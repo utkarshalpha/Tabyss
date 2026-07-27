@@ -17,8 +17,8 @@
  */
 (() => {
   "use strict";
-  if (window.__tabtimeContent) return;
-  window.__tabtimeContent = true;
+  if (window.__tabyssContent) return;
+  window.__tabyssContent = true;
 
   const BEAT_S = 15; // heartbeat granularity
 

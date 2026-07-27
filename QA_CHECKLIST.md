@@ -88,5 +88,5 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] `prefers-reduced-motion` disables transitions.
 
 ## Packaging
-- [ ] `package.ps1` produces `tabtime-v<version>.zip` with only runtime files.
+- [ ] `package.ps1` produces `tabyss-v<version>.zip` with only runtime files.
 - [ ] Zip loads cleanly as an unpacked/dragged extension with no missing-file errors.
