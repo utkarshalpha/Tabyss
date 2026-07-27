@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabyss</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup">
+    <header class="hdr">
+      <span class="brand"><span class="dot"></span>Tabyss</span>
+      <button id="opts" class="iconbtn" title="Settings" aria-label="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </header>
+
+    <!-- Hero: the two numbers that matter -->
+    <div class="heroP">
+      <div class="ht">
+        <div class="htotal mono" id="total">0m</div>
+        <div class="hsub" id="prod">tracked today</div>
+      </div>
+      <div class="ringcol">
+        <div class="ringwrap"><svg id="ring" viewBox="0 0 42 42" role="img" aria-label="Focus score"></svg></div>
+        <div class="ringlbl" id="scoreLabel"></div>
+      </div>
+    </div>
+
+    <button class="personarow" id="personaRow" title="Your browsing personality this week">
+      <canvas id="pDoodle" width="80" height="80"></canvas>
+      <span class="pname" id="pName">…</span>
+      <span class="pchev" id="pChev">▾</span>
+    </button>
+    <div class="pdetail" id="pDetail" hidden>
+      <span class="pepithet" id="pEpithet"></span>
+      <p class="ptag" id="pTagline"></p>
+    </div>
+
+    <div class="section" id="upnextSection">
+      <div class="slabel">Up next</div>
+      <div id="upnext" class="upnext"></div>
+      <label class="switchrow">
+        <span class="swlabel">Office mode <span class="swhint">water &amp; stand reminders</span></span>
+        <span class="switch"><input type="checkbox" id="officeToggle" /><i></i></span>
+      </label>
+    </div>
+
+    <div class="section" id="mediaSection" style="display:none">
+      <div class="slabel">Watched today</div>
+      <div id="mediaStrip" class="mediastrip"></div>
+    </div>
+
+    <div class="section" id="catSection">
+      <div class="slabel">By category</div>
+      <div class="sbar" id="sbar"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="section" id="budgetSection" style="display:none">
+      <div class="slabel">Goal budgets</div>
+      <div id="budgets" class="budgets"></div>
+    </div>
+
+    <div class="section">
+      <div class="slabel">Top sites</div>
+      <div class="bars" id="list"></div>
+    </div>
+
+    <footer class="foot">
+      <span>
+        <button id="dash" class="link">Dashboard ▸</button>
+        <button id="wrapped" class="link">Wrapped ✦</button>
+      </span>
+      <button id="reset" class="link muted">Reset today</button>
+    </footer>
+
+    <script src="common.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

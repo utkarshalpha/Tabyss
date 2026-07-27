@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabyss — Settings</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="opt">
+      <header class="opthead">
+        <div>
+          <h1><span class="dot"></span> Tabyss settings</h1>
+          <p class="sub">Everything is stored on this device. Nothing is uploaded.</p>
+        </div>
+        <button id="openDash" class="btn">Open dashboard ▸</button>
+      </header>
+
+      <section class="optsec">
+        <h2>Daily goals</h2>
+        <p class="hint">Get a desktop notification when a category passes its daily limit. Leave 0 for no limit.</p>
+        <div id="goals"></div>
+      </section>
+
+      <section class="optsec">
+        <h2>Categories</h2>
+        <p class="hint">Every site you've visited, with its category. Search, review, and override — your choices always win over the built-in rules.</p>
+        <div id="catSummary" class="catsummary"></div>
+        <div class="field" style="max-width:320px">
+          <input id="catSearch" type="search" placeholder="Search sites…" />
+        </div>
+        <div id="assign" class="assignlist"></div>
+      </section>
+
+      <section class="optsec">
+        <h2>Breaks &amp; office mode</h2>
+        <p class="hint">20-20-20 eye breaks blur the page for 20 seconds after continuous screen time. Office mode adds water and stand-up reminders while you're at the desk.</p>
+        <div class="goalrow">
+          <label class="glabel" for="eyeOn"><input id="eyeOn" type="checkbox" style="width:auto" /> <span>👀 Eye breaks</span></label>
+          <input id="eyeInterval" type="number" min="5" max="120" />
+          <span class="unit">min screen time (snooze <input id="eyeSnooze" type="number" min="1" max="30" style="width:56px" /> min)</span>
+        </div>
+        <div class="goalrow">
+          <label class="glabel" for="officeOn"><input id="officeOn" type="checkbox" style="width:auto" /> <span>🏢 Office mode</span></label>
+          <span class="unit">💧 every</span>
+          <input id="waterInterval" type="number" min="10" max="240" />
+          <span class="unit">min · 🚶 every</span>
+          <input id="standInterval" type="number" min="15" max="240" />
+          <span class="unit">min</span>
+        </div>
+        <div class="goalrow">
+          <label class="glabel" for="mediaOn"><input id="mediaOn" type="checkbox" style="width:auto" /> <span>🎬 Media detection</span></label>
+          <span class="unit">track video watch-time, Reels/Shorts and feed doomscrolling</span>
+        </div>
+        <div class="goalrow">
+          <label class="glabel" for="recapOn"><input id="recapOn" type="checkbox" style="width:auto" /> <span>🌅 Daily recap</span></label>
+          <span class="unit">a morning notification with yesterday's total, focus and top site</span>
+        </div>
+      </section>
+
+      <section class="optsec">
+        <h2>Digital sunset</h2>
+        <p class="hint">A gentle nudge if you're on social or entertainment sites late at night. One notification max every 2 hours.</p>
+        <div class="goalrow">
+          <label class="glabel" for="sunsetOn"><input id="sunsetOn" type="checkbox" style="width:auto" /> <span>Enable nudge</span></label>
+          <input id="sunsetHour" type="number" min="20" max="23" />
+          <span class="unit">start hour (20–23, ends 4 am)</span>
+        </div>
+      </section>
+
+      <section class="optsec">
+        <h2>Ignore list</h2>
+        <div class="field">
+          <label for="ignore">Domains to never track (one per line)</label>
+          <textarea id="ignore" placeholder="mail.google.com&#10;localhost"></textarea>
+        </div>
+        <div class="field" style="max-width:220px">
+          <label for="idle">Idle threshold (seconds)</label>
+          <input id="idle" type="number" min="15" max="600" />
+        </div>
+        <div class="field" style="max-width:220px">
+          <label for="retention">Keep history for (days)</label>
+          <input id="retention" type="number" min="7" max="3650" />
+        </div>
+      </section>
+
+      <div class="btnrow">
+        <button id="save" class="btn primary">Save</button>
+        <span id="saved" class="saved" style="display:none">Saved ✓</span>
+      </div>
+
+      <section class="optsec" style="margin-top:1.6rem;">
+        <h2>Your data</h2>
+        <p class="hint">Export a JSON backup, restore one, or wipe everything.</p>
+        <div class="btnrow">
+          <button id="export" class="btn">Export JSON</button>
+          <label class="btn" for="importFile" style="cursor:pointer">Import JSON</label>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+          <button id="clear" class="btn danger">Clear all data</button>
+        </div>
+      </section>
+    </main>
+    <script src="common.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>
