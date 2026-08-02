@@ -4,8 +4,9 @@ Decisions are newest-on-top once accepted. Proposed records provide options and 
 
 | ID | Decision | Status |
 |---|---|---|
+| [ADR-023](ADR-023-saved-pages-simplification.md) | Simplify V2 around Focus, insights, and Saved pages | Accepted; supersedes ADR-021 product-surface scope |
 | [ADR-022](ADR-022-original-v1-5-brand-mark.md) | Restore the original V1.5 brand mark | Accepted; supersedes ADR-020 icon clause |
-| [ADR-021](ADR-021-final-local-v2-architecture.md) | Final local V2 product architecture | Accepted |
+| [ADR-021](ADR-021-final-local-v2-architecture.md) | Final local V2 product architecture | Superseded in product-surface scope by ADR-023 |
 | [ADR-020](ADR-020-calm-optimistic-design-system.md) | Calm Optimistic design system | Accepted; icon clause superseded by ADR-022 |
 | [ADR-019](ADR-019-intent-session-state.md) | Quick-intention and focus-session state | Accepted |
 | [ADR-018](ADR-018-quality-and-packaging-baseline.md) | Quality and packaging baseline | Accepted |

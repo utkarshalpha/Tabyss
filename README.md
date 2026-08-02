@@ -1,8 +1,8 @@
 # ⏳ Tabyss — Intentional Browsing
 
-**A privacy-first browser extension that turns open tabs into an intentional plan.**
-Profiles, reusable Focus Contracts, Spaces, Return Capsules, recovery checkpoints,
-time insights, wellbeing breaks, and a weekly Wrapped-style recap — computed
+**A privacy-first browser extension for understanding your time, focusing on one
+thing, and saving pages for later.** Focus sessions, browsing insights, Saved pages,
+wellbeing breaks, and a weekly Wrapped-style recap are computed
 **entirely on your device**. No account. No server.
 **Zero network requests.**
 
@@ -16,12 +16,7 @@ time insights, wellbeing breaks, and a weekly Wrapped-style recap — computed
 
 | | |
 |---|---|
-| 🧭 **Command Center** | A persistent side panel for Profiles, Plans, Spaces, saved detours, and safe tab recovery, with each saved page identified by its Chrome-cached favicon; open it from the popup or with `Alt+Shift+T` |
-| 📋 **Focus Contracts** | Preview the tabs a plan will open or park, save a recovery checkpoint first, then start a timer or open-ended session |
-| 🗂 **Spaces & checkpoints** | Save the current window as reusable context, restore only missing tabs, close duplicates with two-step confirmation, and recover from bounded checkpoints |
-| ↩ **Return Capsules** | Explicitly save the active page and an optional note so you can leave a detour without losing it; revisit, complete, or delete it later |
-| 🛡 **Mindful drift guard** | During a protected plan, choose Return to plan, Save for later & return, or Continue temporarily; quiet on fullscreen and sensitive paths |
-| 🗓 **Local schedules** | Receive a bounded on-device reminder for a reusable plan; nothing starts or changes tabs until you preview and confirm |
+| 🔖 **Saved pages** | Save the current page with an optional note, then open, complete, save again, filter, or delete it from one accessible side panel; site favicons come from Chrome's local cache |
 | ✅ **Intentional focus sessions** | Set a one-line intention, choose a timer or open-ended session, pause/resume/extend, then check out as completed or unfinished with an optional local note |
 | 🎭 **Browsing Personality** | 50+ personas from 6 archetypes × 4 rhythms × 4 intensities, computed weekly from real patterns, each with deterministic generative avatar art |
 | ✨ **Weekly Wrapped** | A 9-slide full-screen recap with a locally rendered 1080×1080 share card (categories only by default — sites are opt-in) |
@@ -70,12 +65,10 @@ every line of UI, tracking, and artwork is hand-rolled:
   excludes site names unless explicitly enabled. Incognito activity is excluded,
   raw storage is restricted to trusted extension contexts, and runtime messages
   are allowlisted by sender type.
-- **Reversible tab operations**: user-confirmed tab parking and duplicate cleanup
-  persist a bounded checkpoint before mutation; restores de-duplicate and never
-  close the user's current tabs.
 - **Explicit capture boundary**: normal analytics remain domain-only. Full URL/title
-  metadata is retained only when the user saves a Plan page, Space, Return Capsule,
-  or checkpoint-producing action, and remains inside local extension storage.
+  metadata is retained only when the user explicitly saves a page, and remains
+  inside local extension storage. Legacy V2 preview records remain exportable but
+  are not active product surfaces.
 
 ## Test
 
@@ -91,7 +84,7 @@ Run the complete local/CI gate, including deterministic packaging:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\verify.ps1
 ```
 
-For a local visual smoke test of the real Settings or Command Center HTML/CSS/JS without installing
+For a local visual smoke test of the real Settings or Saved pages HTML/CSS/JS without installing
 the extension, run `node tests/ui-server.js` and open
 `http://127.0.0.1:4173/options.html` or `/sidepanel.html`. The adapter is test-only and is not included
 by `package.ps1`. The unpacked-extension checklist remains the release authority.

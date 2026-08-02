@@ -2,7 +2,8 @@
 
 ## UX principle
 
-The product should progressively disclose complexity. A new user should receive one useful action; a power user should be able to construct sophisticated plans without forcing that complexity onto everyone else.
+The product should expose one useful action per surface. Internal architecture must
+not become navigation or require onboarding before value.
 
 ## Information architecture
 
@@ -14,22 +15,17 @@ Content order:
 2. Primary action: Start focus, Return to plan, Take break, or Set intention.
 3. Today progress against the chosen outcome.
 4. Compact focus score/time.
-5. Open Command Center, dashboard, or settings.
+5. Open Saved pages, dashboard, or settings.
 
 The popup should not contain the full category legend, long site list, multiple reminders, goals, persona details, and reset controls simultaneously. Those belong in expandable or larger surfaces.
 
-### Side-panel Command Center - act while browsing
+### Side-panel Saved pages - keep it without keeping the tab
 
-Sections:
-
-- Active plan and timer.
-- Current-site status and quick correction.
-- Relevant task/capture.
-- Space tabs.
-- Protection controls.
-- Today progress.
-- Next wellbeing action.
-- Quick pause/privacy state.
+- Save current page and optional note.
+- Saved, Completed, and All filters.
+- Favicon, title, domain, note, and saved date.
+- Open, Mark completed, Save again, and Delete.
+- No Profiles, Plans, Spaces, metrics, checkpoints, or Recovery navigation.
 
 ### Dashboard - understand and configure
 
@@ -38,8 +34,6 @@ Recommended navigation:
 - Today
 - Timeline
 - Insights
-- Plans
-- Spaces
 - Wellbeing
 - Wrapped
 - Data & Privacy
@@ -56,13 +50,10 @@ Connected sections appear only when enabled.
 - Progress and next break.
 - No news, quotes feed, or engagement content required for core utility.
 
-### On-page intervention - recover
+### On-page intervention
 
-- Visually distinct Tabyss identity.
-- State why it appeared.
-- State active rule/plan.
-- Provide Continue intentionally, Return, Save for later, and Change rule.
-- Never obscure security prompts or imitate the website.
+- Wellbeing overlays remain visually distinct and dismissible.
+- The retired Plan drift guard is not activated.
 
 ## End-to-end journey 1: new user
 

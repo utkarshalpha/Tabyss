@@ -9,44 +9,27 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Icons show on the toolbar and in `chrome://extensions`.
 - [ ] Reloading the extension keeps existing data.
 
-## V2 Command Center and Profiles
-- [ ] Popup Command Center button and `Alt+Shift+T` open the side panel; full-tab
-      fallback remains usable if side-panel opening is unavailable.
-- [ ] Personal, Work, and Study are present; a custom Profile can be added, selected,
-      and removed only after confirmation. Removing it deletes only its Plans, Spaces,
-      and Return Capsules.
-- [ ] Empty Plans view offers Deep work and Study sprint starters without creating
-      data until selected.
-- [ ] Plan editor validates bounded name/intention, HTTP(S) pages, canonical domains,
-      timer/open-ended mode, observe/nudge protection, optional Space, parking,
-      restore preference, and local schedule.
-- [ ] Allow-only rules form the complete plan when present; the pause list is used
-      only when the allow-only list is blank.
-- [ ] Local schedule notifies once for the configured minute/day, stays within the
-      daily budget, uses generic lock-screen copy, and never starts work automatically.
-
-## Focus Contract, drift, and recovery
-- [ ] Preview lists every unpinned tab to park and missing Plan/Space page to open;
-      Cancel changes nothing.
-- [ ] Confirm writes a checkpoint before any open/close operation, opens missing
-      context without duplicates, parks only previewed tabs, and starts the focus
-      state visible in popup and Command Center.
-- [ ] Observe mode never injects a guard. Nudge mode offers Return to plan, Save for
-      later & return, and Continue for 10 minutes on an outside-plan domain.
-- [ ] Guard stays quiet on fullscreen and login/signin/auth/payment/checkout paths;
-      it never reads or includes page content.
-- [ ] Finishing or ending a Plan offers its pre-focus checkpoint; Restore opens only
-      missing tabs, while Keep current tabs leaves the browser unchanged.
-- [ ] Save active page creates a Return Capsule with local URL/title and optional
-      note; Open, Mark done, Reopen loop, and Delete all behave correctly.
-- [ ] Saving/updating/restoring a Space de-duplicates URLs and excludes Incognito and
-      unsupported URL schemes.
-- [ ] Duplicate cleanup shows the repeated-page and extra-tab count, requires two
-      clicks, keeps the active/first copy, and creates a restorable checkpoint first.
-- [ ] Manual checkpoint and restore work with partial failures; restore never closes
-      current tabs or repeats already-open pages.
-- [ ] Multi-window, 100-tab boundary, worker interruption during a confirmed action,
-      corrupt product data, and near-storage-quota paths fail safely.
+## V2 Saved pages
+- [ ] Popup bookmark button and `Alt+Shift+T` open Saved pages in the side panel;
+      full-tab fallback remains usable if side-panel opening is unavailable.
+- [ ] The first view contains no Profile, Plan, Space, outcome metric, checkpoint,
+      duplicate-cleanup, or Recovery controls.
+- [ ] Save current page stores the active safe HTTP(S) URL/title and optional note,
+      resets the form, announces success, and shows the locally cached favicon or
+      letter fallback.
+- [ ] Saved pages from every former Profile appear together so the simplified UI
+      never strands existing records.
+- [ ] Open page, Mark completed, Save again, and confirmed Delete behave correctly.
+- [ ] Saved, Completed, and All filters expose accurate `aria-pressed` state and the
+      count/status changes are announced without moving focus.
+- [ ] Empty, loading, invalid URL, worker error, storage limit, and stale-record
+      states preserve entered text where appropriate and provide a recovery action.
+- [ ] Plan schedules do not notify and the retired drift guard is never injected.
+- [ ] Existing compatibility Plan/Space/checkpoint records survive update and remain
+      present in a validated export without appearing in the Saved pages interface.
+- [ ] At 320px width and 200% zoom, the save controls stack without horizontal
+      scrolling; keyboard, screen-reader, light/dark, reduced-motion, forced-colors,
+      and high-contrast checks pass.
 
 ## Tracking accuracy
 - [ ] Browse a focused tab ~2 min → that domain's time increases (~1-min granularity).

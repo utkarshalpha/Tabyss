@@ -5,31 +5,29 @@ claim that every item below is implemented or accepted for release.
 
 ## Product thesis
 
-Most productivity extensions specialize in one layer: restrict websites, restore
-tabs, or create a calmer new tab. Tabyss can be meaningfully different by connecting
-four things around a declared intention:
+Most productivity extensions specialize in one layer. The final owner-reviewed
+Tabyss product intentionally connects only three understandable jobs:
 
-1. Plan what the browser session is for.
-2. Arrange and protect the right browser context.
-3. Recover gracefully when attention drifts.
-4. Reflect on the outcome without shame or surveillance.
+1. Understand where browser time goes.
+2. Focus on one thing.
+3. Save a page for later without keeping its tab open.
 
-The core magic moment is not “a site was blocked.” It is: **I noticed I had drifted,
-Tabyss preserved what tempted me, and I returned to the thing I chose without losing
-context.**
+The core magic moment is: **I kept the useful page without keeping the distracting
+tab open.**
 
 ## Final local V2 disposition
 
-ADR-021 turns the signature loop into the final local V2 build:
+ADR-023 defines the final local V2 build:
 
-- Implemented: Profiles, reusable Plans and local schedules, Focus Contract preview,
-  Focus Workspace open/park/restore, Spaces, Return Capsules, observe/nudge
-  protection, Return/Save/Continue drift recovery, intervention cooldowns, bounded
-  checkpoints, duplicate cleanup, existing-tab de-duplication, honest checkout,
-  weekly intentional minutes, recovery counts, and a side-panel Command Center.
+- Implemented: one Saved pages side panel, optional note, favicon identity,
+  Saved/Completed/All filters, open/complete/save-again/delete actions, quick Focus,
+  honest checkout, browsing insights, and local compatibility preservation.
 - Integrated from the existing product: quick intention, timer/stopwatch recovery,
   domain analytics, focus score, media/doomscroll classification, wellbeing, goals,
   dashboard, persona, Wrapped, export/import, retention, and clear/reset controls.
+- Retired before release: Profiles, Plans, schedules, Focus Contracts, Spaces,
+  drift guard, side-panel North Star counters, duplicate cleanup, manual checkpoints,
+  and Recovery navigation.
 - Deliberately absent rather than deferred behind fake UI: cloud sync, accounts,
   remote AI, friend/family comparison, collaboration, public leaderboards, employee
   or parental surveillance, and hard DNR locking. Those need operating systems that

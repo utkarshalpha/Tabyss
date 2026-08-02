@@ -122,5 +122,6 @@ page-content collection, hard browser blocking, or an unimplemented cloud promis
 
 ## Status
 
-Accepted - the owner authorized the all-in final V2 build and its implementation on
-the dedicated `codex/v2-final-build` branch.
+Superseded in product-surface scope by ADR-023. Its bounded schema, local-only data,
+validation, backup compatibility, and connected-feature exclusions remain accepted;
+Profiles, Plans, Spaces, schedules, guard, and recovery navigation are retired.

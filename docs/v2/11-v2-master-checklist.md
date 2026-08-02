@@ -51,12 +51,12 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 - [ ] Outcome onboarding.
 - [ ] Calibration/sparse-data flow.
-- [x] Profiles.
+- [x] Profiles retired from the active surface under ADR-023; legacy records preserved.
 - [x] Quick intention.
-- [x] Plans and local schedules.
+- [x] Plans and local schedules retired; schedule prompts disabled.
 - [ ] Timer, stopwatch, Pomodoro, and flow execution.
 - [x] Action popup.
-- [x] Side-panel Command Center.
+- [x] One-purpose Saved pages side panel.
 - [x] Intent-aligned timer/stopwatch session model.
 - [x] Completion and abandonment check-out.
 - [ ] Empty, denied, paused, and recovery states (implemented for this slice;
@@ -64,14 +64,12 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 ## 5. Guard/control gate
 
-- [x] Local protection ladder: observe and agency-preserving nudge.
+- [x] Plan protection ladder retired; guard activation disabled.
 - [ ] DNR rule generation and reconciliation.
 - [ ] Safe block page and permanent recovery route.
-- [x] Mindful pause.
+- [x] Mindful Plan pause retired from the active product.
 - [ ] Re-intervention.
-- [x] Return-to-plan recovery.
-- [x] Per-domain continue cooldown plus guard repeat suppression.
-- [x] Fullscreen and sensitive-path quiet contexts for the guard.
+- [x] Return-to-plan recovery and cooldown UI retired with Plans.
 - [ ] Permission grant/revoke behavior.
 - [ ] Supported-site control fail-open tests.
 
@@ -79,13 +77,11 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 - [x] Automatic checkpoints before supported bulk mutations.
 - [x] Persisted checkpoint recovery for interrupted/reopened extension state.
-- [x] Plan-linked Spaces.
+- [x] Spaces retired from the active surface; legacy records preserved.
 - [ ] Tab group preservation.
-- [x] Duplicate detection/cleanup, Return Capsules, and plan tab parking.
-- [x] Focus workspace open/restore.
-- [x] Previewed plan mutation and checkpoint-backed duplicate cleanup.
-- [x] Local explicit page capture through Return Capsules.
-- [ ] Context menu; Command Center keyboard shortcut is implemented.
+- [x] Duplicate cleanup, tab parking, and manual recovery UI retired.
+- [x] Local explicit capture simplified and renamed to Saved pages.
+- [x] Saved pages keyboard shortcut retained as `Alt+Shift+T`.
 - [ ] Optional integration payload preview and fallback, if accepted.
 
 ## 7. Insight/wellbeing gate

@@ -86,8 +86,8 @@ palette and must always be paired with labels or patterns.
 4. Expandable browsing details, persona, categories, goals, sites, and Office Mode.
 5. Weekly story and destructive reset as quiet footer actions.
 
-The popup is a launch and glance surface. Deep review and configuration belong on
-the dashboard/Command Center and settings.
+The popup is a launch and glance surface. Saved pages belongs in the side panel;
+deep review and configuration belong on the dashboard and settings.
 
 ## Icon usage
 

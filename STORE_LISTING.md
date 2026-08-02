@@ -6,7 +6,7 @@ Everything you need to paste into the Web Store Developer Dashboard.
 `Tabyss — Intentional Browsing`
 
 ## Summary (short description, ≤ 132 chars)
-`Plan focused browsing, restore tab Spaces, save detours, and understand your time — private, local, and account-free.`
+`Understand your browsing, focus on one thing, and save pages for later — private, local, and account-free.`
 
 ## Category
 Productivity
@@ -14,19 +14,13 @@ Productivity
 ## Detailed description
 > **Turn a crowded browser into one clear intention.**
 >
-> Tabyss connects four things most productivity extensions leave apart: decide what
-> this browser session is for, bring the right tabs together, recover calmly when
-> attention drifts, and reflect on what actually happened. Everything runs on your
-> device. There is no account, server, telemetry, or cloud requirement.
+> Tabyss connects three simple jobs: understand where your browser time goes, focus
+> on one thing, and save a page for later without keeping its tab open. Everything
+> runs on your device. There is no account, server, telemetry, or cloud requirement.
 >
 > **What you get**
-> • **Focus Contracts** — preview the tabs a Plan will open or park, then confirm
-> • **Spaces** — save a useful browser window and restore only missing pages later
-> • **Return Capsules** — save a tempting page locally and return to your chosen task
-> • **Mindful protection** — Return, Save for later, or Continue; no unescapable lock
-> • **Safe recovery** — automatic checkpoints before tab parking or duplicate cleanup
-> • **Profiles and schedules** — reusable Work, Study, Personal, or custom modes
-> • **Command Center** — a side panel that stays beside the page you are working on
+> • **Saved pages** — save the current page with an optional note; open, complete,
+>   save again, filter, or delete it from one accessible side panel
 > • **Intentional sessions** — timer or open-ended focus with honest checkout
 > • **Your Browsing Personality** — 50+ personas computed weekly from your patterns
 > • **Weekly Wrapped** — a full-screen recap with a shareable card (saved locally)
@@ -48,9 +42,9 @@ Productivity
 > Choose your browser on purpose — without giving your browsing history to a server.
 
 ## Privacy practices tab — exact answers
-- **Single purpose:** "Helps the user browse intentionally by planning local focus sessions, saving and restoring user-selected tab context, recovering from drift, and showing private on-device time/wellbeing insights."
+- **Single purpose:** "Helps the user browse intentionally through local focus sessions, explicitly saved pages, and private on-device time/wellbeing insights."
 - **Data collected:** *Website activity* (time spent per domain; full URL/title only
-  for a user-explicit Plan, Space, Return Capsule, or recovery save) AND *User
+  for a page the user explicitly saves) AND *User
   activity* (scroll-gesture cadence and media-playback state are observed on-page to
   classify video/shorts/feed-scrolling time per domain; keys are only counted as
   scroll gestures — no content, keystrokes, or clicks are recorded). Declare both.
@@ -63,19 +57,19 @@ Productivity
 - **Privacy policy URL:** host `PRIVACY.md` (e.g. GitHub Pages / Gist) and paste the URL.
 
 ## Permission justifications (paste per permission)
-- **tabs** — "Read the active tab's domain for local time attribution and, only when the user explicitly saves or confirms a Plan, Space, Return Capsule, checkpoint, or duplicate cleanup, save/restore that tab's URL and title locally. Page content and form input are never read."
+- **tabs** — "Read the active tab's domain for local time attribution and, only when the user explicitly saves the current page, store its URL and title locally or open it again. Page content and form input are never read."
 - **idle** — "Detect when the user is away so tracking pauses and time isn't over-counted."
-- **alarms** — "Run the 1-minute tracking tick, focus timer recovery, local Plan schedules, and periodic data-retention cleanup."
+- **alarms** — "Run the 1-minute tracking tick, focus timer recovery, and periodic data-retention cleanup."
 - **storage** — "Persist the user's time stats and settings locally on their device."
 - **notifications** — "Notify the user on daily-limit breaches and for eye-break / hydration reminders they enabled."
 - **favicon** — "Display site icons in the user's own stats lists using Chrome's local favicon cache. No network requests."
-- **sidePanel** — "Keep the local Plans, Spaces, Return Capsules, session controls, and recovery Command Center available beside the user's current page."
-- **Content script on http/https (host access)** — "Three on-device features: (1) classify media activity from video state and scroll cadence; (2) render enabled wellbeing overlays; and (3) show a mindful Focus Contract guard based only on the current address and the user's local plan rules. It never reads page text, form input, passwords, or messages, and nothing is transmitted."
+- **sidePanel** — "Keep Saved pages available beside the current page so the user can save it and return later."
+- **Content script on http/https (host access)** — "Two on-device features: (1) classify media activity from video state and scroll cadence, and (2) render enabled wellbeing overlays. It never reads page text, form input, passwords, or messages, and nothing is transmitted."
 
 ## Screenshot plan (1280×800, capture 4)
-1. **Command Center / Plans** — Profile, weekly impact, plan cards. Caption: "Choose the mode for this moment."
-2. **Focus Contract preview** — tabs to park/open. Caption: "See every change before it happens."
-3. **Spaces + recovery** — saved Space and checkpoint cards. Caption: "Context saved. Cleanup reversible."
+1. **Saved pages** — save form and favicon list. Caption: "Keep the page, not the tab."
+2. **Focus session** — intention and timer controls. Caption: "One thing at a time."
+3. **Weekly Wrapped** — persona and local recap. Caption: "See your browsing rhythm."
 4. **Dashboard** — category, focus, and wellbeing insights. Caption: "Your day, understood privately."
 
 Optional promo tile 440×280: logo + tagline "Where does your time go?"

@@ -8,33 +8,20 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
 - Restored the exact V1.5 logo at 16px, 48px, and 128px. The Calm Optimistic UI
   system remains, while the established product mark stays unchanged.
 
-### Command Center and plans
-- Added the V2 side-panel Command Center with Personal, Work, Study, and bounded
-  custom Profiles; it opens from the popup or with `Alt+Shift+T`.
-- Added reusable Plans with intention, definition of done, timer/open-ended mode,
-  observe/mindful-nudge protection, allow-only or pause-site rules, selected pages,
-  linked Space, tab parking, post-focus restore, and local recurring reminders.
-- Added a Focus Contract preview showing every tab that will open or park before the
-  user confirms. A durable checkpoint is written before any tab mutation.
-- Added a cross-surface active-session card with pause/resume, extension, honest
-  completed/unfinished checkout, and post-focus workspace restoration.
-
-### Context, detours, and recovery
-- Added exact-page, Chrome-cached favicons across Plans, Spaces, Return Capsules,
-  duplicate review, checkpoints, and Focus Contract previews, with a resilient
-  letter fallback and no remote favicon service.
-- Added Spaces to save the current window and restore only missing HTTP(S) tabs.
-- Added Return Capsules to explicitly save the active URL/title and optional note,
-  reopen it, mark the loop done, reopen it, or delete it.
-- Added mindful drift recovery during protected Plans: Return to plan, Save for later
-  and return, or Continue for a bounded period. Fullscreen, login, authentication,
-  payment, and checkout paths stay quiet.
-- Added duplicate detection with fragment-safe URL normalization, two-step close
-  confirmation, and an automatic pre-cleanup checkpoint.
-- Added manual and automatic bounded checkpoints with de-duplicated restore.
-- Added a local weekly North Star (intentional outcome days) with focus minutes and
-  successful returns in the Command Center. No telemetry or external product
-  analytics were added.
+### Simpler product surface
+- Replaced the multi-section Command Center with one accessible **Saved pages** side
+  panel that opens from the popup bookmark button or `Alt+Shift+T`.
+- Removed Profiles, reusable Plans, Spaces, weekly outcome counters, manual
+  checkpoints, duplicate cleanup, and Recovery from the user-facing side panel.
+- Renamed Later/Return Capsules to Saved pages and reduced the workflow to Save
+  current page, optional note, Open, Mark completed, Save again, Delete, and three
+  plain filters.
+- Saved pages now combines records from every former Profile and shows exact-page,
+  Chrome-cached favicons with a resilient letter fallback and no remote service.
+- Added native form semantics, pressed filter state, live status/count announcements,
+  busy state, keyboard focus, and narrow-layout controls.
+- Stopped retired Plan schedule notifications and drift-guard activation. Existing
+  compatibility records remain local and exportable instead of being deleted.
 
 ### Schema, permissions, and trust
 - Added versioned and bounded local product schema 1; storage metadata is now schema
@@ -44,8 +31,8 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
   116. Connected sync, remote AI, accounts, social comparison, and hard blocking are
   absent rather than simulated.
 - Added product-model and worker integration coverage for safe URL capture, limits,
-  relationship repair, Focus Contract recovery ordering, guard decisions, schedules,
-  duplicate cleanup, permissions, packaging, and UI contracts.
+  relationship repair, compatibility records, permissions, packaging, and UI
+  contracts, including an explicit absence test for retired side-panel concepts.
 
 ### Intentional focus
 - Added an intention-first popup flow with 25/50/90-minute timers or an open-ended

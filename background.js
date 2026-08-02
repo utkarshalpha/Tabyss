@@ -61,10 +61,10 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onStartup.addListener(setup);
 restrictStorageAccess();
 
-// Clicking a Tabyss notification opens the dashboard.
+// Clicking a Tabyss notification opens the dashboard. Legacy Plan schedule
+// notifications are cleared without reopening the retired Plan interface.
 chrome.notifications.onClicked.addListener((id) => {
-  if (id.startsWith("plan-schedule:")) openCommandCenter();
-  else chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
+  if (!id.startsWith("plan-schedule:")) chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
   chrome.notifications.clear(id);
 });
 
@@ -86,7 +86,6 @@ chrome.notifications.onButtonClicked.addListener((id, btn) => {
 chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === "tick") {
     flush();
-    checkScheduledPlans().catch(() => {});
   }
   else if (a.name === "maintenance") maintenance();
   else if (a.name === "focus-end") reconcileFocus();
@@ -95,19 +94,12 @@ chrome.tabs.onActivated.addListener(() => flush());
 chrome.tabs.onUpdated.addListener((_id, info, tab) => {
   if (info.url && tab.active) {
     flush();
-    maybeShowGuard(tab).catch(() => {});
   }
-});
-chrome.tabs.onActivated.addListener(async (info) => {
-  try {
-    const tab = await chrome.tabs.get(info.tabId);
-    await maybeShowGuard(tab);
-  } catch (_) {}
 });
 chrome.windows.onFocusChanged.addListener(() => flush());
 chrome.idle.onStateChanged.addListener(() => flush());
 
-async function openCommandCenter() {
+async function openSavedPages() {
   try {
     const win = await chrome.windows.getLastFocused();
     if (!win || !Number.isInteger(win.id)) throw new Error("No browser window");
@@ -118,8 +110,8 @@ async function openCommandCenter() {
 }
 
 if (chrome.commands?.onCommand) {
-  chrome.commands.onCommand.addListener((command) => {
-    if (command === "open-command-center") openCommandCenter();
+chrome.commands.onCommand.addListener((command) => {
+    if (command === "open-command-center") openSavedPages();
   });
 }
 
@@ -158,7 +150,7 @@ function sendResult(promise, sendResponse, after) {
       PRODUCT_INVALID_PROFILE: "That profile could not be validated.",
       PRODUCT_INVALID_PLAN: "That plan could not be validated.",
       PRODUCT_INVALID_SPACE: "That Space could not be validated.",
-      PRODUCT_INVALID_CAPSULE: "That Return Capsule could not be validated.",
+      PRODUCT_INVALID_CAPSULE: "That saved page could not be validated.",
       PRODUCT_INVALID_CHECKPOINT: "That browser checkpoint could not be validated.",
       PRODUCT_INVALID_CONTRACT: "That Focus Contract could not be validated.",
       PRODUCT_TAB_LIMIT: "This action needs a complete recovery point. Reduce the window to 100 savable tabs and try again.",
@@ -171,8 +163,10 @@ function sendResult(promise, sendResponse, after) {
   return true;
 }
 
+const ACTIVE_PRODUCT_ACTIONS = new Set(["save-capsule", "update-capsule", "delete-capsule"]);
+
 // Messages are allowlisted by both action and source context. Content scripts
-// can report only media/wellness actions; only extension pages can mutate data.
+// can report only media/wellness actions; extension pages can mutate Saved pages.
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!isPlainObject(msg) || typeof msg.type !== "string" || !isOwnSender(sender)) return false;
   const extensionPage = isExtensionPageSender(sender);
@@ -210,9 +204,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     case "GET_PRODUCT_DATA":
       return extensionPage ? sendResult(productCommand("get", msg, sender), sendResponse) : false;
     case "PRODUCT_COMMAND":
-      return extensionPage ? sendResult(productCommand(msg.action, msg, sender), sendResponse) : false;
-    case "GUARD_DECISION":
-      return contentScript ? sendResult(guardDecision(msg, sender), sendResponse) : false;
+      return extensionPage && ACTIVE_PRODUCT_ACTIONS.has(msg.action)
+        ? sendResult(productCommand(msg.action, msg, sender), sendResponse)
+        : false;
     case "MEDIA_BEAT":
       return contentScript ? sendResult(mediaBeat(msg, sender), sendResponse) : false;
     case "BREAK_SNOOZE":
@@ -301,7 +295,6 @@ function getFocusData() { return withStore(doGetFocusData); }
 function focusCommand(action, payload) { return withStore(() => doFocusCommand(action, payload)); }
 function reconcileFocus() { return withStore(doReconcileFocus); }
 function productCommand(action, payload, sender) { return withStore(() => doProductCommand(action, payload, sender)); }
-function guardDecision(payload, sender) { return withStore(() => doGuardDecision(payload, sender)); }
 
 async function doFlush() {
   const now = Date.now();
@@ -797,7 +790,7 @@ async function doExportData() {
   return { data: buildExportPayload(data) };
 }
 
-/* ---------- V2 plans, Spaces, Return Capsules and recovery ---------- */
+/* ---------- V2 Saved pages and validated compatibility records ---------- */
 
 function newProductId(prefix) {
   return `${prefix}_${crypto.randomUUID().toLowerCase()}`;
@@ -925,15 +918,6 @@ function contractForTabs(product, plan, tabs) {
     })),
     open,
   };
-}
-
-function recordRecovery(product, kind) {
-  const day = dateKey(Date.now());
-  const counts = product.recoveryByDay[day] || { shown: 0, returned: 0, continued: 0, saved: 0 };
-  if (Object.hasOwn(counts, kind)) counts[kind] = Math.min(100000, counts[kind] + 1);
-  product.recoveryByDay[day] = counts;
-  const days = Object.keys(product.recoveryByDay).sort();
-  for (const old of days.slice(0, Math.max(0, days.length - PRODUCT_LIMITS.recoveryDays))) delete product.recoveryByDay[old];
 }
 
 async function publicProductData(product) {
@@ -1189,12 +1173,6 @@ async function doProductCommand(action, payload) {
     return { ...(await publicProductData(product)), closed: remove.length };
   }
 
-  if (action === "guard-shown") {
-    recordRecovery(product, "shown");
-    await saveProductData(product);
-    return {};
-  }
-
   productFailure("PRODUCT_NOT_FOUND");
 }
 
@@ -1205,112 +1183,6 @@ async function finishActiveContract() {
   product.activeContract.status = "finished";
   product.activeContract.finishedAt = Date.now();
   await saveProductData(product);
-}
-
-async function returnToPlannedTab(plan, currentTab) {
-  try {
-    const tabs = await chrome.tabs.query({ windowId: currentTab.windowId });
-    const target = tabs.find((tab) => tab.id !== currentTab.id && productTabIsPlanned(tab, plan));
-    if (target) {
-      await chrome.tabs.update(target.id, { active: true });
-      return;
-    }
-    if (plan.relevantUrls[0]) await chrome.tabs.create({ url: plan.relevantUrls[0], active: true });
-  } catch (_) {}
-}
-
-async function doGuardDecision(payload, sender) {
-  const product = await loadProductData();
-  const contract = product.activeContract;
-  if (!contract || contract.status !== "active" || !sender?.tab) productFailure("PRODUCT_NOT_FOUND");
-  const plan = planById(product, contract.planId);
-  const domain = productDomain(new URL(sender.tab.url).hostname);
-  const decision = ["return", "continue", "save"].includes(payload.decision) ? payload.decision : null;
-  if (!decision) productFailure("PRODUCT_NOT_FOUND");
-  if (decision === "continue") {
-    const minutes = boundedNumber(payload.minutes, 1, 60, 10);
-    product.guardBypasses[domain] = Date.now() + minutes * 60000;
-    recordRecovery(product, "continued");
-  } else if (decision === "save") {
-    product.capsules = [sanitizeProductCapsule({
-      id: newProductId("capsule"),
-      profileId: plan.profileId,
-      planId: plan.id,
-      url: sender.tab.url,
-      title: String(sender.tab.title || domain).slice(0, PRODUCT_LIMITS.title),
-      note: "Saved during focus",
-      status: "saved",
-      savedAt: Date.now(),
-      updatedAt: Date.now(),
-    }), ...product.capsules].slice(0, PRODUCT_LIMITS.capsules);
-    recordRecovery(product, "saved");
-    await returnToPlannedTab(plan, sender.tab);
-  } else {
-    recordRecovery(product, "returned");
-    await returnToPlannedTab(plan, sender.tab);
-  }
-  await saveProductData(product);
-  return { decision };
-}
-
-const guardShownRecently = new Map();
-async function maybeShowGuard(tab) {
-  if (!tab || tab.incognito || !tab.active || typeof tab.url !== "string" || !/^https?:\/\//.test(tab.url)) return;
-  const store = await chrome.storage.local.get(["focusActive", "product"]);
-  const active = validStoredFocusActive(store.focusActive);
-  if (!active || active.status !== "running") return;
-  const product = sanitizeProductData(store.product);
-  const contract = product.activeContract;
-  if (!contract || contract.status !== "active") return;
-  const plan = product.plans.find((item) => item.id === contract.planId);
-  if (!plan || plan.protection !== "nudge" || productTabIsPlanned(tab, plan)) return;
-  const domain = productDomain(new URL(tab.url).hostname);
-  if ((product.guardBypasses[domain] || 0) > Date.now()) return;
-  const key = `${active.id}:${tab.id}:${domain}`;
-  if (Date.now() - (guardShownRecently.get(key) || 0) < 60000) return;
-  guardShownRecently.set(key, Date.now());
-  const response = await chrome.tabs.sendMessage(tab.id, {
-    type: "SHOW_GUARD",
-    cfg: {
-      intention: active.intention,
-      domain,
-      reason: plan.blockedDomains.length && productDomainMatches(domain, plan.blockedDomains)
-        ? "This site is on the plan’s pause list."
-        : "This site is outside the current Focus Contract.",
-    },
-  });
-  if (response?.shown === true) await productCommand("guard-shown", { domain }, null);
-}
-
-async function checkScheduledPlans() {
-  const product = await loadProductData();
-  const { focusActive } = await chrome.storage.local.get("focusActive");
-  if (validStoredFocusActive(focusActive)) return;
-  const now = new Date();
-  const minute = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  const promptKey = `${dateKey(now.getTime())}T${minute}`;
-  const todayPrefix = `${dateKey(now.getTime())}T`;
-  let remaining = Math.max(0, product.preferences.notificationBudget -
-    Object.values(product.schedulePrompts).filter((key) => key.startsWith(todayPrefix)).length);
-  if (!remaining) return;
-  let changed = false;
-  for (const plan of product.plans) {
-    if (!remaining || !plan.schedule.enabled || plan.schedule.time !== minute ||
-        !plan.schedule.days.includes(now.getDay()) || product.schedulePrompts[plan.id] === promptKey) continue;
-    try {
-      await chrome.notifications.create(`plan-schedule:${plan.id}`, {
-        type: "basic",
-        iconUrl: "icon128.png",
-        title: "Your scheduled focus plan is ready",
-        message: "Open Tabyss to review the plan before anything changes.",
-        priority: 0,
-      });
-      product.schedulePrompts[plan.id] = promptKey;
-      remaining--;
-      changed = true;
-    } catch (_) {}
-  }
-  if (changed) await saveProductData(product);
 }
 
 /* ---------- housekeeping & reset ---------- */

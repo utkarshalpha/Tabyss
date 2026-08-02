@@ -88,19 +88,16 @@ manual unpacked-extension and policy gates in `QA_CHECKLIST.md`.
 | V2-FR-5 | Recovery | Popup closure, worker suspension, browser restart, delayed alarms, reset, retention, clear, export, and restore have explicit behavior |
 | V2-FR-6 | Reflection | Dashboard shows active and historical intentional sessions per day without folding them into passive Focus Score |
 | V2-FR-7 | Local privacy | Intentions/outcomes remain in trusted local extension storage; only `sidePanel` is added, with no network request, account, or telemetry |
-| V2-FR-8 | Profiles | Personal, Work, Study, and bounded custom profiles scope Plans, Spaces, and Return Capsules |
-| V2-FR-9 | Reusable Plans | Plans save intention, outcome, mode, local schedule, site policy, selected pages, Space, parking, and restore preference |
-| V2-FR-10 | Focus Contract preview | Before start, show each tab to park and page to open; no tab mutation before confirmation |
-| V2-FR-11 | Command Center | A side panel exposes the authoritative plan/focus/context/recovery state and remains usable as a full extension tab fallback |
-| V2-FR-12 | Spaces | Explicitly save a bounded current-window URL/title set; restore only missing safe HTTP(S) pages |
-| V2-FR-13 | Return Capsules | Explicitly save active page URL/title and optional note; open, complete, reopen, and delete the loop |
-| V2-FR-14 | Mindful recovery | During a protected plan offer Return, Save & return, or bounded Continue; suppress on fullscreen and sensitive paths |
-| V2-FR-15 | Reversible tab tools | Persist a checkpoint before plan parking or duplicate close; use two-step confirmation and de-duplicated restore |
-| V2-FR-16 | Portable V2 data | Product schema 1 participates in validated format-4 export/import, clear, and local-only storage |
+| V2-FR-8 | Saved pages | Explicitly save the active safe HTTP(S) URL/title and optional note; open, complete, save again, filter, and delete |
+| V2-FR-9 | Simple side panel | One Saved pages job with no Profile, Plan, Space, metric, checkpoint, or Recovery navigation |
+| V2-FR-10 | Accessible state | Native controls, visible label, pressed filter state, live feedback/count, busy state, favicon fallback, and narrow-layout support |
+| V2-FR-11 | Compatibility preservation | Retired Plan/Space/checkpoint records remain validated, local, and portable without active schedules, guards, or destructive migration |
+| V2-FR-12 | Portable V2 data | Product schema 1 participates in validated format-4 export/import, clear, and local-only storage |
 
 V2 deliberately does not claim cloud sync, remote AI, accounts, public or household
 comparison, employee/parental monitoring, or hard blocking. Those are not hidden
 future toggles: they are absent because a trustworthy implementation requires a real
 identity/service/security/abuse/operations boundary that this local product does not
-have. V2 chooses timer/open-ended Plans plus calm recovery rather than unescapable
-Pomodoro or DNR enforcement. See ADR-021 for the production compromises.
+have. V2 chooses a timer/open-ended quick Focus action plus Saved pages rather than
+an unescapable Pomodoro, DNR enforcement, or a general tab-workspace manager. See
+ADR-023 for the final product-surface decision.

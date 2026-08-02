@@ -14,13 +14,13 @@ The current implementation uses:
 - `chrome.storage.local` for settings, state, and date-keyed aggregates.
 - Separate popup, dashboard, options, and Wrapped extension pages.
 
-ADR-021 keeps this dependency-free architecture for the final local V2 and adds:
+ADR-021 introduced the bounded product compatibility layer. ADR-023 simplifies its
+active surface:
 
 - `product.js` as the pure, bounded product-schema and rule module.
-- `sidepanel.html` / `sidepanel.js` as the Command Center.
-- A versioned `product` document in `chrome.storage.local` for Profiles, Plans,
-  Spaces, Return Capsules, checkpoints, the active Focus Contract, schedule prompt
-  keys, guard cooldowns, and recovery outcomes.
+- `sidepanel.html` / `sidepanel.js` as the one-purpose Saved pages surface.
+- A versioned `product` document in `chrome.storage.local` for Saved pages plus
+  validated legacy Profile/Plan/Space/checkpoint compatibility records.
 - Worker-owned `PRODUCT_COMMAND` and `GUARD_DECISION` paths protected by the existing
   storage mutex and sender-context allowlist.
 - Backup format 4 and storage metadata schema 3.
@@ -29,26 +29,25 @@ The larger IndexedDB event architecture below remains a design option, not a cla
 about the shipped V2. ADR-021 selected a bounded local document because the record
 limits make it simpler to migrate, validate, export, and recover now.
 
-## Implemented V2 command flow
+## Implemented V2 active flow
 
 ```text
-Popup / Command Center
+Popup / Saved pages
         |
         | validated query or command
         v
 Service worker mutex
         |
         +-- common.js: settings, aggregate analytics, focus state machine
-        +-- product.js: schema, URL/domain rules, duplicate identity
+        +-- product.js: schema, saved-page URL rules, compatibility validation
         |
         +-- chrome.storage.local (validated product + focus + aggregates)
-        +-- chrome.tabs (previewed/reversible context changes)
-        +-- content.js (media, wellbeing, mindful guard only)
+        +-- chrome.tabs (explicit current-page save/open)
+        +-- content.js (media and wellbeing only)
 ```
 
-Critical ordering is intentional: a checkpoint is persisted before a confirmed
-Focus Contract parks tabs or duplicate cleanup removes them. Restore only opens
-missing safe HTTP(S) pages; it does not close the user's current work.
+Saving a page is explicit, accepts only safe HTTP(S) URLs, excludes Incognito, and
+never reads page content. Retired Plan schedules and guard activation are disabled.
 
 ## Proposed logical architecture
 

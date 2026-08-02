@@ -97,7 +97,7 @@ vm.runInContext(`${common}\n${product}\n${background}\n;globalThis.__backgroundT
   isExtensionPageSender, isContentScriptSender, computeState,
   recapNotificationMessage, sunsetNotificationMessage,
   doFocusCommand, doGetFocusData, doImportData, doExportData,
-  doMaintenance, doResetToday, doProductCommand, doGuardDecision, checkScheduledPlans
+  doMaintenance, doResetToday, doProductCommand, ACTIVE_PRODUCT_ACTIONS
 };`, context);
 const api = context.__backgroundTest;
 const inContext = (value) => vm.runInContext(`JSON.parse(${JSON.stringify(JSON.stringify(value))})`, context);
@@ -152,6 +152,10 @@ test("notification copy redacts domains unless the user opts in", () => {
 
 test("runtime message listener is installed", () => {
   assert.equal(typeof listeners.message, "function");
+});
+
+test("runtime mutation surface is limited to Saved pages", () => {
+  assert.deepEqual([...api.ACTIVE_PRODUCT_ACTIONS].sort(), ["delete-capsule", "save-capsule", "update-capsule"]);
 });
 
 test("focus commands persist active state, schedule recovery and export outcomes", async () => {
@@ -264,35 +268,6 @@ test("Focus Contracts preview changes and persist recovery before parking tabs",
   state.tabs = null;
 });
 
-test("guard decisions preserve agency, save detours and return to a planned tab", async () => {
-  const plan = storageState.product.plans[0];
-  state.tabs = [
-    { id: 31, windowId: 1, index: 0, active: false, pinned: false, incognito: false, title: "Brief", url: "https://docs.example.com/brief" },
-    { id: 32, windowId: 1, index: 1, active: true, pinned: false, incognito: false, title: "Interesting video", url: "https://youtube.com/watch?v=2" },
-  ];
-  await api.doFocusCommand("start", inContext({ intention: plan.intention, mode: "timer", targetMinutes: 25 }));
-  storageState.product.activeContract = {
-    planId: plan.id,
-    checkpointId: storageState.product.checkpoints[0].id,
-    startedAt: Date.now(),
-    finishedAt: 0,
-    restoreOnFinish: true,
-    status: "active",
-  };
-  const sender = inContext({ tab: state.tabs[1] });
-  await api.doGuardDecision(inContext({ decision: "continue", minutes: 10 }), sender);
-  assert.ok(storageState.product.guardBypasses["youtube.com"] > Date.now());
-  const latestRecovery = Object.entries(storageState.product.recoveryByDay).sort().at(-1)[1];
-  assert.equal(latestRecovery.continued, 1);
-
-  await api.doGuardDecision(inContext({ decision: "save" }), sender);
-  assert.equal(storageState.product.capsules[0].url, "https://youtube.com/watch?v=2");
-  assert.equal(storageState.product.capsules[0].note, "Saved during focus");
-  assert.equal(state.tabs.find((tab) => tab.id === 31).active, true);
-  await api.doFocusCommand("complete", inContext({}));
-  state.tabs = null;
-});
-
 test("reset today clears local recovery outcomes without stranding workspace recovery", async () => {
   const plan = storageState.product.plans[0];
   const recoveryDay = Object.keys(storageState.product.recoveryByDay).sort().at(-1);
@@ -307,30 +282,6 @@ test("reset today clears local recovery outcomes without stranding workspace rec
   assert.equal(storageState.product.recoveryByDay[recoveryDay], undefined);
   assert.equal(storageState.product.activeContract.status, "finished");
   assert.ok(storageState.product.activeContract.finishedAt > 0);
-});
-
-test("local plan schedules obey the per-day notification budget and de-duplicate", async () => {
-  state.notifications = [];
-  storageState.focusActive = null;
-  const now = new Date();
-  const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  await api.doProductCommand("upsert-plan", inContext({ plan: {
-    profileId: "profile_personal",
-    name: "Scheduled focus",
-    intention: "Start the planned block",
-    mode: "timer",
-    targetMinutes: 25,
-    protection: "observe",
-    allowedDomains: [],
-    blockedDomains: [],
-    relevantUrls: [],
-    parkUnrelated: false,
-    restoreOnFinish: true,
-    schedule: { enabled: true, days: [now.getDay()], time },
-  } }));
-  await api.checkScheduledPlans();
-  await api.checkScheduledPlans();
-  assert.equal(state.notifications.filter((item) => item.id.startsWith("plan-schedule:")).length, 1);
 });
 
 test("duplicate cleanup also persists its checkpoint before removing a tab", async () => {

@@ -4,6 +4,10 @@
 
 V2 is one product generation with one architecture and decision set. It should not be exposed to every user in one untestable store update. Capabilities ship through controlled V2 feature waves and remain under the V2 product definition.
 
+Final disposition: ADR-023 supersedes the Plans/intervention/Spaces workstreams as
+active release surfaces. Their earlier implementation evidence is retained for
+audit, while the shipped UI is Focus + insights + Saved pages.
+
 ## Workstreams
 
 1. Product research and decision acceptance.

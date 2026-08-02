@@ -1,6 +1,6 @@
 /* Tabyss — content script (v2.0)
  *
- * Three jobs, all fully on-device:
+ * Two jobs, both fully on-device:
  *  1. MEDIA DETECTION — classify what's actually happening on the page:
  *     "shorts" (Reels / YT Shorts / TikTok), "video" (real long-form playback),
  *     or "scroll" (sustained feed-scrolling on known feed surfaces). Strict by
@@ -10,12 +10,8 @@
  *  2. BREAK OVERLAY — on command from the worker, blur the page with a
  *     full-screen break card (20-20-20 eye break, water, stand) with
  *     snooze / skip / done actions.
- *  3. MINDFUL GUARD — during a user-started protected Plan, show an accessible
- *     Return / Save for later / Continue choice without reading page content.
- *
  * Nothing here touches page content beyond reading <video> state, counting scroll
- * gestures, and checking the current path locally for sensitive-flow suppression;
- * nothing is sent anywhere except to the extension's own service worker.
+ * gestures; nothing is sent anywhere except to the extension's own service worker.
  */
 (() => {
   "use strict";
@@ -299,97 +295,6 @@
     }
   }
 
-  function guardShouldStayQuiet() {
-    if (document.fullscreenElement) return true;
-    const path = location.pathname.toLowerCase();
-    return /(?:^|\/)(?:auth|checkout|login|payment|signin)(?:\/|$)/.test(path);
-  }
-
-  function showGuard(cfg) {
-    if (guardShouldStayQuiet()) return false;
-    removeOverlay();
-    removePill();
-
-    const host = document.createElement("div");
-    host.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;padding:24px;" +
-      "background:rgba(20,14,28,.54);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);" +
-      "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#251b2e;";
-
-    const card = document.createElement("section");
-    card.setAttribute("role", "dialog");
-    card.setAttribute("aria-modal", "true");
-    card.setAttribute("aria-labelledby", "__tabyssGuardTitle");
-    card.setAttribute("aria-describedby", "__tabyssGuardBody");
-    card.style.cssText =
-      "width:min(440px,100%);padding:26px;border-radius:24px;background:#fcfbfe;" +
-      "border:1px solid rgba(37,27,46,.14);box-shadow:0 30px 90px rgba(0,0,0,.32);";
-
-    const brand = document.createElement("div");
-    brand.textContent = "TABYSS · FOCUS CONTRACT";
-    brand.style.cssText = "color:#5b3fd6;font-size:11px;font-weight:800;letter-spacing:.1em;margin-bottom:12px;";
-    const title = document.createElement("h2");
-    title.id = "__tabyssGuardTitle";
-    title.textContent = "Still choosing this tab?";
-    title.style.cssText = "font-size:24px;line-height:1.18;letter-spacing:-.02em;margin:0 0 9px;";
-    const body = document.createElement("p");
-    body.id = "__tabyssGuardBody";
-    body.textContent = cfg?.intention
-      ? `Your plan is “${String(cfg.intention).slice(0, 160)}”. This tab is outside that plan.`
-      : "This tab is outside the plan you chose for this focus session.";
-    body.style.cssText = "font-size:15px;line-height:1.55;color:#62576d;margin:0 0 8px;";
-    const privacy = document.createElement("p");
-    privacy.textContent = "Tabyss checks the address locally. Page content never leaves this device.";
-    privacy.style.cssText = "font-size:12px;line-height:1.45;color:#786c84;margin:0 0 20px;";
-
-    const row = document.createElement("div");
-    row.style.cssText = "display:flex;gap:9px;flex-wrap:wrap;";
-    const button = (label, primary, decision) => {
-      const element = document.createElement("button");
-      element.type = "button";
-      element.textContent = label;
-      element.style.cssText =
-        "min-height:44px;padding:10px 15px;border-radius:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;" +
-        (primary
-          ? "border:1px solid #5b3fd6;background:#5b3fd6;color:#fff;"
-          : "border:1px solid rgba(37,27,46,.16);background:#fff;color:#251b2e;");
-      element.addEventListener("click", () => {
-        send({ type: "GUARD_DECISION", decision, minutes: decision === "continue" ? 10 : undefined });
-        removeOverlay();
-      });
-      return element;
-    };
-    const returnButton = button("Return to plan", true, "return");
-    row.append(
-      returnButton,
-      button("Save for later & return", false, "save"),
-      button("Continue 10 min", false, "continue")
-    );
-    card.append(brand, title, body, privacy, row);
-    const shadow = host.attachShadow({ mode: "closed" });
-    shadow.append(card);
-    (document.body || document.documentElement).append(host);
-    overlayEl = host;
-    returnButton.focus({ preventScroll: true });
-
-    host.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        send({ type: "GUARD_DECISION", decision: "continue", minutes: 5 });
-        removeOverlay();
-        return;
-      }
-      if (event.key === "Tab") {
-        const controls = [...row.querySelectorAll("button")];
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && shadow.activeElement === first) { event.preventDefault(); last.focus(); }
-        else if (!event.shiftKey && shadow.activeElement === last) { event.preventDefault(); first.focus(); }
-      }
-    });
-    return true;
-  }
-
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg?.type === "SHOW_BREAK") {
       showOverlay(msg.cfg);
@@ -397,8 +302,6 @@
     } else if (msg?.type === "SHOW_PREBREAK") {
       showPreBreak(msg.seconds);
       sendResponse({ ok: true });
-    } else if (msg?.type === "SHOW_GUARD") {
-      sendResponse({ ok: true, shown: showGuard(msg.cfg) });
     } else if (msg?.type === "PING") {
       sendResponse({ ok: true });
     }

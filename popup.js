@@ -518,7 +518,7 @@ document.getElementById("wrapped").addEventListener("click", () =>
   chrome.tabs.create({ url: chrome.runtime.getURL("wrapped.html") })
 );
 document.getElementById("opts").addEventListener("click", () => chrome.runtime.openOptionsPage());
-document.getElementById("commandCenter").addEventListener("click", async () => {
+document.getElementById("savedPages").addEventListener("click", async () => {
   try {
     const win = await chrome.windows.getCurrent();
     await chrome.sidePanel.open({ windowId: win.id });

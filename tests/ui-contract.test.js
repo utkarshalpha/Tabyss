@@ -26,3 +26,18 @@ for (const page of pages) {
     assert.deepEqual(missing, [], `${page} has references to missing element ids`);
   });
 }
+
+test("Saved pages replaces the multi-section Command Center with accessible controls", () => {
+  const html = fs.readFileSync(path.join(root, "sidepanel.html"), "utf8");
+  const js = fs.readFileSync(path.join(root, "sidepanel.js"), "utf8");
+  assert.match(html, /<h1 id="savedPageTitle">Saved pages<\/h1>/);
+  assert.match(html, /aria-label="Filter saved pages"/);
+  assert.match(html, /data-saved-filter="saved"[^>]+aria-pressed="true"/);
+  assert.match(js, /setAttribute\("aria-pressed", String\(active\)\)/);
+  for (const retiredId of ["profileSelect", "planList", "spaceList", "checkpointList", "impactDays", "contractDialog"]) {
+    assert.doesNotMatch(html, new RegExp(`id="${retiredId}"`));
+  }
+  for (const retiredLabel of ["Return Capsules", "Plans", "Spaces", "Tab recovery"]) {
+    assert.doesNotMatch(html, new RegExp(retiredLabel));
+  }
+});

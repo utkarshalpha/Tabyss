@@ -8,6 +8,28 @@ Every implementation wave must add an entry here so the prompt method, durable
 decision, code branch, and verification record stay connected rather than living
 only in chat.
 
+### 2026-08-02 — Saved Pages product simplification
+
+- **Owner decision:** remove audit items 1-6 from the user-facing product: Profiles,
+  manual checkpoints, Recovery navigation, side-panel outcome metrics, reusable
+  Plans, and Spaces. Keep Later, but rename and simplify it.
+- **Selected product:** the popup owns quick Focus, the dashboard owns insights, and
+  the side panel owns one job called Saved pages.
+- **UX decision:** one save form, one optional note, one list, three plain filters,
+  and direct Open / Mark completed / Save again / Delete actions. No metaphor or
+  architecture terms are exposed.
+- **Accessibility decision:** visible form label, native controls, `aria-pressed`
+  filter state, live status and count announcements, busy state, keyboard focus,
+  and 38px-or-larger filter targets.
+- **Compatibility decision:** show saved pages from every former Profile; preserve
+  validated legacy Plan/Space/checkpoint data in local storage and exports instead
+  of deleting it; stop Plan schedules and guard injection.
+- **Surface decision:** retain `sidePanel` and the existing keyboard command, but
+  rename their user-facing purpose to Saved pages.
+- **Evidence:** [ADR-023](docs/v2/decisions/ADR-023-saved-pages-simplification.md),
+  UI absence/accessibility contract, rendered save/complete/filter QA, full release
+  verification, and deterministic package hash.
+
 ### 2026-08-02 — Original V1.5 logo restoration
 
 - **Owner direction:** keep the exact logo used in V1.5 rather than the regenerated

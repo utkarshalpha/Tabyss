@@ -2,6 +2,11 @@
 
 All capabilities belong to the V2 program. Classification controls packaging and rollout, not a hypothetical future major version.
 
+> Final release override: ADR-023 retires Profiles, Plans, schedules, Spaces,
+> Focus Contracts, drift guard, duplicate/manual recovery UI, and side-panel metrics.
+> They remain here as evaluated V2 opportunities, not shipped product claims. Saved
+> pages, quick Focus, insights, wellbeing, and local data control are active.
+
 ## Packaging levels
 
 - Core: enabled in the standard local product after onboarding.

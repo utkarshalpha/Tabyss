@@ -2,7 +2,9 @@
 
 ## Executive decision frame
 
-Tabyss V2 should move from a passive browser-usage dashboard to a local-first intentional-browsing system. The extension should understand behavior, let the user define intent, intervene at the right moment, organize the browser workspace, and show whether the intervention helped.
+Tabyss V2 moves from a passive browser-usage dashboard to a local-first intentional-
+browsing product with three understandable jobs: understand time, focus on one
+thing, and save a page for later. ADR-023 is the final release-scope decision.
 
 ## Current verified foundation
 
@@ -30,10 +32,10 @@ V2 should preserve these strengths while making the product actionable and easie
 
 ## Core loop
 
-1. Plan: choose an intention, rule, or outcome.
-2. Focus: open the relevant workspace and protect the session.
-3. Recover: detect drift and offer a proportionate intervention.
-4. Reflect: explain the result and improve the next plan.
+1. Understand: see where browser time went.
+2. Focus: choose one intention and run a timer or stopwatch.
+3. Save: keep a useful page without keeping its tab open.
+4. Reflect: review the day and weekly rhythm privately.
 
 ## Strategic pillars
 
@@ -63,14 +65,12 @@ A Chrome extension can influence Chrome tabs and pages. It cannot reliably block
 
 ## In scope
 
-- Intentions, plans, goals, schedules, and profiles.
-- Focus sessions, Pomodoro/flow timing, allowlists, blocklists, and graduated strictness.
-- Mindful interventions and supported-site feed controls.
+- Quick intentions, focus sessions, timer/stopwatch, goals, and local insights.
+- Saved pages with optional notes and completed state.
 - Local session timeline and explainable analytics.
-- Tab workspaces, save/restore, snooze, grouping, duplicate/stale cleanup, and crash recovery.
 - Lightweight browser task capture and optional third-party task/calendar connections.
 - Wellbeing routines and context-aware suppression.
-- Optional new-tab Focus Home and persistent side-panel Command Center.
+- Persistent Saved pages side panel.
 - Accessibility, localization readiness, diagnostics, migration, and production lifecycle.
 - Optional connected backup/sync or friend accountability only if separately approved.
 

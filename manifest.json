@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tabyss — Intentional Browsing",
   "version": "2.0.0",
-  "description": "Turn tabs into intentional plans, reusable Spaces, calm focus, and reversible recovery — private and on-device.",
+  "description": "Understand your browsing, focus on one thing, and save pages for later — private and on-device.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "storage", "idle", "alarms", "notifications", "favicon", "sidePanel"],
   "background": { "service_worker": "background.js" },
@@ -22,7 +22,7 @@
   "commands": {
     "open-command-center": {
       "suggested_key": { "default": "Alt+Shift+T" },
-      "description": "Open the Tabyss Command Center"
+      "description": "Open Tabyss Saved Pages"
     }
   },
   "options_ui": { "page": "options.html", "open_in_tab": true },

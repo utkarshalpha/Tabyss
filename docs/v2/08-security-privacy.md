@@ -20,7 +20,8 @@ The user should be able to determine:
 ### Restricted
 
 - Domains and session timeline.
-- Tab URLs and titles in Spaces.
+- Saved page URLs, titles, and optional notes.
+- Preserved compatibility Plan/Space/checkpoint records from earlier local V2 builds.
 - Captured selected text, tasks, and notes.
 - Profile and plan names.
 - Optional integration tokens.

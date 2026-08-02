@@ -48,7 +48,8 @@ Risks:
 
 Every user can see their intentional outcomes locally even if product analytics is disabled. Disabling telemetry must not remove personal metrics.
 
-Final local V2 implements this without telemetry in the Command Center:
+Final local V2 calculates these diagnostics locally but keeps them in research and
+dashboard documentation rather than presenting a `0/3` target in Saved pages:
 
 - **Intentional outcome days:** distinct days in the trailing local seven-day window
   with a user-marked completed focus session or a successful Return-to-plan choice.
@@ -56,8 +57,8 @@ Final local V2 implements this without telemetry in the Command Center:
   metric.
 - **Supporting signals:** intentional focus minutes and successful returns in the
   same window.
-- **Separate diagnostics:** saved Return Capsules, plan starts, passive Focus Score,
-  and tracked time are useful context but do not automatically count as success.
+- **Separate diagnostics:** Saved pages, passive Focus Score, and tracked time are
+  useful context but do not automatically count as success.
 
 No event is transmitted, no installation identifier exists, and Tabyss cannot claim
 cohort retention, conversion, or feature-funnel performance from this build. The
