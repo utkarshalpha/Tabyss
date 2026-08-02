@@ -21,7 +21,7 @@ function svg(tag, attrs) {
   return e;
 }
 
-/* ---------- intention-first focus session ---------- */
+/* ---------- simple intentional session ---------- */
 let focusSnapshot = null;
 let focusTimer = null;
 let focusCheckoutOpen = false;
@@ -29,7 +29,7 @@ let focusReviewRequested = false;
 
 function showFocusError(message) {
   const box = document.getElementById("focusError");
-  box.textContent = message || "The focus session could not be updated.";
+  box.textContent = message || "The session could not be updated.";
   box.hidden = false;
 }
 
@@ -113,16 +113,18 @@ function renderFocus(data) {
   focusSnapshot = data.focus || null;
   populateRecentIntentions(Array.isArray(data.focusSessions) ? data.focusSessions : []);
   if (data.focusHistoryAvailable === false) {
-    showFocusError("Focus history could not be validated. Restore a known-good backup or clear local data before starting another session.");
+    showFocusError("Session history could not be validated. Restore a known-good backup or clear local data before starting another session.");
   }
   const create = document.getElementById("focusCreate");
   const activeBox = document.getElementById("focusActive");
   const status = document.getElementById("focusStatus");
+  const heading = document.getElementById("focusHeading");
   if (focusTimer) clearInterval(focusTimer);
   focusTimer = null;
   focusReviewRequested = false;
 
   if (!focusSnapshot) {
+    heading.textContent = "Start a session";
     create.hidden = false;
     activeBox.hidden = true;
     status.hidden = true;
@@ -130,18 +132,16 @@ function renderFocus(data) {
     return;
   }
 
+  heading.textContent = "Current session";
   create.hidden = true;
   activeBox.hidden = false;
   status.hidden = false;
   status.textContent = {
-    running: "In focus",
+    running: "Running",
     paused: "Paused",
     review: "Ready to review",
-  }[focusSnapshot.status] || "Focus session";
+  }[focusSnapshot.status] || "Session";
   document.getElementById("focusTitle").textContent = focusSnapshot.intention;
-  const success = document.getElementById("focusSuccessView");
-  success.textContent = focusSnapshot.successDefinition || "";
-  success.hidden = !focusSnapshot.successDefinition;
 
   const pause = document.getElementById("focusPause");
   pause.textContent = focusSnapshot.status === "paused" ? "Resume" : "Pause";
@@ -171,13 +171,13 @@ document.getElementById("focusCreate").addEventListener("submit", async (event) 
   try {
     const data = await focusRequest("START_FOCUS", {
       intention: document.getElementById("focusIntention").value,
-      successDefinition: document.getElementById("focusSuccess").value,
+      successDefinition: "",
       mode: duration === "stopwatch" ? "stopwatch" : "timer",
       targetMinutes: duration === "stopwatch" ? null : Number(duration),
     });
     focusCheckoutOpen = false;
     renderFocus(data);
-    announceFocus("Focus session started.");
+    announceFocus("Session started.");
   } catch (error) {
     showFocusError(error.message);
   } finally {
@@ -189,7 +189,7 @@ document.getElementById("focusPause").addEventListener("click", async () => {
   try {
     const type = focusSnapshot?.status === "paused" ? "RESUME_FOCUS" : "PAUSE_FOCUS";
     renderFocus(await focusRequest(type));
-    announceFocus(type === "RESUME_FOCUS" ? "Focus session resumed." : "Focus session paused.");
+    announceFocus(type === "RESUME_FOCUS" ? "Session resumed." : "Session paused.");
   } catch (error) { showFocusError(error.message); }
 });
 
@@ -197,7 +197,7 @@ document.getElementById("focusExtend").addEventListener("click", async () => {
   try {
     focusCheckoutOpen = false;
     renderFocus(await focusRequest("EXTEND_FOCUS", { minutes: 10 }));
-    announceFocus("Focus session extended by 10 minutes.");
+    announceFocus("Session extended by 10 minutes.");
   } catch (error) { showFocusError(error.message); }
 });
 
@@ -218,20 +218,18 @@ async function closeFocus(type, announcement) {
   try {
     const data = await focusRequest(type, {
       note: document.getElementById("focusNote").value,
-      reason: type === "ABANDON_FOCUS" ? document.getElementById("focusReason").value : "",
+      reason: "",
     });
     document.getElementById("focusNote").value = "";
-    document.getElementById("focusReason").value = "";
     document.getElementById("focusIntention").value = "";
-    document.getElementById("focusSuccess").value = "";
     focusCheckoutOpen = false;
     renderFocus(data);
     announceFocus(announcement);
   } catch (error) { showFocusError(error.message); }
 }
 
-document.getElementById("focusComplete").addEventListener("click", () => closeFocus("COMPLETE_FOCUS", "Focus session marked completed."));
-document.getElementById("focusAbandon").addEventListener("click", () => closeFocus("ABANDON_FOCUS", "Focus session ended unfinished."));
+document.getElementById("focusComplete").addEventListener("click", () => closeFocus("COMPLETE_FOCUS", "Session completed."));
+document.getElementById("focusAbandon").addEventListener("click", () => closeFocus("ABANDON_FOCUS", "Session ended."));
 
 function categoryTotals(usageDay, overrides) {
   const totals = {};

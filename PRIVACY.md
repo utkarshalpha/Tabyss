@@ -16,9 +16,10 @@ To show you how you spend time online, Tabyss records, **locally on your compute
   never reads or stores page content, text you type, or full URLs.
 - **Wellness counts** per day: eye breaks taken/skipped, water and stand-up
   reminders completed.
-- **Intentional focus data you enter:** the current intention, optional definition
-  of done, timer/stopwatch state, and completed/unfinished session outcomes with
-  optional reason and note. These fields are never taken from page content.
+- **Intentional session data you enter:** what you are working on, timer/stopwatch
+  state, completed/ended outcome, and an optional result or next-step note. Earlier
+  local V2 session records may also retain a definition of done or ending reason for
+  compatibility. These fields are never taken from page content.
 - **Saved pages:** when you choose **Save current page**, Tabyss stores that page's
   full HTTP(S) URL, title, optional note, saved/completed state, and timestamps so
   you can return later. These records are bounded, exclude Incognito, reject

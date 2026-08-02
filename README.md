@@ -1,7 +1,8 @@
 # ⏳ Tabyss — Intentional Browsing
 
-**A privacy-first browser extension for understanding your time, focusing on one
-thing, and saving pages for later.** Focus sessions, browsing insights, Saved pages,
+**A privacy-first browser extension for understanding your time, running a simple
+session when it helps, and saving pages for later.** Browsing insights, optional
+sessions, Saved pages,
 wellbeing breaks, and a weekly Wrapped-style recap are computed
 **entirely on your device**. No account. No server.
 **Zero network requests.**
@@ -17,7 +18,7 @@ wellbeing breaks, and a weekly Wrapped-style recap are computed
 | | |
 |---|---|
 | 🔖 **Saved pages** | Save the current page with an optional note, then open, complete, save again, filter, or delete it from one accessible side panel; site favicons come from Chrome's local cache |
-| ✅ **Intentional focus sessions** | Set a one-line intention, choose a timer or open-ended session, pause/resume/extend, then check out as completed or unfinished with an optional local note |
+| ✅ **Optional intentional sessions** | Enter what you are doing, choose a timer or open-ended session, then pause, extend, complete, or end it with an optional local note |
 | 🎭 **Browsing Personality** | 50+ personas from 6 archetypes × 4 rhythms × 4 intensities, computed weekly from real patterns, each with deterministic generative avatar art |
 | ✨ **Weekly Wrapped** | A 9-slide full-screen recap with a locally rendered 1080×1080 share card (categories only by default — sites are opt-in) |
 | 🎯 **Focus Score** | Daily 0–100 from productive share + tab discipline − rabbit holes; honest "warming up" state under 30 minutes |

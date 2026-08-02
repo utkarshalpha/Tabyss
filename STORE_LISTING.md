@@ -6,7 +6,7 @@ Everything you need to paste into the Web Store Developer Dashboard.
 `Tabyss — Intentional Browsing`
 
 ## Summary (short description, ≤ 132 chars)
-`Understand your browsing, focus on one thing, and save pages for later — private, local, and account-free.`
+`Understand your browsing, use a simple optional timer, and save pages for later — private, local, and account-free.`
 
 ## Category
 Productivity
@@ -14,14 +14,14 @@ Productivity
 ## Detailed description
 > **Turn a crowded browser into one clear intention.**
 >
-> Tabyss connects three simple jobs: understand where your browser time goes, focus
-> on one thing, and save a page for later without keeping its tab open. Everything
+> Tabyss connects three simple jobs: understand where your browser time goes, use an
+> optional timer when it helps, and save a page for later without keeping its tab open. Everything
 > runs on your device. There is no account, server, telemetry, or cloud requirement.
 >
 > **What you get**
 > • **Saved pages** — save the current page with an optional note; open, complete,
 >   save again, filter, or delete it from one accessible side panel
-> • **Intentional sessions** — timer or open-ended focus with honest checkout
+> • **Intentional sessions** — a simple optional timer or open-ended session with honest checkout
 > • **Your Browsing Personality** — 50+ personas computed weekly from your patterns
 > • **Weekly Wrapped** — a full-screen recap with a shareable card (saved locally)
 > • **Focus Score** — a daily 0–100 built from productive share and tab discipline
@@ -68,7 +68,7 @@ Productivity
 
 ## Screenshot plan (1280×800, capture 4)
 1. **Saved pages** — save form and favicon list. Caption: "Keep the page, not the tab."
-2. **Focus session** — intention and timer controls. Caption: "One thing at a time."
+2. **Intentional session** — the compact task and timer controls. Caption: "A timer when it helps."
 3. **Weekly Wrapped** — persona and local recap. Caption: "See your browsing rhythm."
 4. **Dashboard** — category, focus, and wellbeing insights. Caption: "Your day, understood privately."
 

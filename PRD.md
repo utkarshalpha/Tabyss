@@ -81,10 +81,10 @@ manual unpacked-extension and policy gates in `QA_CHECKLIST.md`.
 
 | ID | Requirement | Acceptance |
 |----|-------------|-----------|
-| V2-FR-1 | Quick intention | Required action ≤160 characters; optional definition of done ≤240; recent intentions are reusable |
+| V2-FR-1 | Simple optional session | Today's insight leads; a secondary session card needs one labelled action ≤160 characters, one duration, and Start; recent intentions are reusable |
 | V2-FR-2 | Timer and open-ended focus | 5–240 minute initial timer or stopwatch; elapsed/remaining time derives from persisted timestamps |
 | V2-FR-3 | Session controls | Running sessions can pause, resume, extend by an allowlisted duration, or enter checkout |
-| V2-FR-4 | Honest checkout | Timer expiry enters Review; only the user can mark Completed or End unfinished, with an optional reason/note |
+| V2-FR-4 | Honest checkout | Timer expiry enters Review; only the user can choose Completed or End now, with one optional result/next-step note |
 | V2-FR-5 | Recovery | Popup closure, worker suspension, browser restart, delayed alarms, reset, retention, clear, export, and restore have explicit behavior |
 | V2-FR-6 | Reflection | Dashboard shows active and historical intentional sessions per day without folding them into passive Focus Score |
 | V2-FR-7 | Local privacy | Intentions/outcomes remain in trusted local extension storage; only `sidePanel` is added, with no network request, account, or telemetry |
@@ -98,6 +98,6 @@ V2 deliberately does not claim cloud sync, remote AI, accounts, public or househ
 comparison, employee/parental monitoring, or hard blocking. Those are not hidden
 future toggles: they are absent because a trustworthy implementation requires a real
 identity/service/security/abuse/operations boundary that this local product does not
-have. V2 chooses a timer/open-ended quick Focus action plus Saved pages rather than
+have. V2 chooses an optional timer/open-ended session plus Saved pages rather than
 an unescapable Pomodoro, DNR enforcement, or a general tab-workspace manager. See
 ADR-023 for the final product-surface decision.

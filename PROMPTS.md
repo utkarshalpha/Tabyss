@@ -8,6 +8,26 @@ Every implementation wave must add an entry here so the prompt method, durable
 decision, code branch, and verification record stay connected rather than living
 only in chat.
 
+### 2026-08-02 — Intentional Session simplification
+
+- **Owner decision:** keep Intentional Session, but make it much simpler and give it
+  less emphasis in the popup.
+- **Selected hierarchy:** Today's browsing insight appears first; the session is a
+  neutral secondary utility rather than a branded hero.
+- **Creation decision:** one visible “What are you working on?” field, one duration,
+  and Start. Default to 25 minutes; keep 50, 90, and open-ended choices.
+- **Checkout decision:** keep pause, resume, extend, Completed, End now, and one
+  optional note; remove definition-of-done and ending-reason questions from the
+  current popup. Empty compatibility fields are recorded rather than inferred.
+- **Compatibility decision:** retain the restart-safe state machine, storage schema,
+  history, backup, retention, and dashboard support for earlier richer records.
+- **Language/accessibility decision:** use plain Session/Running language, a visible
+  field label, accessible progress name, native controls, and the established focus
+  states without introducing a new permission or data source.
+- **Evidence:** [ADR-024](docs/v2/decisions/ADR-024-simple-optional-session.md), popup
+  simplicity/order contract, rendered popup review, full verification gate, and
+  deterministic package hash.
+
 ### 2026-08-02 — Saved Pages product simplification
 
 - **Owner decision:** remove audit items 1-6 from the user-facing product: Profiles,

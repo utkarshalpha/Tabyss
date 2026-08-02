@@ -46,13 +46,16 @@ Run before every store submission. Load unpacked from `chrome://extensions`
       the Incognito domain and time never appear in popup, dashboard, or export.
 
 ## Popup
-- [ ] Create a 25/50/90-minute focus session with a one-line intention; the form is
+- [ ] Today's insight appears before the quieter Intentional Session card; no hero
+      marketing headline, definition-of-done field, or ending-reason selector appears.
+- [ ] Create a 25/50/90-minute or open-ended session with a one-line task; 25 minutes
+      is the default, the form is
       replaced by the active controls and reopening the popup preserves the session.
 - [ ] Open-ended mode counts upward; timer mode counts down; neither drifts after
       closing/reopening the popup or sleeping/waking the machine.
 - [ ] Pause freezes elapsed time; Resume continues it; +10 min changes a timer target.
-- [ ] Check out as Completed and End unfinished both create the correct dashboard
-      outcome; optional definition, reason, and note render safely as text.
+- [ ] Completed and End now both create the correct dashboard outcome; the optional
+      result/next-step note renders safely as text and no unstated reason is inferred.
 - [ ] Timer expiry enters Review and does not auto-complete; extend resumes it.
 - [ ] Reload the extension and restart Chrome during running and paused sessions;
       state recovers and the focus alarm is recreated from timestamps.

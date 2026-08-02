@@ -41,3 +41,23 @@ test("Saved pages replaces the multi-section Command Center with accessible cont
     assert.doesNotMatch(html, new RegExp(retiredLabel));
   }
 });
+
+test("popup keeps the optional intentional session simple and secondary", () => {
+  const html = fs.readFileSync(path.join(root, "popup.html"), "utf8");
+  const js = fs.readFileSync(path.join(root, "popup.js"), "utf8");
+  assert.ok(html.indexOf('class="today-card"') < html.indexOf('class="focuscard"'), "Today should lead the popup");
+  assert.match(html, /<h2 id="focusHeading">Start a session<\/h2>/);
+  assert.match(html, /An optional timer for what you are doing now\./);
+  assert.match(html, /<option value="25" selected>25 min<\/option>/);
+  assert.match(html, />Start<\/button>/);
+  assert.match(html, /aria-label="Session progress"/);
+  assert.match(js, /successDefinition: ""/);
+  assert.match(js, /reason: ""/);
+  for (const removedId of ["focusSuccess", "focusSuccessView", "focusReason"]) {
+    assert.doesNotMatch(html, new RegExp(`id="${removedId}"`));
+    assert.doesNotMatch(js, new RegExp(`getElementById\\("${removedId}"\\)`));
+  }
+  for (const removedCopy of ["One thing at a time", "Make space for what matters", "Add a finish line", "End unfinished"]) {
+    assert.doesNotMatch(html, new RegExp(removedCopy));
+  }
+});

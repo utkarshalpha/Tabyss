@@ -14,7 +14,7 @@ Complete the Chrome-extension V2 as one understandable local product. The final
 owner-reviewed loop is:
 
 1. Understand browser time in the popup and dashboard.
-2. Start one timer or open-ended Focus session from the popup.
+2. Optionally start one simple timer or open-ended session from the popup.
 3. Save the current page with an optional note instead of keeping its tab open.
 4. Return through one Saved pages list, then complete, save again, or delete it.
 
@@ -26,6 +26,9 @@ Recovery architecture as navigation.
 - [ADR-023](../decisions/ADR-023-saved-pages-simplification.md) is the final product-
   surface decision: Focus in the popup, insights in the dashboard, and one Saved
   pages side panel. It supersedes ADR-021's broader visible feature set.
+- [ADR-024](../decisions/ADR-024-simple-optional-session.md) puts Today before a
+  quieter optional session and reduces setup to one task, one duration, and Start.
+  It supersedes ADR-019/020 only for popup hierarchy and input scope.
 - [ADR-022](../decisions/ADR-022-original-v1-5-brand-mark.md) restores the exact V1.5
   runtime logo and supersedes only ADR-020's regenerated-icon clause.
 - [ADR-021](../decisions/ADR-021-final-local-v2-architecture.md) remains the historical
@@ -57,6 +60,19 @@ Recovery architecture as navigation.
 - Visible labels, live feedback/counts, busy state, keyboard focus, minimum target
   sizing, and narrow-layout stacking make the surface accessible without onboarding.
 
+### Optional intentional session
+
+- Today's local browsing insight leads the popup; the session is a neutral secondary
+  card rather than a branded hero.
+- Starting requires one visibly labelled task and one duration. The default is 25
+  minutes, with 50, 90, and open-ended choices retained.
+- Pause/resume, ten-minute extension, Finish session, Completed, End now, and one
+  optional result/next-step note remain. Definition-of-done and ending-reason
+  questions are absent from new popup sessions.
+- The persisted state machine and historical schema remain compatible, so earlier
+  richer records stay readable, exportable, and subject to the same recovery and
+  retention rules.
+
 ### Retired compatibility features
 
 - Profiles, Plans, Spaces, Plan schedules, drift guard, Focus Contracts, outcome
@@ -64,7 +80,7 @@ Recovery architecture as navigation.
   active product surfaces.
 - Existing records remain validated, local, and exportable to avoid destructive
   migration. Plan schedule notifications and guard activation are disabled.
-- Quick Focus remains authoritative in the popup; reflection remains in dashboard.
+- The optional session stays in the popup; reflection remains in the dashboard.
 
 ## Data contracts, privacy, and permissions
 
@@ -98,18 +114,25 @@ Recovery architecture as navigation.
 
 - `verify.ps1`: pass.
 - JavaScript syntax: all runtime/test JavaScript passes `node --check`.
-- Node suite: **46/46 pass**.
+- Node suite: **47/47 pass**.
 - Covered boundaries include sender authorization, Incognito, ignore domains,
   notification redaction, focus recovery, compatibility records, reset/retention,
   product schema/URL limits, backup/import safety, manifest/package policy, zero-
   network policy, five-page UI reference/accessibility contracts, and explicit
   absence of the retired side-panel concepts.
 - V2 documentation links and git whitespace: pass.
-- Deterministic runtime package: 19 allowlisted files, 95.8 KB, identical builds:
-  `e777c39e697f6e82d05d50dec2ee3f2339f1dfeb60faeda79755f0de087ea32c`.
+- Deterministic runtime package: 19 allowlisted files, 95.5 KB, identical builds:
+  `0404ea8eeef1846185a17602999e3c3d15ef7038efa96f31ce17583247c14364`.
 
 ### Rendered browser adapter
 
+- Dark-mode popup rendered with Today first and a visually neutral Intentional
+  Session card second. The accessibility tree exposed level-one Today and level-two
+  Start/Current session headings, a visible task label, selected 25-minute default,
+  and a named Session progress bar.
+- Exercised: enter task, Start, active Current session state, Finish session, End now,
+  announcement, and return to the cleared creation form without a definition or
+  reason question.
 - Dark-mode Saved pages rendered with Calm Optimistic tokens, the restored V1.5
   mark, an empty state, and local test data.
 - Exercised: optional note, Save current page, form reset, live success status,

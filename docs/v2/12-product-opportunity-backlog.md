@@ -9,7 +9,7 @@ Most productivity extensions specialize in one layer. The final owner-reviewed
 Tabyss product intentionally connects only three understandable jobs:
 
 1. Understand where browser time goes.
-2. Focus on one thing.
+2. Optionally time one current task.
 3. Save a page for later without keeping its tab open.
 
 The core magic moment is: **I kept the useful page without keeping the distracting
@@ -17,12 +17,13 @@ tab open.**
 
 ## Final local V2 disposition
 
-ADR-023 defines the final local V2 build:
+ADR-023 and ADR-024 define the final local V2 build:
 
 - Implemented: one Saved pages side panel, optional note, favicon identity,
-  Saved/Completed/All filters, open/complete/save-again/delete actions, quick Focus,
-  honest checkout, browsing insights, and local compatibility preservation.
-- Integrated from the existing product: quick intention, timer/stopwatch recovery,
+  Saved/Completed/All filters, open/complete/save-again/delete actions, an optional
+  simple session, honest checkout, browsing insights, and local compatibility
+  preservation.
+- Integrated from the existing product: timer/stopwatch recovery,
   domain analytics, focus score, media/doomscroll classification, wellbeing, goals,
   dashboard, persona, Wrapped, export/import, retention, and clear/reset controls.
 - Retired before release: Profiles, Plans, schedules, Focus Contracts, Spaces,

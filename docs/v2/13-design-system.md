@@ -1,6 +1,7 @@
 # Calm Optimistic Design System
 
-Status: Foundation accepted in ADR-020; ADR-022 restores the original V1.5 mark.
+Status: Foundation accepted in ADR-020; ADR-022 restores the original V1.5 mark;
+ADR-024 makes the popup session secondary and minimal.
 
 ## Brand idea
 
@@ -46,18 +47,18 @@ palette and must always be paired with labels or patterns.
 - Sentence case is the default. Uppercase is reserved for short kickers and never
   used for destructive warnings.
 - Keep body copy at or above 13px in the popup and 14px on full pages.
-- Prefer direct verbs: Begin session, Return to plan, Save for later, Review today.
+- Prefer direct verbs: Start, Finish session, Save current page, Open dashboard.
 
 ## State vocabulary
 
 | Runtime state | User-facing language |
 |---|---|
-| No active focus | Ready when you are |
-| Running | In focus |
+| No active session | Start a session |
+| Running | Running |
 | Paused | Paused |
 | Timer elapsed | Ready to review |
-| Completed | Finished as planned |
-| Abandoned | Ended unfinished |
+| Completed | Completed |
+| Abandoned | Ended |
 | Sparse data | Still learning your rhythm |
 | Error | Say what stayed safe and the next recovery action |
 
@@ -68,8 +69,8 @@ palette and must always be paired with labels or patterns.
 - **Secondary button:** neutral surface and border; never visually competes with the
   primary action.
 - **Quiet action:** text/icon action for navigation or optional detail.
-- **Focus card:** the first popup card; holds intention, duration, finish line, or
-  live controls.
+- **Session card:** a neutral secondary popup card; holds one task, one duration, or
+  compact live controls. It is optional and must not use hero treatment.
 - **Today card:** compact total, intentional/productive context, focus ring, and up
   to two next cues.
 - **Disclosure:** secondary analytics and controls use a clearly named native
@@ -81,8 +82,8 @@ palette and must always be paired with labels or patterns.
 ## Popup information hierarchy
 
 1. Brand and private/local state.
-2. One primary focus/intention action or the active session.
-3. Compact Today snapshot and next cue.
+2. Compact Today snapshot and next cue.
+3. One secondary optional session action or the active session.
 4. Expandable browsing details, persona, categories, goals, sites, and Office Mode.
 5. Weekly story and destructive reset as quiet footer actions.
 

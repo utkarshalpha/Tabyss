@@ -35,9 +35,14 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
   contracts, including an explicit absence test for retired side-panel concepts.
 
 ### Intentional focus
+- Simplified the popup session to one task, one duration, and Start; Today's insight
+  now leads the popup and the session uses a quieter secondary card.
+- Removed definition-of-done and ending-reason questions from new popup sessions,
+  made 25 minutes the default, and kept pause, extend, Completed, End now, and one
+  optional note. Earlier richer records remain readable and portable.
 - Added an intention-first popup flow with 25/50/90-minute timers or an open-ended
-  stopwatch, optional definition of done, pause/resume, ten-minute extension, and
-  explicit completed/unfinished checkout with an optional local note.
+  stopwatch, pause/resume, ten-minute extension, and explicit completed/ended
+  checkout with an optional local note.
 - Added a per-day dashboard reflection panel that keeps chosen focus sessions
   distinct from passive browsing analytics.
 - Active sessions recover across popup closure, worker suspension, and browser
