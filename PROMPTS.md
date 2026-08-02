@@ -36,6 +36,24 @@ Output:
 Rules: Chrome-extension-only core; local-first; no new dependency or permission without a decision.
 ```
 
+## Implementation wave
+
+```text
+Role: Senior product engineer, product manager, designer, security reviewer, and release owner.
+Task: Implement Tabyss V2 Wave [N] on its own codex/v2-* branch.
+Inputs: Current repository, accepted ADRs, docs/v2 feature requirements, prior build records.
+Steps:
+1. Verify current behavior and write the concrete exit gate.
+2. Record every durable choice as an ADR; do not silently accept unrelated Proposed ADRs.
+3. Implement the smallest coherent end-to-end vertical slice, including denied/error/recovery states.
+4. Update schema/migration/backup behavior and privacy/permission copy when affected.
+5. Add unit, integration, browser/UI, accessibility, performance, and manual QA evidence in proportion to risk.
+6. Self-review security boundaries, races, data loss, hostile inputs, worker suspension, and rollback.
+7. Write docs/v2/builds/wave-[N]-*.md with branch, decisions, files, evidence, limitations, and recovery.
+8. Commit only after checks pass; never hide a failed or manual-only gate.
+Rules: Core stays local-first and Chrome-extension-only. No dependency, permission, telemetry, connection, or remote code without an Accepted ADR.
+```
+
 ## Architecture decision
 
 ```text

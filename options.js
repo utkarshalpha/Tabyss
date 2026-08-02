@@ -118,8 +118,12 @@ function collect() {
     if (categorize(domain, {}) !== sel.value) overrides[domain] = sel.value;
     else delete overrides[domain];
   }
-  const ignore = document.getElementById("ignore").value
-    .split(/[\n,]/).map((s) => s.trim().replace(/^https?:\/\//, "").replace(/^www\./, "")).filter(Boolean);
+  const ignoreInputs = document.getElementById("ignore").value
+    .split(/[\n,]/).map((value) => value.trim()).filter(Boolean);
+  const invalidIgnore = ignoreInputs.find((value) => !normalizeDomainInput(value));
+  if (invalidIgnore) throw new Error(`Invalid ignore entry: ${invalidIgnore}`);
+  if (ignoreInputs.length > 1000) throw new Error("The ignore list can contain at most 1,000 entries.");
+  const ignore = [...new Set(ignoreInputs.map(normalizeDomainInput))];
   const idleSeconds = Math.max(15, Math.min(600, Number(document.getElementById("idle").value) || 60));
   const retentionDays = Math.max(7, Math.min(3650, Number(document.getElementById("retention").value) || 180));
   const sunsetEnabled = document.getElementById("sunsetOn").checked;
@@ -138,59 +142,92 @@ function collect() {
     standIntervalMin: num("standInterval", 15, 240, 60),
     mediaEnabled: document.getElementById("mediaOn").checked,
     recapEnabled: document.getElementById("recapOn").checked,
+    notificationDetails: document.getElementById("notificationDetails").checked,
   };
 }
 
 async function save() {
   // read-merge-write: never clobber keys another surface (popup toggle) wrote
-  settings = Object.assign({}, DEFAULT_SETTINGS, await getSettings(), collect());
+  settings = sanitizeSettings(Object.assign({}, await getSettings(), collect()));
   await chrome.storage.local.set({ settings });
-  chrome.runtime.sendMessage({ type: "SETTINGS_CHANGED" });
+  let refreshFailed = false;
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "SETTINGS_CHANGED" });
+    refreshFailed = !response || response.ok !== true;
+  } catch (_) {
+    refreshFailed = true;
+  }
   const saved = document.getElementById("saved");
   saved.style.display = "";
   setTimeout(() => (saved.style.display = "none"), 1800);
   renderAssign();
+  return { refreshFailed };
 }
 
-document.getElementById("save").addEventListener("click", save);
-
-document.getElementById("export").addEventListener("click", async () => {
-  const all = await chrome.storage.local.get([
-    "usage", "hours", "switches", "holes", "notified", "media", "wellness", "settings",
-  ]);
-  const blob = new Blob([JSON.stringify({ ...all, exportedFrom: "Tabyss" }, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `tabyss-export-${dateKey(Date.now())}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+document.getElementById("save").addEventListener("click", async () => {
+  try {
+    const result = await save();
+    if (result.refreshFailed) {
+      alert("Settings were saved, but background behavior could not refresh. Reload the extension before relying on the new timing rules.");
+    }
+  } catch (error) {
+    alert(`Settings not saved. ${error && error.message ? error.message : "Please review the form and try again."}`);
+  }
 });
 
-document.getElementById("importFile").addEventListener("change", (e) => {
+function downloadJson(payload, filename) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 0);
+}
+
+async function readBackupData() {
+  return chrome.storage.local.get(EXPORT_DATA_KEYS);
+}
+
+async function sendWorkerRequest(message) {
+  const response = await chrome.runtime.sendMessage(message);
+  if (!response || response.ok !== true) throw new Error(response?.error || "The background worker did not accept the request.");
+  return response;
+}
+
+document.getElementById("export").addEventListener("click", async () => {
+  const all = await readBackupData();
+  downloadJson(buildExportPayload(all), `tabyss-export-${dateKey(Date.now())}.json`);
+});
+
+document.getElementById("importFile").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    try {
-      const data = JSON.parse(reader.result);
-      const patch = {};
-      if (data.usage) patch.usage = data.usage;
-      if (data.hours) patch.hours = data.hours;
-      if (data.switches) patch.switches = data.switches;
-      if (data.holes) patch.holes = data.holes;
-      if (data.notified) patch.notified = data.notified;
-      if (data.media) patch.media = data.media;
-      if (data.wellness) patch.wellness = data.wellness;
-      if (data.settings) patch.settings = data.settings;
-      await chrome.storage.local.set(patch);
-      settings = await getSettings();
-      init();
-      alert("Import complete.");
-    } catch {
-      alert("That file isn't a valid Tabyss export.");
-    }
-  };
-  reader.readAsText(file);
+  e.target.value = "";
+  if (file.size > IMPORT_MAX_FILE_BYTES) {
+    alert(`That backup is too large. Tabyss accepts files up to ${Math.round(IMPORT_MAX_FILE_BYTES / 1024 / 1024)} MB.`);
+    return;
+  }
+  try {
+    const data = JSON.parse(await file.text());
+    const preview = validateImportData(data);
+    const warningText = preview.warnings.length ? `\n\n${preview.warnings.join("\n")}` : "";
+    const confirmed = confirm(
+      `Restore ${preview.importedKeys.join(", ")} from this backup?\n\n` +
+      "Those data sections will replace their current values. Tabyss will first download a safety backup." + warningText
+    );
+    if (!confirmed) return;
+
+    const current = await readBackupData();
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    downloadJson(buildExportPayload(current), `tabyss-before-import-${stamp}.json`);
+    const result = await sendWorkerRequest({ type: "IMPORT_DATA", data });
+    await init();
+    const workerWarnings = Array.isArray(result.warnings) && result.warnings.length
+      ? `\n\n${result.warnings.join("\n")}` : "";
+    alert(`Import complete: ${result.importedKeys.join(", ")}.${workerWarnings}`);
+  } catch (error) {
+    alert(`Import stopped. ${error && error.message ? error.message : "That file is not a valid Tabyss backup."}`);
+  }
 });
 
 document.getElementById("clear").addEventListener("click", async (e) => {
@@ -200,18 +237,22 @@ document.getElementById("clear").addEventListener("click", async (e) => {
     setTimeout(() => { clearArmed = false; e.target.textContent = "Clear all data"; }, 3000);
     return;
   }
-  await chrome.storage.local.clear();
-  settings = Object.assign({}, DEFAULT_SETTINGS);
-  clearArmed = false;
-  e.target.textContent = "Clear all data";
-  init();
+  try {
+    await sendWorkerRequest({ type: "CLEAR_ALL_DATA" });
+    settings = sanitizeSettings({});
+    clearArmed = false;
+    e.target.textContent = "Clear all data";
+    await init();
+  } catch (error) {
+    alert(error && error.message ? error.message : "Tabyss could not clear the data.");
+  }
 });
 
 // If another surface (the popup's office-mode toggle) writes settings while
 // this page is open, refresh the form so save() can't revert it.
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" || !changes.settings) return;
-  settings = Object.assign({}, DEFAULT_SETTINGS, changes.settings.newValue || {});
+  settings = sanitizeSettings(changes.settings.newValue);
   document.getElementById("officeOn").checked = !!settings.officeMode;
 });
 
@@ -235,6 +276,7 @@ async function init() {
   document.getElementById("standInterval").value = settings.standIntervalMin || 60;
   document.getElementById("mediaOn").checked = settings.mediaEnabled !== false;
   document.getElementById("recapOn").checked = settings.recapEnabled !== false;
+  document.getElementById("notificationDetails").checked = !!settings.notificationDetails;
   renderGoals();
   await renderAssign();
 }

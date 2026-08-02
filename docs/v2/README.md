@@ -1,6 +1,6 @@
 # Tabyss V2 Product Definition
 
-Status: Proposed product program
+Status: Active product program. Individual proposals remain gated by their ADR status.
 
 This folder defines V2 as a complete Chrome-extension product generation. It does not assume a future major version for essential Chrome-extension functionality. Connected services are considered only as optional extension capabilities and do not weaken local-only operation.
 
@@ -19,6 +19,7 @@ This folder defines V2 as a complete Chrome-extension product generation. It doe
 11. [Research and open questions](10-research-and-open-questions.md)
 12. [V2 master checklist](11-v2-master-checklist.md)
 13. [Decision register](decisions/README.md)
+14. [Build register](builds/README.md)
 
 ## Document rules
 

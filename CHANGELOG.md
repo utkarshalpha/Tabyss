@@ -1,6 +1,24 @@
 # Changelog
 
-All notable changes to TabTime. Format based on Keep a Changelog; versioning is SemVer.
+All notable changes to Tabyss. Format based on Keep a Changelog; versioning is SemVer.
+
+## [Unreleased] — V2 Wave 0: Trust foundation
+### Security & privacy
+- Incognito tabs are excluded from both foreground-time and media tracking.
+- Ignore rules cover the selected domain and its subdomains with label-boundary-safe
+  matching.
+- Site names are hidden from OS notifications by default, with an explicit opt-in.
+- Extension storage is restricted to trusted extension contexts; runtime messages are
+  allowlisted by action and sender type.
+- JSON restores enforce a 5 MB UI limit, a versioned allowlisted schema, bounded
+  values, valid dates/domains/categories, depth/entry limits, and prototype-pollution
+  defenses. The worker validates again before writing.
+- Restore now previews affected sections and downloads a safety backup first; restore,
+  clear, reset, and tracking writes share the same storage mutex.
+
+### Quality
+- Added dependency-free regression tests for domain privacy rules, settings bounds,
+  legacy/current backup compatibility, malformed data, and unsafe object keys.
 
 ## [1.4.0] — 2026-07-27 · "The Refinement Update" (final)
 ### Changed — from real-usage feedback

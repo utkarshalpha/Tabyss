@@ -16,6 +16,12 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Go idle > idle-threshold → tracking pauses; resumes on return.
 - [ ] `chrome://` pages and the new-tab page are not tracked.
 - [ ] A domain in the ignore list is never tracked.
+- [ ] `example.com` in the ignore list also excludes `mail.example.com`, but does
+      not exclude `evil-example.com`.
+- [ ] Invalid ignore input is rejected with a clear error instead of silently
+      pretending the domain is excluded.
+- [ ] Enable Tabyss in Incognito, browse for 2+ min, then return to a regular window:
+      the Incognito domain and time never appear in popup, dashboard, or export.
 
 ## Popup
 - [ ] Shows today total, productive %, category bar + legend, top 5 sites.
@@ -36,11 +42,23 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Notification does not repeat the same day for the same category.
 - [ ] Clicking the notification opens the dashboard.
 - [ ] Popup shows the goal-breach chip.
+- [ ] Daily recap and Digital sunset notifications contain no domain by default.
+- [ ] Enable "Show site names in notifications" → recap/sunset may include the domain;
+      disable it again → details are redacted.
 
 ## Settings / data
 - [ ] Category override changes a site's category everywhere after save.
 - [ ] Ignore list + idle + retention persist across reload.
 - [ ] Export → Clear all → Import restores the data.
+- [ ] Export contains `exportedFrom`, `formatVersion`, `exportedAt`, and all eight
+      restorable sections.
+- [ ] Import preview lists the sections that will change and downloads a
+      `tabyss-before-import-*.json` safety backup before restore.
+- [ ] Canceling the import preview changes nothing and downloads no safety backup.
+- [ ] Import rejects: non-Tabyss JSON, a future format version, invalid dates/hours,
+      negative counters, unsafe `__proto__`/`constructor` keys, and files over 5 MB.
+- [ ] Import and "Clear all data" complete without deleted/live session data
+      reappearing on the next tracking tick.
 - [ ] Retention: entries older than the window are pruned (verify via export).
 
 ## v1.2 — Personality, Wrapped, focus & detectors

@@ -56,7 +56,22 @@ every line of UI, tracking, and artwork is hand-rolled:
   requires both a known feed URL and sustained cadence (≥8 gestures/min).
 - **Privacy as architecture**: no `history` permission, no remote code, no
   telemetry, favicon rendering via Chrome's local cache, and a share card that
-  excludes site names unless explicitly enabled.
+  excludes site names unless explicitly enabled. Incognito activity is excluded,
+  raw storage is restricted to trusted extension contexts, and runtime messages
+  are allowlisted by sender type.
+
+## Test
+
+Run the dependency-free security and data-contract suite:
+
+```powershell
+node --test tests/common.test.js tests/background.test.js
+```
+
+For a local visual smoke test of the real Settings HTML/CSS/JS without installing
+the extension, run `node tests/ui-server.js` and open
+`http://127.0.0.1:4173/options.html`. The adapter is test-only and is not included
+by `package.ps1`. The unpacked-extension checklist remains the release authority.
 
 ## Install
 

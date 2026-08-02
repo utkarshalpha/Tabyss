@@ -494,10 +494,9 @@ document.getElementById("wrappedBtn").addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("wrapped.html") });
 });
 document.getElementById("export").addEventListener("click", () => {
-  const data = JSON.stringify(
-    { usage, hours, switches, holes, notified, media, wellness, settings, exportedFrom: "Tabyss" },
-    null, 2
-  );
+  const data = JSON.stringify(buildExportPayload({
+    usage, hours, switches, holes, notified, media, wellness, settings,
+  }), null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);

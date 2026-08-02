@@ -13,7 +13,7 @@ The owner wants all important Chrome-extension capabilities treated as V2 rather
 - Benefit: Simple external story.
 - Compromise: Unmanageable test matrix, permission shock, weak learning, and high rollback blast radius.
 
-### B. One V2 architecture with controlled feature waves - recommended
+### B. One V2 architecture with controlled feature waves - selected
 
 - Benefit: Everything remains V2 while decisions, migrations, and modules can be validated progressively.
 - Compromise: Requires flags, compatibility discipline, and clear communication about V2 availability.
@@ -23,9 +23,9 @@ The owner wants all important Chrome-extension capabilities treated as V2 rather
 - Benefit: Smaller releases and easier marketing milestones.
 - Compromise: Contradicts the owner's requested product framing and delays foundational coherence.
 
-## Recommendation
+## Decision
 
-Use B. Define all accepted capabilities in V2, maintain one V2 architecture/data contract, and expose modules through dogfood, beta, and staged production waves.
+Use B. Define all accepted capabilities in V2, maintain one V2 architecture/data contract, and expose modules through dogfood, beta, and staged production waves. Each implementation wave uses a separate reviewable `codex/v2-*` branch and writes a build record.
 
 ## Consequences
 
@@ -36,4 +36,4 @@ Use B. Define all accepted capabilities in V2, maintain one V2 architecture/data
 
 ## Status
 
-Proposed.
+Accepted - the owner explicitly requested that all essential work remain V2 and that new builds use separate branches.

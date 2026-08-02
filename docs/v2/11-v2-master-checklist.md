@@ -15,7 +15,7 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] Accept or reject ADR-011 engineering modernization.
 - [ ] Accept or reject ADR-012 permission model.
 - [ ] Accept or reject ADR-013 scoring evolution.
-- [ ] Accept or reject ADR-014 controlled V2 feature waves.
+- [x] Accept ADR-014 controlled V2 feature waves and separate build branches.
 - [ ] Record target users, business model, team capacity, and release constraint.
 
 ## 2. Evidence gate
@@ -36,12 +36,12 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] V2 schema registry established.
 - [ ] Current export samples collected and anonymized for migration tests.
 - [ ] Pre-migration backup and rollback implemented.
-- [ ] Incognito exclusion fixed.
-- [ ] Ignore-domain boundary behavior fixed.
-- [ ] Import validation/staging implemented.
-- [ ] Notification privacy defaults implemented.
+- [x] Incognito exclusion fixed.
+- [x] Ignore-domain boundary behavior fixed.
+- [x] Import validation/staging implemented with a pre-import safety backup.
+- [x] Notification privacy defaults implemented.
 - [ ] Typed message contract established.
-- [ ] Storage access restricted appropriately.
+- [x] Storage access restricted appropriately.
 - [ ] CI and reproducible package established.
 - [ ] Design tokens and accessibility baseline established.
 

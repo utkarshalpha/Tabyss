@@ -161,6 +161,34 @@ function domainMatchesRule(domain, needle) {
   );
 }
 
+/* Canonical host input for settings/imports. Accept a hostname or URL, but
+ * persist only the hostname so paths, ports and credentials never become
+ * tracking rules. */
+function normalizeDomainInput(value) {
+  if (typeof value !== "string") return null;
+  const raw = value.trim();
+  if (!raw || raw.length > 2048) return null;
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (!url.hostname) return null;
+    const domain = url.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+    if (["__proto__", "constructor", "prototype"].includes(domain)) return null;
+    return domain && domain.length <= 253 ? domain : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Ignoring example.com also ignores its subdomains, but never evil-example.com.
+function isIgnoredDomain(domain, rules) {
+  const host = normalizeDomainInput(domain);
+  if (!host) return false;
+  return (Array.isArray(rules) ? rules : []).some((value) => {
+    const rule = normalizeDomainInput(value);
+    return rule && (host === rule || host.endsWith(`.${rule}`));
+  });
+}
+
 /* Bundled offline catalog — exact base-domain → category, compiled from public
  * domain-popularity data. Checked before rules; zero network, updates ship with
  * the extension. */
@@ -301,7 +329,75 @@ const DEFAULT_SETTINGS = {
   waterIntervalMin: 50,
   standIntervalMin: 60,
   recapEnabled: true, // morning "yesterday on Tabyss" notification
+  notificationDetails: false, // domain names may appear on the OS lock screen
 };
+
+function isPlainObject(value) {
+  if (!value || Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function boundedNumber(value, min, max, fallback, integer = true) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  const bounded = Math.max(min, Math.min(max, number));
+  return integer ? Math.round(bounded) : bounded;
+}
+
+/* Settings are read through an allowlist. This prevents stale, malformed or
+ * imported values from becoming executable object keys or unbounded timers. */
+function sanitizeSettings(input) {
+  const source = isPlainObject(input) ? input : {};
+  const overrides = {};
+  if (isPlainObject(source.overrides)) {
+    for (const [rawDomain, category] of Object.entries(source.overrides)) {
+      const domain = normalizeDomainInput(rawDomain);
+      if (domain && CATEGORIES.includes(category)) overrides[domain] = category;
+    }
+  }
+
+  const goals = {};
+  if (isPlainObject(source.goals)) {
+    for (const category of CATEGORIES) {
+      if (category === "Other" || !Object.prototype.hasOwnProperty.call(source.goals, category)) continue;
+      const minutes = boundedNumber(source.goals[category], 0, 1440, 0);
+      if (minutes > 0) goals[category] = minutes;
+    }
+  }
+
+  const ignore = [];
+  const seen = new Set();
+  if (Array.isArray(source.ignore)) {
+    for (const value of source.ignore.slice(0, 1000)) {
+      const domain = normalizeDomainInput(value);
+      if (domain && !seen.has(domain)) {
+        seen.add(domain);
+        ignore.push(domain);
+      }
+    }
+  }
+
+  const bool = (key, fallback) => typeof source[key] === "boolean" ? source[key] : fallback;
+  return {
+    overrides,
+    goals,
+    ignore,
+    idleSeconds: boundedNumber(source.idleSeconds, 15, 600, DEFAULT_SETTINGS.idleSeconds),
+    retentionDays: boundedNumber(source.retentionDays, 7, 3650, DEFAULT_SETTINGS.retentionDays),
+    sunsetEnabled: bool("sunsetEnabled", DEFAULT_SETTINGS.sunsetEnabled),
+    sunsetHour: boundedNumber(source.sunsetHour, 20, 23, DEFAULT_SETTINGS.sunsetHour),
+    mediaEnabled: bool("mediaEnabled", DEFAULT_SETTINGS.mediaEnabled),
+    eyeEnabled: bool("eyeEnabled", DEFAULT_SETTINGS.eyeEnabled),
+    eyeIntervalMin: boundedNumber(source.eyeIntervalMin, 5, 120, DEFAULT_SETTINGS.eyeIntervalMin),
+    eyeSnoozeMin: boundedNumber(source.eyeSnoozeMin, 1, 30, DEFAULT_SETTINGS.eyeSnoozeMin),
+    officeMode: bool("officeMode", DEFAULT_SETTINGS.officeMode),
+    waterIntervalMin: boundedNumber(source.waterIntervalMin, 10, 240, DEFAULT_SETTINGS.waterIntervalMin),
+    standIntervalMin: boundedNumber(source.standIntervalMin, 15, 240, DEFAULT_SETTINGS.standIntervalMin),
+    recapEnabled: bool("recapEnabled", DEFAULT_SETTINGS.recapEnabled),
+    notificationDetails: bool("notificationDetails", DEFAULT_SETTINGS.notificationDetails),
+  };
+}
 
 /* ==================================================================
  * Persona doodle — deterministic generative avatar art.
@@ -421,7 +517,213 @@ function faviconUrl(domain, size) {
 
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
-  return Object.assign({}, DEFAULT_SETTINGS, settings || {});
+  return sanitizeSettings(settings);
+}
+
+/* ---------- portable backup schema ---------- */
+const EXPORT_SCHEMA_VERSION = 2;
+const EXPORT_DATA_KEYS = ["usage", "hours", "switches", "holes", "notified", "media", "wellness", "settings"];
+const IMPORT_MAX_FILE_BYTES = 5 * 1024 * 1024;
+const DANGEROUS_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function buildExportPayload(source) {
+  const data = isPlainObject(source) ? source : {};
+  const out = {
+    exportedFrom: "Tabyss",
+    formatVersion: EXPORT_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+  };
+  for (const key of EXPORT_DATA_KEYS) {
+    if (key === "settings") out.settings = sanitizeSettings(data.settings);
+    else out[key] = isPlainObject(data[key]) ? data[key] : {};
+  }
+  return out;
+}
+
+function importError(path, detail) {
+  throw new Error(`${path}: ${detail}`);
+}
+
+function assertSafeJsonTree(root) {
+  const stack = [{ value: root, depth: 0, path: "export" }];
+  let nodes = 0;
+  while (stack.length) {
+    const { value, depth, path } = stack.pop();
+    if (++nodes > 150000) importError(path, "too many values");
+    if (depth > 12) importError(path, "nested too deeply");
+    if (value == null || typeof value !== "object") continue;
+    if (!Array.isArray(value) && !isPlainObject(value)) importError(path, "must contain plain JSON values");
+    for (const key of Object.keys(value)) {
+      if (DANGEROUS_OBJECT_KEYS.has(key)) importError(path, `unsafe key \"${key}\"`);
+      stack.push({ value: value[key], depth: depth + 1, path: `${path}.${key}` });
+    }
+  }
+}
+
+function validDateKey(key) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return false;
+  const [year, month, day] = key.split("-").map(Number);
+  const value = new Date(year, month - 1, day);
+  return value.getFullYear() === year && value.getMonth() === month - 1 && value.getDate() === day;
+}
+
+function requirePlainMap(value, path, maxKeys) {
+  if (!isPlainObject(value)) importError(path, "must be an object");
+  const keys = Object.keys(value);
+  if (keys.length > maxKeys) importError(path, `contains more than ${maxKeys} entries`);
+  return keys;
+}
+
+function requireCount(value, path, max = 315576000) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > max) {
+    importError(path, `must be a number from 0 to ${max}`);
+  }
+  return Math.round(value);
+}
+
+function sanitizeDomainDayMap(value, path) {
+  const out = {};
+  for (const day of requirePlainMap(value, path, 4000)) {
+    if (!validDateKey(day)) importError(`${path}.${day}`, "invalid date key");
+    const domains = value[day];
+    const clean = {};
+    for (const rawDomain of requirePlainMap(domains, `${path}.${day}`, 5000)) {
+      const domain = normalizeDomainInput(rawDomain);
+      if (!domain) importError(`${path}.${day}.${rawDomain}`, "invalid domain");
+      const count = requireCount(domains[rawDomain], `${path}.${day}.${rawDomain}`);
+      clean[domain] = Math.min(315576000, (clean[domain] || 0) + count);
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeHours(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "hours", 4000)) {
+    if (!validDateKey(day)) importError(`hours.${day}`, "invalid date key");
+    const clean = {};
+    for (const hour of requirePlainMap(value[day], `hours.${day}`, 24)) {
+      const number = Number(hour);
+      if (!/^\d{1,2}$/.test(hour) || number < 0 || number > 23) importError(`hours.${day}.${hour}`, "invalid hour");
+      clean[number] = requireCount(value[day][hour], `hours.${day}.${hour}`, 86400);
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeSwitches(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "switches", 4000)) {
+    if (!validDateKey(day)) importError(`switches.${day}`, "invalid date key");
+    out[day] = requireCount(value[day], `switches.${day}`, 1000000);
+  }
+  return out;
+}
+
+function sanitizeHoles(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "holes", 4000)) {
+    if (!validDateKey(day)) importError(`holes.${day}`, "invalid date key");
+    if (!Array.isArray(value[day]) || value[day].length > 24) importError(`holes.${day}`, "must contain at most 24 entries");
+    out[day] = value[day].map((hole, index) => {
+      const at = `holes.${day}.${index}`;
+      if (!isPlainObject(hole)) importError(at, "must be an object");
+      const domain = normalizeDomainInput(hole.domain);
+      if (!domain) importError(`${at}.domain`, "invalid domain");
+      return {
+        domain,
+        secs: requireCount(hole.secs, `${at}.secs`, 86400),
+        hour: requireCount(hole.hour, `${at}.hour`, 23),
+      };
+    });
+  }
+  return out;
+}
+
+function sanitizeNotified(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "notified", 4000)) {
+    if (!validDateKey(day)) importError(`notified.${day}`, "invalid date key");
+    const clean = {};
+    for (const category of requirePlainMap(value[day], `notified.${day}`, CATEGORIES.length)) {
+      if (!CATEGORIES.includes(category) || typeof value[day][category] !== "boolean") {
+        importError(`notified.${day}.${category}`, "invalid category flag");
+      }
+      clean[category] = value[day][category];
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeMedia(value) {
+  const out = {};
+  const kinds = ["video", "shorts", "scroll"];
+  for (const day of requirePlainMap(value, "media", 4000)) {
+    if (!validDateKey(day)) importError(`media.${day}`, "invalid date key");
+    const clean = {};
+    for (const kind of requirePlainMap(value[day], `media.${day}`, kinds.length)) {
+      if (!kinds.includes(kind)) importError(`media.${day}.${kind}`, "invalid media type");
+      clean[kind] = sanitizeDomainDayMap({ [day]: value[day][kind] }, `media.${kind}`)[day];
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeWellness(value) {
+  const out = {};
+  const fields = new Set(["eyeSkipped", "eyeTaken", "waterDone", "standDone"]);
+  for (const day of requirePlainMap(value, "wellness", 4000)) {
+    if (!validDateKey(day)) importError(`wellness.${day}`, "invalid date key");
+    const clean = {};
+    for (const field of requirePlainMap(value[day], `wellness.${day}`, fields.size)) {
+      if (!fields.has(field)) importError(`wellness.${day}.${field}`, "unknown wellness counter");
+      clean[field] = requireCount(value[day][field], `wellness.${day}.${field}`, 1000000);
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+/* Validate before every restore, including restores requested by extension
+ * pages. The worker calls this again so a compromised page cannot bypass it. */
+function validateImportData(value) {
+  if (!isPlainObject(value)) importError("export", "must be a JSON object");
+  assertSafeJsonTree(value);
+  if (value.exportedFrom !== "Tabyss") importError("exportedFrom", "not a Tabyss backup");
+  if (value.formatVersion != null) {
+    const version = value.formatVersion;
+    if (!Number.isInteger(version) || version < 1) importError("formatVersion", "invalid backup version");
+    if (version > EXPORT_SCHEMA_VERSION) importError("formatVersion", "backup was created by a newer Tabyss version");
+  }
+
+  const importedKeys = EXPORT_DATA_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(value, key));
+  if (!importedKeys.length) importError("export", "contains no restorable Tabyss data");
+  const patch = {};
+  const warnings = [];
+  if (importedKeys.includes("usage")) patch.usage = sanitizeDomainDayMap(value.usage, "usage");
+  if (importedKeys.includes("hours")) patch.hours = sanitizeHours(value.hours);
+  if (importedKeys.includes("switches")) patch.switches = sanitizeSwitches(value.switches);
+  if (importedKeys.includes("holes")) patch.holes = sanitizeHoles(value.holes);
+  if (importedKeys.includes("notified")) patch.notified = sanitizeNotified(value.notified);
+  if (importedKeys.includes("media")) patch.media = sanitizeMedia(value.media);
+  if (importedKeys.includes("wellness")) patch.wellness = sanitizeWellness(value.wellness);
+  if (importedKeys.includes("settings")) {
+    if (!isPlainObject(value.settings)) importError("settings", "must be an object");
+    const allowedSettings = new Set(Object.keys(DEFAULT_SETTINGS));
+    const ignoredSettings = Object.keys(value.settings).filter((key) => !allowedSettings.has(key));
+    if (ignoredSettings.length) warnings.push(`Ignored unknown settings: ${ignoredSettings.join(", ")}.`);
+    patch.settings = sanitizeSettings(value.settings);
+  }
+
+  const knownTopLevel = new Set([...EXPORT_DATA_KEYS, "exportedFrom", "formatVersion", "exportedAt"]);
+  const ignored = Object.keys(value).filter((key) => !knownTopLevel.has(key));
+  if (value.formatVersion == null) warnings.push("Legacy backup: it will be upgraded to the current format.");
+  if (ignored.length) warnings.push(`Ignored unknown fields: ${ignored.join(", ")}.`);
+  return { patch, importedKeys, warnings };
 }
 
 /* ==================================================================

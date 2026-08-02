@@ -15,7 +15,18 @@ const HOLE_CATS = ["Entertainment", "Social"];
 const SUNSET_COOLDOWN_MS = 2 * 3600 * 1000;
 const EYE_SECONDS = 20; // the "20 seconds" of 20-20-20
 
+async function restrictStorageAccess() {
+  try {
+    // Content scripts only communicate through validated messages; page-adjacent
+    // contexts never need raw access to the user's complete browsing history.
+    await chrome.storage.local.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" });
+  } catch (_) {
+    /* Older Chrome versions may not expose setAccessLevel. */
+  }
+}
+
 function setup() {
+  restrictStorageAccess();
   getSettings().then((s) => chrome.idle.setDetectionInterval(clampIdle(s.idleSeconds)));
   chrome.alarms.create("tick", { periodInMinutes: 1 });
   chrome.alarms.create("maintenance", { periodInMinutes: 360 }); // prune every 6h
@@ -36,6 +47,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 chrome.runtime.onStartup.addListener(setup);
+restrictStorageAccess();
 
 // Clicking a Tabyss notification opens the dashboard.
 chrome.notifications.onClicked.addListener((id) => {
@@ -69,36 +81,62 @@ chrome.tabs.onUpdated.addListener((_id, info, tab) => {
 chrome.windows.onFocusChanged.addListener(() => flush());
 chrome.idle.onStateChanged.addListener(() => flush());
 
-// Messages from the popup / dashboard / options pages and the content script.
+function isOwnSender(sender) {
+  return !!sender && sender.id === chrome.runtime.id;
+}
+function isExtensionPageSender(sender) {
+  return isOwnSender(sender) && typeof sender.url === "string" &&
+    sender.url.startsWith(chrome.runtime.getURL(""));
+}
+function isContentScriptSender(sender) {
+  return isOwnSender(sender) && !!sender.tab && !sender.tab.incognito &&
+    typeof sender.url === "string" && /^https?:\/\//.test(sender.url);
+}
+function sendResult(promise, sendResponse, after) {
+  Promise.resolve(promise).then((value) => {
+    if (after) after(value);
+    sendResponse({ ok: true, ...(isPlainObject(value) ? value : {}) });
+  }).catch((error) => {
+    console.warn("Tabyss request failed:", error && error.message ? error.message : "unknown error");
+    sendResponse({ ok: false, error: "The request could not be completed safely." });
+  });
+  return true;
+}
+
+// Messages are allowlisted by both action and source context. Content scripts
+// can report only media/wellness actions; only extension pages can mutate data.
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  switch (msg?.type) {
+  if (!isPlainObject(msg) || typeof msg.type !== "string" || !isOwnSender(sender)) return false;
+  const extensionPage = isExtensionPageSender(sender);
+  const contentScript = isContentScriptSender(sender);
+  switch (msg.type) {
     case "SETTINGS_CHANGED":
+      if (!extensionPage) return false;
       setup();
-      break;
+      sendResponse({ ok: true });
+      return false;
     case "FLUSH_NOW":
-      flush().then(() => sendResponse({ ok: true }));
-      return true;
+      return extensionPage ? sendResult(flush(), sendResponse) : false;
     case "RESET_TODAY":
-      resetToday().then(() => sendResponse({ ok: true }));
-      return true;
+      return extensionPage ? sendResult(resetToday(), sendResponse) : false;
+    case "IMPORT_DATA":
+      return extensionPage ? sendResult(importData(msg.data), sendResponse, setup) : false;
+    case "CLEAR_ALL_DATA":
+      return extensionPage ? sendResult(clearAllData(), sendResponse, setup) : false;
     case "MEDIA_BEAT":
-      mediaBeat(msg, sender);
-      break;
+      return contentScript ? sendResult(mediaBeat(msg, sender), sendResponse) : false;
     case "BREAK_SNOOZE":
-      breakSnooze(msg.kind, msg.mins);
-      break;
+      return contentScript ? sendResult(breakSnooze(msg.kind, msg.mins), sendResponse) : false;
     case "BREAK_SKIP":
-      breakSkip(msg.kind);
-      break;
+      return contentScript ? sendResult(breakSkip(msg.kind), sendResponse) : false;
     case "BREAK_DONE":
-      breakDone(msg.kind);
-      break;
+      return contentScript ? sendResult(breakDone(msg.kind), sendResponse) : false;
     case "WELL_DONE":
-      wellDone(msg.kind);
-      break;
+      return contentScript ? sendResult(wellDone(msg.kind), sendResponse) : false;
     case "WELL_SNOOZE":
-      wellSnooze(msg.kind, msg.mins);
-      break;
+      return contentScript ? sendResult(wellSnooze(msg.kind, msg.mins), sendResponse) : false;
+    default:
+      return false;
   }
 });
 
@@ -122,10 +160,10 @@ async function computeState(settings) {
   if (!win || !win.focused) return { domain: null, counting: false, tabId: null };
 
   const [tab] = await chrome.tabs.query({ active: true, windowId: win.id });
-  if (!tab || !tab.url) return { domain: null, counting: false, tabId: null };
+  if (!tab || !tab.url || tab.incognito) return { domain: null, counting: false, tabId: null };
 
   const domain = domainOf(tab.url);
-  if (!domain || (settings.ignore || []).includes(domain))
+  if (!domain || isIgnoredDomain(domain, settings.ignore))
     return { domain: null, counting: false, tabId: null };
 
   // Idle check comes last, with one exception: an audible tab (video/music
@@ -166,6 +204,8 @@ function withStore(fn) {
 function flush() { return withStore(doFlush); }
 function maintenance() { return withStore(doMaintenance); }
 function resetToday() { return withStore(doResetToday); }
+function importData(data) { return withStore(() => doImportData(data)); }
+function clearAllData() { return withStore(doClearAllData); }
 
 async function doFlush() {
   const now = Date.now();
@@ -203,7 +243,7 @@ async function doFlush() {
         "recap",
         // after a multi-day gap, name the actual day instead of lying "yesterday"
         shiftDay(day, -1) === y ? "Yesterday on Tabyss" : `${prettyDate(y)} on Tabyss`,
-        `${fmt(yTotal)} online${yScore != null ? ` · focus ${yScore}` : ""}${top ? ` · top: ${top[0]}` : ""}`
+        recapNotificationMessage(yTotal, yScore, top, settings)
       );
     }
   }
@@ -275,7 +315,7 @@ async function doFlush() {
     if (inWindow && HOLE_CATS.includes(cat) && now - sunsetLast > SUNSET_COOLDOWN_MS) {
       sunsetLast = now;
       notifySafe(`sunset-${now}`, "Digital sunset 🌆",
-        `It's late — you're on ${state.domain}. Your future self says wind down.`);
+        sunsetNotificationMessage(state.domain, settings));
     }
   }
 
@@ -383,6 +423,17 @@ function notifySafe(id, title, message, buttons) {
   }
 }
 
+function recapNotificationMessage(total, score, top, settings) {
+  return `${fmt(total)} online${score != null ? ` · focus ${score}` : ""}` +
+    (settings.notificationDetails && top ? ` · top: ${top[0]}` : "");
+}
+
+function sunsetNotificationMessage(domain, settings) {
+  return settings.notificationDetails
+    ? `It's late — you're on ${domain}. Your future self says wind down.`
+    : "It's late and you've been on a stimulating site. Your future self says wind down.";
+}
+
 /* Show a break on the active page (blur overlay); fall back to a notification
  * with Done/Snooze buttons when no content script can be reached. */
 async function triggerBreak(state, cfg, idPrefix) {
@@ -476,7 +527,7 @@ function wellSnooze(kind, mins) {
 
 function mediaBeat(msg, sender) {
   const tab = sender && sender.tab;
-  if (!tab || !tab.active || !tab.url) return; // only the focused, active tab counts
+  if (!tab || !tab.active || !tab.url || tab.incognito) return; // only a regular focused tab counts
   const domain = domainOf(tab.url);
   if (!domain) return;
   const kind = ["video", "shorts", "scroll"].includes(msg.kind) ? msg.kind : null;
@@ -485,7 +536,7 @@ function mediaBeat(msg, sender) {
   return withStore(async () => {
     const settings = await getSettings();
     if (settings.mediaEnabled === false) return;
-    if ((settings.ignore || []).includes(domain)) return;
+    if (isIgnoredDomain(domain, settings.ignore)) return;
     const day = dateKey(Date.now());
     const { media = {} } = await chrome.storage.local.get("media");
     media[day] = media[day] || {};
@@ -559,4 +610,24 @@ async function doResetToday() {
     if (store[k]) delete store[k][day];
   }
   await chrome.storage.local.set({ ...store, run: null, session: null });
+}
+
+/* Restore/clear are serialized with tracking writes. Imports are revalidated in
+ * this trusted context even when the options page already showed a preview. */
+async function doImportData(data) {
+  const result = validateImportData(data);
+  await chrome.storage.local.set({
+    ...result.patch,
+    session: null,
+    run: null,
+    sunsetLast: 0,
+    wellnessState: null,
+    meta: { schemaVersion: SCHEMA_VERSION },
+  });
+  return { importedKeys: result.importedKeys, warnings: result.warnings };
+}
+
+async function doClearAllData() {
+  await chrome.storage.local.clear();
+  await chrome.storage.local.set({ meta: { schemaVersion: SCHEMA_VERSION } });
 }

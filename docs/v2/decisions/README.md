@@ -4,7 +4,10 @@ Decisions are newest-on-top once accepted. Proposed records provide options and 
 
 | ID | Decision | Status |
 |---|---|---|
-| [ADR-014](ADR-014-v2-feature-waves.md) | Controlled V2 feature waves | Proposed |
+| [ADR-017](ADR-017-runtime-trust-boundaries.md) | Runtime trust boundaries | Accepted |
+| [ADR-016](ADR-016-backup-restore-safety.md) | Backup and restore safety | Accepted |
+| [ADR-015](ADR-015-private-browsing-boundaries.md) | Private browsing boundaries | Accepted |
+| [ADR-014](ADR-014-v2-feature-waves.md) | Controlled V2 feature waves | Accepted |
 | [ADR-013](ADR-013-scoring-evolution.md) | Intent-aware score evolution | Proposed |
 | [ADR-012](ADR-012-permission-model.md) | Capability-based permissions | Proposed |
 | [ADR-011](ADR-011-engineering-modernization.md) | Engineering modernization | Proposed |

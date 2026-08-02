@@ -54,7 +54,11 @@
         </div>
         <div class="goalrow">
           <label class="glabel" for="recapOn"><input id="recapOn" type="checkbox" style="width:auto" /> <span>🌅 Daily recap</span></label>
-          <span class="unit">a morning notification with yesterday's total, focus and top site</span>
+          <span class="unit">a morning notification with yesterday's total and focus score</span>
+        </div>
+        <div class="goalrow">
+          <label class="glabel" for="notificationDetails"><input id="notificationDetails" type="checkbox" style="width:auto" /> <span>Show site names in notifications</span></label>
+          <span class="unit">off by default so lock-screen previews stay private</span>
         </div>
       </section>
 
@@ -70,6 +74,7 @@
 
       <section class="optsec">
         <h2>Ignore list</h2>
+        <p class="hint">A domain also excludes all of its subdomains. For example, google.com excludes mail.google.com but not evil-google.com.</p>
         <div class="field">
           <label for="ignore">Domains to never track (one per line)</label>
           <textarea id="ignore" placeholder="mail.google.com&#10;localhost"></textarea>
@@ -91,7 +96,7 @@
 
       <section class="optsec" style="margin-top:1.6rem;">
         <h2>Your data</h2>
-        <p class="hint">Export a JSON backup, restore one, or wipe everything.</p>
+        <p class="hint">Export a JSON backup, safely restore one, or wipe everything. Imports are validated and a safety backup is downloaded before anything changes.</p>
         <div class="btnrow">
           <button id="export" class="btn">Export JSON</button>
           <label class="btn" for="importFile" style="cursor:pointer">Import JSON</label>
