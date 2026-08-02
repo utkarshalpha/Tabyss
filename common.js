@@ -504,10 +504,22 @@ function drawDoodle(canvas, persona, stats) {
 
 /* Chrome's built-in favicon cache — an extension-local URL, zero network.
  * Requires the "favicon" permission; only works inside extension pages. */
-function faviconUrl(domain, size) {
+function faviconUrl(pageOrDomain, size) {
   try {
+    const raw = String(pageOrDomain || "").trim();
+    if (!raw) return null;
+    let pageUrl;
+    try {
+      const parsed = new URL(raw);
+      if (!/^https?:$/.test(parsed.protocol)) return null;
+      pageUrl = parsed.toString();
+    } catch (_) {
+      const domain = normalizeDomainInput(raw);
+      if (!domain) return null;
+      pageUrl = `https://${domain}/`;
+    }
     const u = new URL(chrome.runtime.getURL("/_favicon/"));
-    u.searchParams.set("pageUrl", "https://" + domain);
+    u.searchParams.set("pageUrl", pageUrl);
     u.searchParams.set("size", String(size || 32));
     return u.toString();
   } catch (_) {

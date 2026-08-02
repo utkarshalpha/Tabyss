@@ -246,6 +246,7 @@ test("Focus Contracts preview changes and persist recovery before parking tabs",
   const preview = await api.doProductCommand("contract-preview", inContext({ planId }));
   assert.equal(preview.contract.unrelated.length, 1);
   assert.equal(preview.contract.unrelated[0].domain, "youtube.com");
+  assert.equal(preview.contract.unrelated[0].url, "https://youtube.com/watch?v=1");
 
   const notConfirmed = await api.doProductCommand("start-plan", inContext({ planId }));
   assert.equal(notConfirmed.requiresConfirmation, true);

@@ -16,7 +16,7 @@ time insights, wellbeing breaks, and a weekly Wrapped-style recap — computed
 
 | | |
 |---|---|
-| 🧭 **Command Center** | A persistent side panel for Profiles, Plans, Spaces, saved detours, and safe tab recovery; open it from the popup or with `Alt+Shift+T` |
+| 🧭 **Command Center** | A persistent side panel for Profiles, Plans, Spaces, saved detours, and safe tab recovery, with each saved page identified by its Chrome-cached favicon; open it from the popup or with `Alt+Shift+T` |
 | 📋 **Focus Contracts** | Preview the tabs a plan will open or park, save a recovery checkpoint first, then start a timer or open-ended session |
 | 🗂 **Spaces & checkpoints** | Save the current window as reusable context, restore only missing tabs, close duplicates with two-step confirmation, and recover from bounded checkpoints |
 | ↩ **Return Capsules** | Explicitly save the active page and an optional note so you can leave a detour without losing it; revisit, complete, or delete it later |

@@ -96,7 +96,7 @@
             return { ok: true, ...publicProduct(), closed: 1 };
           } else if (message.action === "contract-preview" || message.action === "start-plan") {
             const plan = current.plans.find((item) => item.id === message.planId);
-            const unrelated = tabs.filter((tab) => !productTabIsPlanned(tab, plan)).map((tab) => ({ id: tab.id, title: tab.title, domain: new URL(tab.url).hostname }));
+            const unrelated = tabs.filter((tab) => !productTabIsPlanned(tab, plan)).map((tab) => ({ id: tab.id, title: tab.title, domain: new URL(tab.url).hostname, url: tab.url }));
             const contract = { planId: plan.id, planName: plan.name, intention: plan.intention, unrelated, open: plan.relevantUrls.map((url) => ({ url, domain: new URL(url).hostname })) };
             if (message.action === "contract-preview") return { ok: true, ...publicProduct(), contract };
             focus = {

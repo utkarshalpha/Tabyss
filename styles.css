@@ -660,6 +660,15 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .item-card { padding: 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); }
 .item-card.is-done { opacity: 0.72; }
 .item-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.7rem; }
+.item-copy { min-width: 0; }
+.item-identity { display: flex; align-items: flex-start; gap: 0.55rem; min-width: 0; }
+.page-favicon { display: inline-grid; place-items: center; flex: 0 0 24px; width: 24px; height: 24px; overflow: hidden; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--brand); font-size: 0.64rem; font-weight: 750; line-height: 1; }
+.page-favicon img { display: block; width: 16px; height: 16px; object-fit: contain; }
+.page-favicon.is-fallback { background: var(--brand-soft); border-color: color-mix(in srgb, var(--brand) 22%, var(--border)); }
+.favicon-stack { display: flex; align-items: center; width: fit-content; margin-top: 0.55rem; padding-left: 4px; }
+.favicon-stack .page-favicon { margin-left: -4px; box-shadow: 0 0 0 2px var(--surface); }
+.favicon-stack .page-favicon:first-child { margin-left: 0; }
+.favicon-overflow { display: inline-grid; place-items: center; min-width: 24px; height: 24px; margin-left: 4px; padding-inline: 0.28rem; border-radius: 7px; background: var(--plane); color: var(--muted); font-size: 0.59rem; font-weight: 700; }
 .item-card h3 { margin: 0; font-size: 0.86rem; line-height: 1.35; overflow-wrap: anywhere; }
 .item-intention { margin: 0.22rem 0 0; color: var(--ink2); font-size: 0.75rem; line-height: 1.42; overflow-wrap: anywhere; }
 .item-meta, .item-preview { margin: 0.45rem 0 0; color: var(--muted); font-size: 0.65rem; line-height: 1.4; overflow-wrap: anywhere; }
@@ -685,9 +694,10 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .contract-summary span { color: var(--ink2); font-size: 0.65rem; }
 .dialog-shell h3 { margin: 0.9rem 0 0.4rem; font-size: 0.75rem; }
 .preview-list { display: grid; gap: 0.3rem; max-height: 150px; overflow: auto; }
-.preview-row { display: grid; gap: 0.08rem; padding: 0.45rem 0.55rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.67rem; }
+.preview-row { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 0.5rem; padding: 0.45rem 0.55rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.67rem; }
+.preview-copy { display: grid; gap: 0.08rem; min-width: 0; }
 .preview-row strong { overflow-wrap: anywhere; }
-.preview-row span { color: var(--muted); overflow-wrap: anywhere; }
+.preview-copy span { color: var(--muted); overflow-wrap: anywhere; }
 .privacy-note { color: var(--muted); font-size: 0.66rem; }
 .dialog-actions { margin-top: 1rem; }
 

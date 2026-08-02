@@ -67,6 +67,10 @@ that tempted them, return to their intention, and recover the original tabs late
 
 - Spaces explicitly save a bounded current-window HTTP(S) URL/title set and restore
   only missing pages.
+- Exact saved page URLs resolve through Chrome's extension-local favicon cache in
+  Plans, Spaces, Return Capsules, duplicate review, checkpoints, and Focus Contract
+  previews. The UI shows a calm letter fallback when Chrome has no cached icon;
+  no image blob is stored and no remote favicon service is contacted.
 - Return Capsules explicitly save the active page plus an optional note and support
   open, done, reopen, and delete.
 - Mindful guard actions: Return to plan, Save for later & return, or Continue for a
@@ -114,7 +118,7 @@ that tempted them, return to their intention, and recover the original tabs late
 
 - `verify.ps1`: pass.
 - JavaScript syntax: all runtime/test JavaScript passes `node --check`.
-- Node suite: **45/45 pass**.
+- Node suite: **46/46 pass**.
 - Covered boundaries include sender authorization, Incognito, ignore domains,
   notification redaction, focus recovery, Focus Contract preview/start/finish,
   pre-mutation persistence, guard choices, reset/retention, schedule de-duplication,
@@ -122,8 +126,8 @@ that tempted them, return to their intention, and recover the original tabs late
   backup/import safety, manifest/package policy, zero-network policy, and five-page
   UI reference/accessibility contracts.
 - V2 documentation links and git whitespace: pass.
-- Deterministic runtime package: 19 allowlisted files, 104.9 KB, identical builds:
-  `c70f66e47563b3e737925d30e604e703b955dd8eed6bcd743192d8573243e9c1`.
+- Deterministic runtime package: 19 allowlisted files, 105.9 KB, identical builds:
+  `975f4fb0d3e86ddd5f8a72a3978cf24d6b2291545e658c2026ddf7c10708e61a`.
 
 ### Rendered browser adapter
 
@@ -132,6 +136,10 @@ that tempted them, return to their intention, and recover the original tabs late
 - Exercised: empty Plans, starter Plan, full Plan editor, Plan save, Contract preview,
   Contract start, active focus card, Space save, Return Capsule save, Recovery view,
   duplicate review/second confirmation, and post-action feedback.
+- Exact-page favicon placement was reviewed in Return Capsules, Space stacks, and
+  duplicate rows. The HTTP adapter intentionally cannot access Chrome's extension
+  cache, so its image errors exercised and visually verified the letter fallback;
+  real-icon retrieval remains part of unpacked-extension dogfood.
 - The pass found an async `event.currentTarget` lifecycle bug in Profile/Space/
   Capsule/checkpoint forms. Handlers now capture the form before awaiting; Space and
   Capsule inputs were retested to clear successfully with success feedback.

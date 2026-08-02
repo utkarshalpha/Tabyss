@@ -16,6 +16,9 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
   completed/unfinished checkout, and post-focus workspace restoration.
 
 ### Context, detours, and recovery
+- Added exact-page, Chrome-cached favicons across Plans, Spaces, Return Capsules,
+  duplicate review, checkpoints, and Focus Contract previews, with a resilient
+  letter fallback and no remote favicon service.
 - Added Spaces to save the current window and restore only missing HTTP(S) tabs.
 - Added Return Capsules to explicitly save the active URL/title and optional note,
   reopen it, mark the loop done, reopen it, or delete it.

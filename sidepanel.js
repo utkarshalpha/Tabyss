@@ -74,6 +74,54 @@ function metaLine(parts) {
   return node("p", "item-meta", parts.filter(Boolean).join(" · "));
 }
 
+function faviconBadge(pageOrDomain, label) {
+  const badge = node("span", "page-favicon");
+  badge.setAttribute("aria-hidden", "true");
+  const fallbackText = String(label || pageOrDomain || "?").trim().charAt(0).toUpperCase() || "?";
+  const showFallback = () => {
+    badge.replaceChildren(fallbackText);
+    badge.classList.add("is-fallback");
+  };
+  const source = faviconUrl(pageOrDomain, 32);
+  if (!source) {
+    showFallback();
+    return badge;
+  }
+  const image = document.createElement("img");
+  image.src = source;
+  image.alt = "";
+  image.addEventListener("error", showFallback, { once: true });
+  badge.append(image);
+  return badge;
+}
+
+function faviconStack(pages) {
+  const sources = [];
+  const seen = new Set();
+  for (const page of Array.isArray(pages) ? pages : []) {
+    const candidate = typeof page === "string" ? { url: page, title: page } : page;
+    if (!candidate?.url || seen.has(candidate.url)) continue;
+    seen.add(candidate.url);
+    sources.push(candidate);
+  }
+  if (!sources.length) return null;
+  const stack = node("div", "favicon-stack");
+  stack.setAttribute("aria-label", `${sources.length} saved page${sources.length === 1 ? "" : "s"}`);
+  for (const page of sources.slice(0, 5)) stack.append(faviconBadge(page.url, page.title));
+  if (sources.length > 5) stack.append(node("span", "favicon-overflow", `+${sources.length - 5}`));
+  return stack;
+}
+
+function itemIdentity(primary, secondary, pageOrDomain) {
+  const identity = node("div", "item-identity");
+  identity.append(faviconBadge(pageOrDomain, primary));
+  const copy = node("div", "item-copy");
+  copy.append(node("h3", "", primary));
+  if (secondary) copy.append(node("p", "item-preview", secondary));
+  identity.append(copy);
+  return identity;
+}
+
 function renderProfiles() {
   const select = document.getElementById("profileSelect");
   select.replaceChildren();
@@ -161,7 +209,7 @@ function renderRestoreOffer() {
 function planCard(plan) {
   const card = node("article", "item-card");
   const heading = node("div", "item-heading");
-  const copy = node("div");
+  const copy = node("div", "item-copy");
   copy.append(node("h3", "", plan.name), node("p", "item-intention", plan.intention));
   const protection = node("span", `status-chip ${plan.protection === "nudge" ? "accent" : ""}`, plan.protection === "nudge" ? "Mindful nudge" : "Observe");
   heading.append(copy, protection);
@@ -174,7 +222,12 @@ function planCard(plan) {
     button("Edit", "edit-plan", plan.id),
     button("Delete", "delete-plan", plan.id, "btn compact quiet-danger")
   );
-  card.append(heading, metaLine([session, schedule, context]), actions);
+  card.append(heading, metaLine([session, schedule, context]));
+  const linkedSpace = commandState.product.spaces.find((space) => space.id === plan.spaceId);
+  const pages = linkedSpace ? [...plan.relevantUrls, ...linkedSpace.tabs.map((tab) => tab.url)] : plan.relevantUrls;
+  const icons = faviconStack(pages);
+  if (icons) card.append(icons);
+  card.append(actions);
   return card;
 }
 
@@ -212,9 +265,15 @@ function renderSpaceOptions() {
 
 function spaceCard(space) {
   const card = node("article", "item-card");
-  card.append(node("h3", "", space.name), metaLine([`${space.tabs.length} tabs`, `Updated ${formatWhen(space.updatedAt)}`]));
+  const heading = node("div", "item-heading");
+  const copy = node("div", "item-copy");
+  copy.append(node("h3", "", space.name), metaLine([`${space.tabs.length} tabs`, `Updated ${formatWhen(space.updatedAt)}`]));
+  heading.append(copy);
+  card.append(heading);
   const domains = [...new Set(space.tabs.map((tab) => { try { return new URL(tab.url).hostname; } catch (_) { return ""; } }).filter(Boolean))].slice(0, 4);
   if (domains.length) card.append(node("p", "item-preview", domains.join(" · ")));
+  const icons = faviconStack(space.tabs);
+  if (icons) card.append(icons);
   const actions = node("div", "button-row item-actions");
   actions.append(
     button("Restore", "restore-space", space.id, "btn primary compact"),
@@ -236,9 +295,7 @@ function renderSpaces() {
 function capsuleCard(capsule) {
   const card = node("article", `item-card ${capsule.status === "done" ? "is-done" : ""}`);
   const heading = node("div", "item-heading");
-  const copy = node("div");
-  copy.append(node("h3", "", capsule.title), node("p", "item-preview", capsule.domain));
-  heading.append(copy, node("span", "status-chip", capsule.status === "done" ? "Done" : "To revisit"));
+  heading.append(itemIdentity(capsule.title, capsule.domain, capsule.url), node("span", "status-chip", capsule.status === "done" ? "Done" : "To revisit"));
   card.append(heading);
   if (capsule.note) card.append(node("p", "item-intention", capsule.note));
   card.append(metaLine([`Saved ${formatWhen(capsule.savedAt)}`]));
@@ -275,7 +332,7 @@ function renderRecovery() {
     for (const group of commandState.duplicates) {
       let domain = "saved page";
       try { domain = new URL(group[0].url).hostname; } catch (_) {}
-      list.append(previewRow(group[0].title || domain, `${domain} · ${group.length} copies`));
+      list.append(previewRow(group[0].title || domain, `${domain} · ${group.length} copies`, group[0].url));
     }
     details.append(list);
     duplicateCard.append(details, button(duplicateCloseArmed ? `Confirm close ${extras}` : `Review & close ${extras}`, "close-duplicates", "", duplicateCloseArmed ? "btn danger compact" : "btn compact"));
@@ -288,6 +345,8 @@ function renderRecovery() {
   for (const checkpoint of checkpoints) {
     const card = node("article", "item-card compact-card");
     card.append(node("h3", "", checkpoint.label), metaLine([`${checkpoint.tabs.length} tabs`, formatWhen(checkpoint.createdAt), checkpoint.reason]));
+    const icons = faviconStack(checkpoint.tabs);
+    if (icons) card.append(icons);
     const actions = node("div", "button-row item-actions");
     actions.append(button("Restore checkpoint", "restore-checkpoint", checkpoint.id, "btn primary compact"));
     actions.append(button("Delete", "delete-checkpoint", checkpoint.id, "btn compact quiet-danger"));
@@ -381,9 +440,12 @@ function planPayload() {
   };
 }
 
-function previewRow(primary, secondary) {
+function previewRow(primary, secondary, pageOrDomain) {
   const row = node("div", "preview-row");
-  row.append(node("strong", "", primary), node("span", "", secondary));
+  row.append(faviconBadge(pageOrDomain, primary));
+  const copy = node("div", "preview-copy");
+  copy.append(node("strong", "", primary), node("span", "", secondary));
+  row.append(copy);
   return row;
 }
 
@@ -397,11 +459,11 @@ async function previewPlan(id) {
   document.getElementById("contractSummary").textContent = `${contract.unrelated.length} tab${contract.unrelated.length === 1 ? "" : "s"} to park · ${contract.open.length} page${contract.open.length === 1 ? "" : "s"} to open`;
   const park = document.getElementById("contractParkList");
   park.replaceChildren();
-  contract.unrelated.forEach((tab) => park.append(previewRow(tab.title, tab.domain)));
+  contract.unrelated.forEach((tab) => park.append(previewRow(tab.title, tab.domain, tab.url)));
   document.getElementById("contractParkBlock").hidden = !contract.unrelated.length;
   const open = document.getElementById("contractOpenList");
   open.replaceChildren();
-  contract.open.forEach((page) => open.append(previewRow(page.domain, page.url)));
+  contract.open.forEach((page) => open.append(previewRow(page.domain, page.url, page.url)));
   document.getElementById("contractOpenBlock").hidden = !contract.open.length;
   document.getElementById("contractStart").textContent = contract.unrelated.length || contract.open.length ? "Confirm and start" : "Start plan";
   document.getElementById("contractDialog").showModal();

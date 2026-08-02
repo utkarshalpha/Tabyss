@@ -8,6 +8,27 @@ Every implementation wave must add an entry here so the prompt method, durable
 decision, code branch, and verification record stay connected rather than living
 only in chat.
 
+### 2026-08-02 — Exact-page favicon identity pass
+
+- **Owner direction:** when a user opens and explicitly saves a web page in Tabyss,
+  carry that site's favicon into the connected V2 experience.
+- **Verified capability:** the accepted manifest already includes Chrome's `favicon`
+  permission, and the legacy analytics list already uses the extension-local
+  `/_favicon/` cache endpoint. No new permission or remote service is required.
+- **Options considered:** persist favicon image blobs; fetch icons from a remote
+  favicon provider; or resolve exact saved HTTP(S) page URLs through Chrome's local
+  cache at render time.
+- **Selected decision:** exact-page local-cache resolution with a deterministic
+  letter fallback. Render single-page identity in Return Capsules and Focus Contract
+  rows, plus bounded five-icon stacks for Plans, Spaces, and recovery checkpoints.
+- **Trust and lifecycle decisions:** never fetch a favicon from the web, never store
+  image data, never read page content, keep the extension toolbar icon as the Tabyss
+  brand, and let Chrome refresh its own cache. Incognito and unsupported schemes
+  remain excluded by the existing capture boundary.
+- **Build branch:** `codex/v2-final-build`.
+- **Evidence:** shared resolver and worker contract tests, full verification gate,
+  and browser-adapter review of Capsule, Space, duplicate, and fallback states.
+
 ### 2026-08-02 — Wave 1B Calm Optimistic design foundation
 
 - **Delegated task:** act as senior product designer/PM, expand the V2 feature

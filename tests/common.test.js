@@ -18,13 +18,23 @@ const context = vm.createContext({
 });
 vm.runInContext(`${source}\n${productSource}\n;globalThis.__tabyssTest = {
   normalizeDomainInput, isIgnoredDomain, sanitizeSettings, validateImportData,
-  buildExportPayload, EXPORT_SCHEMA_VERSION
+  buildExportPayload, faviconUrl, EXPORT_SCHEMA_VERSION
 };`, context);
 
 const api = context.__tabyssTest;
 const jsonInContext = (value) => vm.runInContext(`JSON.parse(${JSON.stringify(JSON.stringify(value))})`, context);
 const rawJsonInContext = (value) => vm.runInContext(`JSON.parse(${JSON.stringify(value)})`, context);
 const plain = (value) => JSON.parse(JSON.stringify(value));
+
+test("favicon URLs use Chrome's local cache for exact web pages", () => {
+  const exact = new URL(api.faviconUrl("https://docs.example.com/brief?mode=review", 24));
+  assert.equal(exact.protocol, "chrome-extension:");
+  assert.equal(exact.pathname, "/_favicon/");
+  assert.equal(exact.searchParams.get("pageUrl"), "https://docs.example.com/brief?mode=review");
+  assert.equal(exact.searchParams.get("size"), "24");
+  assert.equal(new URL(api.faviconUrl("www.Example.com", 32)).searchParams.get("pageUrl"), "https://example.com/");
+  assert.equal(api.faviconUrl("chrome://settings", 32), null);
+});
 
 test("domain input is canonical and ignore rules respect label boundaries", () => {
   assert.equal(api.normalizeDomainInput("https://www.Google.com:443/a?q=1"), "google.com");

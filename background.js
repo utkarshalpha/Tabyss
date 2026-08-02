@@ -917,7 +917,12 @@ function contractForTabs(product, plan, tabs) {
     protection: plan.protection,
     restoreOnFinish: plan.restoreOnFinish,
     parkUnrelated: plan.parkUnrelated,
-    unrelated: unrelated.map((tab) => ({ id: tab.id, title: String(tab.title || "Untitled tab").slice(0, 120), domain: normalizeDomainInput(new URL(tab.url).hostname) || "site" })),
+    unrelated: unrelated.map((tab) => ({
+      id: tab.id,
+      title: String(tab.title || "Untitled tab").slice(0, 120),
+      domain: normalizeDomainInput(new URL(tab.url).hostname) || "site",
+      url: tab.url,
+    })),
     open,
   };
 }
