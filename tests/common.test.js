@@ -82,6 +82,7 @@ test("current exports include version metadata and all restorable sections", () 
   for (const key of ["usage", "hours", "switches", "holes", "notified", "media", "wellness"]) {
     assert.deepEqual(payload[key], {});
   }
+  assert.deepEqual(payload.focusSessions, []);
   assert.doesNotThrow(() => api.validateImportData(jsonInContext(payload)));
 });
 

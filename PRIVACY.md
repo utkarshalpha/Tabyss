@@ -15,6 +15,9 @@ To show you how you spend time online, Tabyss records, **locally on your compute
   never reads or stores page content, text you type, or full URLs.
 - **Wellness counts** per day: eye breaks taken/skipped, water and stand-up
   reminders completed.
+- **Intentional focus data you enter:** the current intention, optional definition
+  of done, timer/stopwatch state, and completed/unfinished session outcomes with
+  optional reason and note. These fields are never taken from page content.
 - Your **settings** (categories, goals, breaks, office mode, ignore list,
   retention window).
 - **Incognito tabs are never recorded**, even if you separately allow the extension
@@ -39,7 +42,8 @@ your stored history.
 ## Permissions, in plain language
 - **tabs** — to read the domain of your active tab so time can be attributed to it.
 - **idle** — to pause tracking when you step away.
-- **alarms** — to run the 1-minute tracking tick and periodic cleanup.
+- **alarms** — to run the 1-minute tracking tick, periodic cleanup, and wake the
+  extension when a focus timer is ready for review.
 - **storage** — to save your stats and settings on your device.
 - **notifications** — to alert you on daily limits you set, and for the eye-break /
   water / stand reminders you enable. Site names are hidden from notification
@@ -55,8 +59,10 @@ your stored history.
   boundaries (`example.com` excludes `mail.example.com`, not `evil-example.com`).
 - **Export / Import:** back up or restore your data as a JSON file (Settings → Your data).
   Imports have a file-size limit, are schema-validated twice, and trigger a local
-  safety-backup download before any stored section is replaced.
-- **Delete:** "Reset today" clears a day; "Clear all data" wipes everything; uninstalling
+  safety-backup download before any stored section is replaced. An active focus
+  session must be checked out first so a restore cannot split its outcome history;
+  the in-progress recovery record becomes portable history only after checkout.
+- **Delete:** "Reset today" clears that day's browsing and focus sessions; "Clear all data" wipes everything; uninstalling
   the extension removes all stored data.
 - **Retention:** history older than your chosen window (default 180 days) is deleted
   automatically.

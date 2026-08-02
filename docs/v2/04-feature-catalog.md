@@ -72,6 +72,9 @@ All capabilities belong to the V2 program. Classification controls packaging and
 
 ### PLN-01 Quick intention - Core
 
+Wave 1A status: implemented for action, optional duration/success definition, and
+recent-intention reuse in the popup; relevant-site/tab linking remains deferred.
+
 - Create an intention in under ten seconds.
 - Fields: action, optional duration, optional success definition, optional relevant sites/tabs.
 - Reuse recent intentions.
@@ -108,6 +111,10 @@ All capabilities belong to the V2 program. Classification controls packaging and
 ## Focus execution and intervention
 
 ### FOC-01 Focus session - Core
+
+Wave 1A status: implemented from the popup for timer/stopwatch, pause, resume,
+extend, complete, abandon, restart recovery, checkout note, and dashboard reflection.
+Other entry surfaces and relevant-tab controls remain deferred.
 
 - Start from popup, side panel, new tab, keyboard shortcut, context menu, dashboard, or saved plan.
 - Show task, elapsed/remaining time, active controls, and relevant tabs.

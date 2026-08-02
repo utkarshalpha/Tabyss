@@ -25,22 +25,34 @@ async function restrictStorageAccess() {
   }
 }
 
+async function ensureSchema() {
+  const { meta } = await chrome.storage.local.get("meta");
+  if (!meta || Number(meta.schemaVersion) < SCHEMA_VERSION) {
+    await chrome.storage.local.set({
+      meta: {
+        ...(isPlainObject(meta) ? meta : {}),
+        schemaVersion: SCHEMA_VERSION,
+        migratedAt: Date.now(),
+      },
+    });
+  }
+}
+
 function setup() {
   restrictStorageAccess();
+  ensureSchema().catch(() => {});
   getSettings().then((s) => chrome.idle.setDetectionInterval(clampIdle(s.idleSeconds)));
   chrome.alarms.create("tick", { periodInMinutes: 1 });
   chrome.alarms.create("maintenance", { periodInMinutes: 360 }); // prune every 6h
   maintenance();
   flush(); // start a session immediately so tracking begins on install/startup
+  reconcileFocus();
 }
 function clampIdle(n) {
   return Math.max(15, Math.min(600, Number(n) || 60));
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
-  chrome.storage.local.get("meta").then(({ meta }) => {
-    if (!meta) chrome.storage.local.set({ meta: { schemaVersion: SCHEMA_VERSION } });
-  });
   setup();
   if (details.reason === "install") {
     chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
@@ -73,6 +85,7 @@ chrome.notifications.onButtonClicked.addListener((id, btn) => {
 chrome.alarms.onAlarm.addListener((a) => {
   if (a.name === "tick") flush();
   else if (a.name === "maintenance") maintenance();
+  else if (a.name === "focus-end") reconcileFocus();
 });
 chrome.tabs.onActivated.addListener(() => flush());
 chrome.tabs.onUpdated.addListener((_id, info, tab) => {
@@ -98,7 +111,18 @@ function sendResult(promise, sendResponse, after) {
     sendResponse({ ok: true, ...(isPlainObject(value) ? value : {}) });
   }).catch((error) => {
     console.warn("Tabyss request failed:", error && error.message ? error.message : "unknown error");
-    sendResponse({ ok: false, error: "The request could not be completed safely." });
+    const safeErrors = {
+      FOCUS_ALREADY_ACTIVE: "A focus session is already active.",
+      FOCUS_NOT_ACTIVE: "There is no active focus session.",
+      FOCUS_INVALID_TEXT: "Add a short intention and keep details within the shown limits.",
+      FOCUS_INVALID_DURATION: "Choose a supported focus duration.",
+      FOCUS_INVALID_REASON: "Choose a supported reason for ending the session.",
+      FOCUS_IMPORT_ACTIVE: "Finish or end the active focus session before restoring a backup.",
+      FOCUS_HISTORY_CORRUPT: "Focus history could not be validated. Restore a known-good backup or clear local data before starting another session.",
+      FOCUS_INVALID_MODE: "Choose timer or stopwatch mode.",
+      FOCUS_INVALID_TRANSITION: "That action is not available in the current session state.",
+    };
+    sendResponse({ ok: false, code: error && error.code || null, error: safeErrors[error && error.code] || "The request could not be completed safely." });
   });
   return true;
 }
@@ -123,6 +147,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return extensionPage ? sendResult(importData(msg.data), sendResponse, setup) : false;
     case "CLEAR_ALL_DATA":
       return extensionPage ? sendResult(clearAllData(), sendResponse, setup) : false;
+    case "EXPORT_DATA":
+      return extensionPage ? sendResult(exportData(), sendResponse) : false;
+    case "GET_FOCUS_DATA":
+      return extensionPage ? sendResult(getFocusData(), sendResponse) : false;
+    case "START_FOCUS":
+      return extensionPage ? sendResult(focusCommand("start", msg), sendResponse) : false;
+    case "PAUSE_FOCUS":
+      return extensionPage ? sendResult(focusCommand("pause", msg), sendResponse) : false;
+    case "RESUME_FOCUS":
+      return extensionPage ? sendResult(focusCommand("resume", msg), sendResponse) : false;
+    case "EXTEND_FOCUS":
+      return extensionPage ? sendResult(focusCommand("extend", msg), sendResponse) : false;
+    case "COMPLETE_FOCUS":
+      return extensionPage ? sendResult(focusCommand("complete", msg), sendResponse) : false;
+    case "ABANDON_FOCUS":
+      return extensionPage ? sendResult(focusCommand("abandon", msg), sendResponse) : false;
     case "MEDIA_BEAT":
       return contentScript ? sendResult(mediaBeat(msg, sender), sendResponse) : false;
     case "BREAK_SNOOZE":
@@ -206,6 +246,10 @@ function maintenance() { return withStore(doMaintenance); }
 function resetToday() { return withStore(doResetToday); }
 function importData(data) { return withStore(() => doImportData(data)); }
 function clearAllData() { return withStore(doClearAllData); }
+function exportData() { return withStore(doExportData); }
+function getFocusData() { return withStore(doGetFocusData); }
+function focusCommand(action, payload) { return withStore(() => doFocusCommand(action, payload)); }
+function reconcileFocus() { return withStore(doReconcileFocus); }
 
 async function doFlush() {
   const now = Date.now();
@@ -580,13 +624,133 @@ async function checkGoals(day, usageDay, settings) {
   if (changed) await chrome.storage.local.set({ notified });
 }
 
+/* ---------- V2 quick intention / focus sessions ---------- */
+
+function validStoredFocusActive(value) {
+  if (!isPlainObject(value) || value.version !== FOCUS_ACTIVE_VERSION) return null;
+  if (typeof value.id !== "string" || !/^[A-Za-z0-9_-]{8,100}$/.test(value.id)) return null;
+  if (typeof value.intention !== "string" || !value.intention || value.intention.length > FOCUS_MAX_TEXT) return null;
+  if (typeof value.successDefinition !== "string" || value.successDefinition.length > FOCUS_MAX_DETAIL) return null;
+  if (!["timer", "stopwatch"].includes(value.mode) || !["running", "paused", "review"].includes(value.status)) return null;
+  if (!Number.isFinite(value.startedAt) || value.startedAt < 946684800000 || value.startedAt > 4102444800000) return null;
+  if (!Number.isFinite(value.updatedAt) || value.updatedAt < value.startedAt) return null;
+  if (!Number.isFinite(value.accumulatedMs) || value.accumulatedMs < 0 || value.accumulatedMs > FOCUS_MAX_RUNNING_MS) return null;
+  if (value.status === "running" && (!Number.isFinite(value.segmentStartedAt) || value.segmentStartedAt < value.startedAt)) return null;
+  if (value.status !== "running" && value.segmentStartedAt != null) return null;
+  if (value.mode === "timer") {
+    if (!Number.isInteger(value.targetMinutes) || value.targetMinutes < 5 || value.targetMinutes > 720) return null;
+    if (value.targetMs !== value.targetMinutes * 60000 || value.targetMs > FOCUS_MAX_RUNNING_MS) return null;
+    if (value.accumulatedMs > value.targetMs) return null;
+  } else if (value.targetMinutes != null || value.targetMs != null) return null;
+  if (value.status === "review" && value.reviewReason !== (value.mode === "timer" ? "timer" : "safety")) return null;
+  if (value.status !== "review" && value.reviewReason != null) return null;
+  return value;
+}
+
+function readFocusHistory(value) {
+  try {
+    return { sessions: sanitizeFocusSessions(value == null ? [] : value), valid: true };
+  } catch (error) {
+    console.warn("Tabyss focus history is invalid:", error && error.message ? error.message : "unknown error");
+    return { sessions: [], valid: false };
+  }
+}
+
+function newFocusId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") return globalThis.crypto.randomUUID();
+  const bytes = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(bytes);
+  return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+function pruneFocusHistory(records, retentionDays) {
+  const cutoff = shiftDay(dateKey(Date.now()), -Math.max(1, Number(retentionDays) || 180));
+  return records.filter((record) => record.day >= cutoff).slice(-FOCUS_MAX_HISTORY);
+}
+
+async function syncFocusAlarm(active, now) {
+  await chrome.alarms.clear("focus-end");
+  if (!active || active.status !== "running") return;
+  const remaining = active.mode === "timer"
+    ? focusRemainingMs(active, now)
+    : Math.max(0, FOCUS_MAX_RUNNING_MS - focusElapsedMs(active, now));
+  if (remaining > 0) await chrome.alarms.create("focus-end", { when: now + remaining });
+}
+
+async function loadAndReconcileFocus() {
+  const now = Date.now();
+  const store = await chrome.storage.local.get(["focusActive", "focusSessions"]);
+  let active = validStoredFocusActive(store.focusActive);
+  const history = readFocusHistory(store.focusSessions);
+  const sessions = history.sessions;
+  let changed = !!store.focusActive && !active;
+  let enteredReview = false;
+  if (active && focusNeedsReview(active, now)) {
+    active = focusTransition(active, "review", now).active;
+    changed = true;
+    enteredReview = true;
+  }
+  if (changed) await chrome.storage.local.set({ focusActive: active });
+  await syncFocusAlarm(active, now);
+  if (enteredReview) {
+    const settings = await getSettings();
+    notifySafe(
+      "focus-review",
+      active.reviewReason === "safety" ? "Focus session paused for review" : "Focus session ready to review",
+      settings.notificationDetails ? `Check in on: ${active.intention}` : "Open Tabyss to complete, extend, or end the session."
+    );
+  }
+  return { active, sessions, historyValid: history.valid, now };
+}
+
+function publicFocusData(active, sessions, now, historyValid = true) {
+  return { focus: focusView(active, now), focusSessions: sessions, focusHistoryAvailable: historyValid };
+}
+
+async function doGetFocusData() {
+  const state = await loadAndReconcileFocus();
+  return publicFocusData(state.active, state.sessions, state.now, state.historyValid);
+}
+
+async function doReconcileFocus() {
+  return doGetFocusData();
+}
+
+async function doFocusCommand(action, payload) {
+  const state = await loadAndReconcileFocus();
+  let active = state.active;
+  let sessions = state.sessions;
+  if (!state.historyValid) focusFailure("FOCUS_HISTORY_CORRUPT");
+  const now = Date.now();
+  if (action === "start") {
+    if (active) focusFailure("FOCUS_ALREADY_ACTIVE");
+    active = createFocusActive(payload, now, newFocusId());
+  } else {
+    const result = focusTransition(active, action, now, payload);
+    active = result.active;
+    if (result.record) {
+      const settings = await getSettings();
+      sessions = pruneFocusHistory([...sessions, result.record], settings.retentionDays);
+    }
+  }
+  await chrome.storage.local.set({ focusActive: active, focusSessions: sessions });
+  await syncFocusAlarm(active, now);
+  return publicFocusData(active, sessions, now);
+}
+
+async function doExportData() {
+  await doFlush();
+  const data = await chrome.storage.local.get(EXPORT_DATA_KEYS);
+  return { data: buildExportPayload(data) };
+}
+
 /* ---------- housekeeping & reset ---------- */
 
 // Periodic housekeeping: prune all date-keyed maps beyond the retention window.
 async function doMaintenance() {
   const settings = await getSettings();
   const store = await chrome.storage.local.get([
-    "usage", "hours", "notified", "switches", "holes", "media", "wellness",
+    "usage", "hours", "notified", "switches", "holes", "media", "wellness", "focusSessions",
   ]);
   const days = settings.retentionDays;
   let pruned = 0;
@@ -596,7 +760,17 @@ async function doMaintenance() {
     pruned += pruneByRetention(map, days);
     out[key] = map;
   }
-  if (pruned) await chrome.storage.local.set(out);
+  const history = readFocusHistory(store.focusSessions);
+  if (!history.valid) {
+    if (pruned) await chrome.storage.local.set(out);
+    return;
+  }
+  const focusSessions = pruneFocusHistory(history.sessions, days);
+  const storedFocusCount = Array.isArray(store.focusSessions) ? store.focusSessions.length : 0;
+  const focusChanged = focusSessions.length !== storedFocusCount ||
+    (store.focusSessions != null && !Array.isArray(store.focusSessions));
+  if (focusChanged) out.focusSessions = focusSessions;
+  if (pruned || focusChanged) await chrome.storage.local.set(out);
 }
 
 /* Reset today's data — runs in the worker, inside the mutex, and clears the
@@ -604,10 +778,18 @@ async function doMaintenance() {
 async function doResetToday() {
   const day = dateKey(Date.now());
   const store = await chrome.storage.local.get([
-    "usage", "hours", "switches", "holes", "notified", "media", "wellness",
+    "usage", "hours", "switches", "holes", "notified", "media", "wellness", "focusSessions", "focusActive",
   ]);
   for (const k of ["usage", "hours", "switches", "holes", "notified", "media", "wellness"]) {
     if (store[k]) delete store[k][day];
+  }
+  const history = readFocusHistory(store.focusSessions);
+  if (!history.valid) focusFailure("FOCUS_HISTORY_CORRUPT");
+  store.focusSessions = history.sessions.filter((record) => record.day !== day);
+  const active = validStoredFocusActive(store.focusActive);
+  if (!active || dateKey(active.startedAt) === day) {
+    store.focusActive = null;
+    await chrome.alarms.clear("focus-end");
   }
   await chrome.storage.local.set({ ...store, run: null, session: null });
 }
@@ -616,6 +798,12 @@ async function doResetToday() {
  * this trusted context even when the options page already showed a preview. */
 async function doImportData(data) {
   const result = validateImportData(data);
+  const { focusActive } = await chrome.storage.local.get("focusActive");
+  if (validStoredFocusActive(focusActive)) focusFailure("FOCUS_IMPORT_ACTIVE");
+  if (focusActive) {
+    await chrome.storage.local.set({ focusActive: null });
+    await chrome.alarms.clear("focus-end");
+  }
   await chrome.storage.local.set({
     ...result.patch,
     session: null,
@@ -628,6 +816,11 @@ async function doImportData(data) {
 }
 
 async function doClearAllData() {
+  await chrome.alarms.clear("focus-end");
   await chrome.storage.local.clear();
   await chrome.storage.local.set({ meta: { schemaVersion: SCHEMA_VERSION } });
 }
+
+// Rebuild the one-shot focus alarm whenever MV3 evaluates a fresh worker.
+// The alarm is only a wake-up hint; timestamps remain the source of truth.
+reconcileFocus().catch(() => {});

@@ -50,14 +50,15 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] Outcome onboarding.
 - [ ] Calibration/sparse-data flow.
 - [ ] Profiles.
-- [ ] Quick intention.
+- [x] Quick intention.
 - [ ] Plans and schedules.
 - [ ] Timer, stopwatch, Pomodoro, and flow execution.
-- [ ] Action popup.
+- [x] Action popup.
 - [ ] Side-panel Command Center.
-- [ ] Intent-aligned session model.
-- [ ] Completion and abandonment check-out.
-- [ ] Empty, denied, paused, and recovery states.
+- [x] Intent-aligned timer/stopwatch session model.
+- [x] Completion and abandonment check-out.
+- [ ] Empty, denied, paused, and recovery states (implemented for this slice;
+      unpacked-extension restart/suspension/accessibility QA remains).
 
 ## 5. Guard/control gate
 
@@ -114,7 +115,7 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 ## 9. Quality gate
 
-- [ ] Unit/property/integration suites passing.
+- [x] Unit and worker-integration suites passing for implemented Waves 0–1A.
 - [ ] Extension E2E suite passing.
 - [ ] Worker suspension/update/restart scenarios passing.
 - [ ] Migration and rollback matrix passing.

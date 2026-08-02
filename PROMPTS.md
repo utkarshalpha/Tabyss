@@ -2,6 +2,35 @@
 
 These templates implement the user-supplied plan-first, grounded, option-based working method for Tabyss.
 
+## Decision and build trace ledger
+
+Every implementation wave must add an entry here so the prompt method, durable
+decision, code branch, and verification record stay connected rather than living
+only in chat.
+
+### 2026-08-02 — Wave 1 intentional-session vertical slice
+
+- **Delegated task:** take senior-PM/engineering decisions and build the next
+  coherent V2 Chrome-extension slice on a separate branch, while preserving the
+  local-first trust contract.
+- **Verified constraint:** MV3 workers are short-lived, alarms can be delayed, and
+  critical active state cannot depend on popup/worker memory.
+- **Options considered:** popup-memory timer; persisted timestamp state with bounded
+  local outcomes; or blocking user value on the full proposed IndexedDB event model.
+- **Selected decision:** the persisted timestamp state machine in
+  [ADR-019](docs/v2/decisions/ADR-019-intent-session-state.md). Broader side-panel
+  and IndexedDB decisions remain Proposed.
+- **Product choices:** intention is the popup's primary action; timer expiry means
+  review, never automatic success; completion and abandonment require checkout;
+  passive Focus Score and chosen focus outcomes remain distinct.
+- **Trust choices:** no new dependency, permission, network path, account, telemetry,
+  or page-content capture; focus restores are blocked while a valid session is active.
+- **Build branch:** `codex/v2-wave1-intent-session`.
+- **Evidence/rollback:** [Wave 1 build record](docs/v2/builds/wave-1-intent-session.md).
+
+This ledger records decisions actually taken. Future ideas stay in the V2 catalog
+or Proposed ADRs until their own implementation wave is authorized and verified.
+
 ## Product decision
 
 ```text

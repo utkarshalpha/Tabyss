@@ -1,8 +1,8 @@
 # ⏳ Tabyss — Know Your Scroll
 
 **A privacy-first browser extension that turns your browsing time into a personality.**
-Time tracking, focus scoring, doomscroll detection, wellbeing breaks, and a weekly
-Wrapped-style recap — computed **entirely on your device**. No account. No server.
+Intentional focus sessions, time tracking, focus scoring, doomscroll detection,
+wellbeing breaks, and a weekly Wrapped-style recap — computed **entirely on your device**. No account. No server.
 **Zero network requests.**
 
 > Are you *The Autoplay Vampire*? *The 3AM Shipwright*? *The Timeline Landlord*?
@@ -15,6 +15,7 @@ Wrapped-style recap — computed **entirely on your device**. No account. No ser
 
 | | |
 |---|---|
+| ✅ **Intentional focus sessions** | Set a one-line intention, choose a timer or open-ended session, pause/resume/extend, then check out as completed or unfinished with an optional local note |
 | 🎭 **Browsing Personality** | 50+ personas from 6 archetypes × 4 rhythms × 4 intensities, computed weekly from real patterns, each with deterministic generative avatar art |
 | ✨ **Weekly Wrapped** | A 9-slide full-screen recap with a locally rendered 1080×1080 share card (categories only by default — sites are opt-in) |
 | 🎯 **Focus Score** | Daily 0–100 from productive share + tab discipline − rabbit holes; honest "warming up" state under 30 minutes |
@@ -38,6 +39,9 @@ every line of UI, tracking, and artwork is hand-rolled:
 - **Event-driven tracking engine** on a service worker that survives suspension:
   1-minute alarm heartbeat + tab/window/idle events, with wall-clock gap detection
   so machine sleep never inflates a day.
+- **Restart-safe focus state machine** — the active session is persisted, elapsed
+  time is derived from timestamps, and one alarm is used only as a wake-up hint;
+  timer expiry opens review instead of falsely claiming completion.
 - **Serialized storage transactions** — all read-modify-write cycles run through a
   promise-chain mutex after a review found flush/maintenance races that could
   silently erase committed data.
@@ -65,7 +69,7 @@ every line of UI, tracking, and artwork is hand-rolled:
 Run the dependency-free security and data-contract suite:
 
 ```powershell
-node --test tests/common.test.js tests/background.test.js
+node --test tests/*.test.js
 ```
 
 Run the complete local/CI gate, including deterministic packaging:

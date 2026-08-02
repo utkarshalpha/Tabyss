@@ -73,3 +73,21 @@ sessions, focus-timer/Pomodoro, optional local export to CSV.
 true 100; sparse days show "—" not 0; audible tabs count as active (video); category
 matching is domain-boundary-safe; the share card never includes site names without
 explicit opt-in; epithet copy is playful, never shaming.
+
+## 9. V2 Wave 1 implementation addendum — Intentional focus
+
+Status: implemented on the stacked review branch; not yet a released store claim.
+
+| ID | Requirement | Acceptance |
+|----|-------------|-----------|
+| V2-FR-1 | Quick intention | Required action ≤160 characters; optional definition of done ≤240; recent intentions are reusable |
+| V2-FR-2 | Timer and open-ended focus | 5–240 minute initial timer or stopwatch; elapsed/remaining time derives from persisted timestamps |
+| V2-FR-3 | Session controls | Running sessions can pause, resume, extend by an allowlisted duration, or enter checkout |
+| V2-FR-4 | Honest checkout | Timer expiry enters Review; only the user can mark Completed or End unfinished, with an optional reason/note |
+| V2-FR-5 | Recovery | Popup closure, worker suspension, browser restart, delayed alarms, reset, retention, clear, export, and restore have explicit behavior |
+| V2-FR-6 | Reflection | Dashboard shows active and historical intentional sessions per day without folding them into passive Focus Score |
+| V2-FR-7 | Local privacy | Intentions/outcomes remain in trusted local extension storage; no new permission, network request, account, or telemetry |
+
+This slice deliberately does not claim Pomodoro cycles, recurring plans, blocking,
+side-panel command center, sync, friends/family comparison, or the proposed final
+IndexedDB event model. Those require their own accepted decisions and end-to-end gates.

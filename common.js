@@ -38,7 +38,7 @@ function weekdayShort(key) {
 }
 
 /* ---------- storage schema / retention ---------- */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 // Delete date-keyed entries older than the retention window. Keys are
 // YYYY-MM-DD, which sort chronologically as strings. Mutates `map`; returns count.
@@ -520,9 +520,229 @@ async function getSettings() {
   return sanitizeSettings(settings);
 }
 
+/* ---------- V2 intention / focus-session state machine ---------- */
+const FOCUS_ACTIVE_VERSION = 1;
+const FOCUS_MAX_TEXT = 160;
+const FOCUS_MAX_DETAIL = 240;
+const FOCUS_MAX_RUNNING_MS = 12 * 60 * 60 * 1000;
+const FOCUS_MAX_HISTORY = 2000;
+
+function focusFailure(code) {
+  const error = new Error(code);
+  error.code = code;
+  throw error;
+}
+
+function normalizeFocusText(value, maxLength, required = false) {
+  if (value == null && !required) return "";
+  if (typeof value !== "string") focusFailure("FOCUS_INVALID_TEXT");
+  const text = value.trim().replace(/\s+/g, " ");
+  if ((required && !text) || text.length > maxLength) focusFailure("FOCUS_INVALID_TEXT");
+  return text;
+}
+
+function focusMinutes(value, min, max, code = "FOCUS_INVALID_DURATION") {
+  const minutes = Number(value);
+  if (!Number.isInteger(minutes) || minutes < min || minutes > max) focusFailure(code);
+  return minutes;
+}
+
+function createFocusActive(input, now, id) {
+  if (!isPlainObject(input) || !Number.isFinite(now) || typeof id !== "string" || !id) {
+    focusFailure("FOCUS_INVALID_REQUEST");
+  }
+  const intention = normalizeFocusText(input.intention, FOCUS_MAX_TEXT, true);
+  const successDefinition = normalizeFocusText(input.successDefinition, FOCUS_MAX_DETAIL);
+  const mode = input.mode === "stopwatch" ? "stopwatch" : input.mode === "timer" ? "timer" : null;
+  if (!mode) focusFailure("FOCUS_INVALID_MODE");
+  const targetMinutes = mode === "timer" ? focusMinutes(input.targetMinutes, 5, 240) : null;
+  return {
+    version: FOCUS_ACTIVE_VERSION,
+    id,
+    intention,
+    successDefinition,
+    mode,
+    targetMinutes,
+    targetMs: targetMinutes == null ? null : targetMinutes * 60000,
+    startedAt: now,
+    status: "running",
+    accumulatedMs: 0,
+    segmentStartedAt: now,
+    updatedAt: now,
+  };
+}
+
+function focusElapsedMs(active, now) {
+  if (!active) return 0;
+  let elapsed = Math.max(0, Number(active.accumulatedMs) || 0);
+  if (active.status === "running" && Number.isFinite(active.segmentStartedAt)) {
+    elapsed += Math.max(0, now - active.segmentStartedAt);
+  }
+  elapsed = Math.min(FOCUS_MAX_RUNNING_MS, elapsed);
+  if (active.mode === "timer" && Number.isFinite(active.targetMs)) elapsed = Math.min(active.targetMs, elapsed);
+  return Math.round(elapsed);
+}
+
+function focusRemainingMs(active, now) {
+  if (!active || active.mode !== "timer") return null;
+  return Math.max(0, active.targetMs - focusElapsedMs(active, now));
+}
+
+function focusNeedsReview(active, now) {
+  if (!active || active.status !== "running") return false;
+  if (active.mode === "timer") return focusRemainingMs(active, now) <= 0;
+  return focusElapsedMs(active, now) >= FOCUS_MAX_RUNNING_MS;
+}
+
+function focusView(active, now) {
+  if (!active) return null;
+  return {
+    version: active.version,
+    id: active.id,
+    intention: active.intention,
+    successDefinition: active.successDefinition || "",
+    mode: active.mode,
+    targetMinutes: active.targetMinutes,
+    targetMs: active.targetMs,
+    startedAt: active.startedAt,
+    status: active.status,
+    reviewReason: active.reviewReason || null,
+    elapsedMs: focusElapsedMs(active, now),
+    remainingMs: focusRemainingMs(active, now),
+    snapshotAt: now,
+  };
+}
+
+function focusTransition(active, action, now, payload = {}) {
+  if (!active) focusFailure("FOCUS_NOT_ACTIVE");
+  if (!Number.isFinite(now) || now < active.startedAt || !isPlainObject(payload)) focusFailure("FOCUS_INVALID_REQUEST");
+  const elapsed = focusElapsedMs(active, now);
+  const next = { ...active, updatedAt: now };
+
+  if (action === "pause") {
+    if (active.status !== "running") focusFailure("FOCUS_INVALID_TRANSITION");
+    next.status = "paused";
+    next.accumulatedMs = elapsed;
+    next.segmentStartedAt = null;
+    return { active: next };
+  }
+  if (action === "resume") {
+    if (active.status !== "paused") focusFailure("FOCUS_INVALID_TRANSITION");
+    next.status = "running";
+    next.segmentStartedAt = now;
+    return { active: next };
+  }
+  if (action === "review") {
+    if (!focusNeedsReview(active, now)) focusFailure("FOCUS_NOT_DUE");
+    next.status = "review";
+    next.accumulatedMs = elapsed;
+    next.segmentStartedAt = null;
+    next.reviewReason = active.mode === "timer" ? "timer" : "safety";
+    return { active: next };
+  }
+  if (action === "extend") {
+    if (active.mode !== "timer" || !["running", "paused", "review"].includes(active.status)) {
+      focusFailure("FOCUS_INVALID_TRANSITION");
+    }
+    const minutes = focusMinutes(payload.minutes, 1, 120);
+    const targetMs = active.targetMs + minutes * 60000;
+    if (targetMs > FOCUS_MAX_RUNNING_MS) focusFailure("FOCUS_INVALID_DURATION");
+    next.targetMs = targetMs;
+    next.targetMinutes = Math.round(targetMs / 60000);
+    if (active.status === "review") {
+      next.status = "running";
+      next.accumulatedMs = elapsed;
+      next.segmentStartedAt = now;
+      delete next.reviewReason;
+    }
+    return { active: next };
+  }
+  if (action === "complete" || action === "abandon") {
+    const note = normalizeFocusText(payload.note, FOCUS_MAX_DETAIL);
+    const allowedReasons = ["", "changed-priority", "interrupted", "too-long", "other"];
+    if (action === "abandon" && payload.reason != null && !allowedReasons.includes(payload.reason)) {
+      focusFailure("FOCUS_INVALID_REASON");
+    }
+    const abandonedReason = action === "abandon" ? (payload.reason || "") : "";
+    return {
+      active: null,
+      record: {
+        version: 1,
+        id: active.id,
+        day: dateKey(active.startedAt),
+        intention: active.intention,
+        successDefinition: active.successDefinition || "",
+        mode: active.mode,
+        targetMinutes: active.targetMinutes,
+        startedAt: active.startedAt,
+        endedAt: now,
+        focusedMs: elapsed,
+        outcome: action === "complete" ? "completed" : "abandoned",
+        abandonedReason,
+        note,
+      },
+    };
+  }
+  focusFailure("FOCUS_INVALID_ACTION");
+}
+
+function sanitizeFocusSessions(value) {
+  if (!Array.isArray(value)) importError("focusSessions", "must be an array");
+  if (value.length > FOCUS_MAX_HISTORY) importError("focusSessions", `contains more than ${FOCUS_MAX_HISTORY.toLocaleString()} entries`);
+  const ids = new Set();
+  const records = value.map((record, index) => {
+    const at = `focusSessions.${index}`;
+    if (!isPlainObject(record)) importError(at, "must be an object");
+    if (typeof record.id !== "string" || !/^[A-Za-z0-9_-]{8,100}$/.test(record.id) || ids.has(record.id)) {
+      importError(`${at}.id`, "invalid or duplicate session id");
+    }
+    ids.add(record.id);
+    let intention, successDefinition, note;
+    try {
+      intention = normalizeFocusText(record.intention, FOCUS_MAX_TEXT, true);
+      successDefinition = normalizeFocusText(record.successDefinition, FOCUS_MAX_DETAIL);
+      note = normalizeFocusText(record.note, FOCUS_MAX_DETAIL);
+    } catch (_) {
+      importError(at, "contains invalid text");
+    }
+    if (!["timer", "stopwatch"].includes(record.mode)) importError(`${at}.mode`, "invalid mode");
+    if (!["completed", "abandoned"].includes(record.outcome)) importError(`${at}.outcome`, "invalid outcome");
+    const targetMinutes = record.mode === "timer"
+      ? requireCount(record.targetMinutes, `${at}.targetMinutes`, 720)
+      : null;
+    if (record.mode === "timer" && targetMinutes < 1) importError(`${at}.targetMinutes`, "must be positive");
+    const startedAt = requireCount(record.startedAt, `${at}.startedAt`, 4102444800000);
+    const endedAt = requireCount(record.endedAt, `${at}.endedAt`, 4102444800000);
+    if (startedAt < 946684800000 || endedAt < startedAt) {
+      importError(at, "contains an invalid time range");
+    }
+    const focusedMs = requireCount(record.focusedMs, `${at}.focusedMs`, FOCUS_MAX_RUNNING_MS);
+    const day = dateKey(startedAt);
+    const allowedReasons = ["", "changed-priority", "interrupted", "too-long", "other"];
+    const abandonedReason = record.outcome === "abandoned" && allowedReasons.includes(record.abandonedReason)
+      ? record.abandonedReason : "";
+    return {
+      version: 1,
+      id: record.id,
+      day,
+      intention,
+      successDefinition,
+      mode: record.mode,
+      targetMinutes,
+      startedAt,
+      endedAt,
+      focusedMs,
+      outcome: record.outcome,
+      abandonedReason,
+      note,
+    };
+  });
+  return records.sort((a, b) => a.endedAt - b.endedAt);
+}
+
 /* ---------- portable backup schema ---------- */
-const EXPORT_SCHEMA_VERSION = 2;
-const EXPORT_DATA_KEYS = ["usage", "hours", "switches", "holes", "notified", "media", "wellness", "settings"];
+const EXPORT_SCHEMA_VERSION = 3;
+const EXPORT_DATA_KEYS = ["usage", "hours", "switches", "holes", "notified", "media", "wellness", "focusSessions", "settings"];
 const IMPORT_MAX_FILE_BYTES = 5 * 1024 * 1024;
 const DANGEROUS_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
@@ -535,6 +755,7 @@ function buildExportPayload(source) {
   };
   for (const key of EXPORT_DATA_KEYS) {
     if (key === "settings") out.settings = sanitizeSettings(data.settings);
+    else if (key === "focusSessions") out.focusSessions = sanitizeFocusSessions(Array.isArray(data.focusSessions) ? data.focusSessions : []);
     else out[key] = isPlainObject(data[key]) ? data[key] : {};
   }
   return out;
@@ -711,6 +932,7 @@ function validateImportData(value) {
   if (importedKeys.includes("notified")) patch.notified = sanitizeNotified(value.notified);
   if (importedKeys.includes("media")) patch.media = sanitizeMedia(value.media);
   if (importedKeys.includes("wellness")) patch.wellness = sanitizeWellness(value.wellness);
+  if (importedKeys.includes("focusSessions")) patch.focusSessions = sanitizeFocusSessions(value.focusSessions);
   if (importedKeys.includes("settings")) {
     if (!isPlainObject(value.settings)) importError("settings", "must be an object");
     const allowedSettings = new Set(Object.keys(DEFAULT_SETTINGS));

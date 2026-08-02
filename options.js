@@ -185,7 +185,8 @@ function downloadJson(payload, filename) {
 }
 
 async function readBackupData() {
-  return chrome.storage.local.get(EXPORT_DATA_KEYS);
+  const response = await sendWorkerRequest({ type: "EXPORT_DATA" });
+  return response.data;
 }
 
 async function sendWorkerRequest(message) {
@@ -195,8 +196,12 @@ async function sendWorkerRequest(message) {
 }
 
 document.getElementById("export").addEventListener("click", async () => {
-  const all = await readBackupData();
-  downloadJson(buildExportPayload(all), `tabyss-export-${dateKey(Date.now())}.json`);
+  try {
+    const backup = await readBackupData();
+    downloadJson(backup, `tabyss-export-${dateKey(Date.now())}.json`);
+  } catch (error) {
+    alert(`Export stopped. ${error && error.message ? error.message : "The background worker could not create a consistent backup."}`);
+  }
 });
 
 document.getElementById("importFile").addEventListener("change", async (e) => {
@@ -210,6 +215,10 @@ document.getElementById("importFile").addEventListener("change", async (e) => {
   try {
     const data = JSON.parse(await file.text());
     const preview = validateImportData(data);
+    const focusState = await sendWorkerRequest({ type: "GET_FOCUS_DATA" });
+    if (focusState.focus) {
+      throw new Error("Finish or end the active focus session before restoring a backup.");
+    }
     const warningText = preview.warnings.length ? `\n\n${preview.warnings.join("\n")}` : "";
     const confirmed = confirm(
       `Restore ${preview.importedKeys.join(", ")} from this backup?\n\n` +
@@ -219,7 +228,7 @@ document.getElementById("importFile").addEventListener("change", async (e) => {
 
     const current = await readBackupData();
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    downloadJson(buildExportPayload(current), `tabyss-before-import-${stamp}.json`);
+    downloadJson(current, `tabyss-before-import-${stamp}.json`);
     const result = await sendWorkerRequest({ type: "IMPORT_DATA", data });
     await init();
     const workerWarnings = Array.isArray(result.warnings) && result.warnings.length

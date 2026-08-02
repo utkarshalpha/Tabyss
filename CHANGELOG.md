@@ -2,7 +2,19 @@
 
 All notable changes to Tabyss. Format based on Keep a Changelog; versioning is SemVer.
 
-## [Unreleased] — V2 Wave 0: Trust foundation
+## [Unreleased] — V2 Waves 0–1: Trust foundation and intentional focus
+### Intentional focus
+- Added an intention-first popup flow with 25/50/90-minute timers or an open-ended
+  stopwatch, optional definition of done, pause/resume, ten-minute extension, and
+  explicit completed/unfinished checkout with an optional local note.
+- Added a per-day dashboard reflection panel that keeps chosen focus sessions
+  distinct from passive browsing analytics.
+- Active sessions recover across popup closure, worker suspension, and browser
+  restart using persisted timestamps; timer expiry enters review instead of
+  auto-completing work, and open-ended sessions have a 12-hour safety review.
+- Focus outcomes follow retention/reset/clear behavior and portable backup format 3.
+  Restores are blocked while a valid focus session is active.
+
 ### Security & privacy
 - Incognito tabs are excluded from both foreground-time and media tracking.
 - Ignore rules cover the selected domain and its subdomains with label-boundary-safe

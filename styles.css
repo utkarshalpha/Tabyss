@@ -40,6 +40,10 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: var(--sans); background: var(--plane); color: var(--ink); font-size: 14px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
 
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 3px; }
 select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
@@ -71,6 +75,54 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); out
   cursor: pointer;
 }
 .iconbtn:hover { background: var(--track); color: var(--ink); }
+
+/* intention-first focus session */
+.focuscard {
+  margin: 0 0.75rem 0.75rem; padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--border));
+  border-radius: 14px; background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    var(--grad) border-box; box-shadow: 0 8px 26px rgba(22, 18, 31, 0.07);
+}
+.focuscard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.7rem; }
+.focus-kicker { color: var(--brand); font-size: 0.66rem; font-weight: 720; letter-spacing: 0.08em; text-transform: uppercase; }
+.focuscard h1 { font-size: 1rem; line-height: 1.25; margin: 0.13rem 0 0.65rem; letter-spacing: -0.01em; }
+.focus-status {
+  flex: none; padding: 0.2rem 0.46rem; border-radius: 99px;
+  color: var(--brand); background: color-mix(in srgb, var(--brand) 11%, var(--card));
+  font-size: 0.66rem; font-weight: 680; text-transform: capitalize;
+}
+.focus-create { display: flex; flex-direction: column; gap: 0.52rem; }
+.focus-create[hidden] { display: none; }
+.focus-intention, .focuscard textarea, .focuscard select {
+  width: 100%; font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 9px;
+}
+.focus-intention { padding: 0.62rem 0.68rem; font-weight: 590; }
+.focuscard textarea { padding: 0.55rem 0.62rem; resize: vertical; line-height: 1.35; }
+.focuscard select { padding: 0.48rem 0.52rem; }
+.focus-setup-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; }
+.focus-primary { min-width: 112px; }
+.focus-details { color: var(--ink2); font-size: 0.75rem; }
+.focus-details summary { cursor: pointer; width: fit-content; }
+.focus-details summary span { color: var(--muted); margin-left: 0.2rem; }
+.focus-details textarea { margin-top: 0.45rem; font-size: 0.78rem; }
+.focus-title { margin: 0 0 0.25rem; font-size: 0.94rem; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; }
+.focus-success { margin: 0 0 0.5rem; color: var(--ink2); font-size: 0.74rem; line-height: 1.35; }
+.focus-success::before { content: "Done: "; font-weight: 650; color: var(--ink); }
+.focus-clock-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin-top: 0.55rem; }
+.focus-clock { font-size: 1.72rem; font-weight: 720; letter-spacing: -0.04em; }
+.focus-clock-hint { color: var(--muted); font-size: 0.7rem; }
+.focus-progress { height: 5px; overflow: hidden; border-radius: 99px; background: var(--track); margin: 0.35rem 0 0.72rem; }
+.focus-progress span { display: block; height: 100%; width: 0; background: var(--grad); border-radius: inherit; transition: width 0.25s linear; }
+.focus-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.42rem; }
+.focus-actions[hidden] { display: none; }
+.focus-actions .btn { padding: 0.42rem 0.64rem; font-size: 0.78rem; }
+.focus-checkout { border-top: 1px solid var(--border); margin-top: 0.72rem; padding-top: 0.72rem; display: grid; gap: 0.52rem; }
+.focus-checkout[hidden] { display: none; }
+.focus-checkout-title { font-size: 0.8rem; font-weight: 680; }
+.focus-checkout textarea, .focus-checkout select { font-size: 0.76rem; }
+.focus-error { color: #c22f3d; background: color-mix(in srgb, #c22f3d 8%, var(--card)); border-radius: 7px; padding: 0.45rem 0.55rem; margin: 0.6rem 0 0; font-size: 0.73rem; }
 
 /* hero: today total + focus ring, side by side */
 .heroP {
@@ -179,6 +231,24 @@ select:focus-visible, input:focus-visible { outline: 2px solid var(--brand); out
 @media (max-width: 680px) { .grid2 { grid-template-columns: 1fr; } }
 .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.2rem; }
 .panel h2 { font-size: 0.82rem; letter-spacing: 0.01em; color: var(--muted); margin: 0 0 0.9rem; font-weight: 640; }
+.focus-history-panel { margin-bottom: 1.8rem; }
+.panel-heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.panel-heading-row h2 { margin-bottom: 0.18rem; }
+.panel-sub { margin: 0 0 0.9rem; color: var(--ink2); font-size: 0.76rem; }
+.focus-day-summary { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.focus-summary-chip { padding: 0.25rem 0.55rem; background: var(--track); border: 1px solid var(--border); border-radius: 99px; color: var(--ink2); font-size: 0.7rem; }
+.focus-history { display: grid; gap: 0.55rem; }
+.focus-history-row { display: grid; grid-template-columns: 112px 1fr; gap: 0.8rem; align-items: start; padding: 0.72rem 0; border-top: 1px solid var(--border); }
+.focus-history-row.active { border: 1px solid color-mix(in srgb, var(--brand) 24%, var(--border)); border-radius: 10px; padding: 0.72rem; background: color-mix(in srgb, var(--brand) 5%, var(--card)); }
+.focus-outcome { width: fit-content; padding: 0.22rem 0.5rem; border-radius: 99px; background: var(--track); color: var(--ink2); font-size: 0.68rem; font-weight: 680; }
+.focus-outcome.completed { color: #187a4b; background: color-mix(in srgb, #25a66a 12%, var(--card)); }
+.focus-outcome.abandoned { color: var(--warn-ink); background: color-mix(in srgb, var(--warn) 14%, var(--card)); }
+.focus-outcome.running { color: var(--brand); background: color-mix(in srgb, var(--brand) 12%, var(--card)); text-transform: capitalize; }
+.focus-history-body { min-width: 0; }
+.focus-history-title { font-weight: 650; overflow-wrap: anywhere; }
+.focus-history-meta { margin-top: 0.18rem; color: var(--ink2); font-size: 0.72rem; }
+.focus-history-detail { margin-top: 0.28rem; color: var(--muted); font-size: 0.72rem; line-height: 1.4; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .focus-history-row { grid-template-columns: 1fr; gap: 0.35rem; } }
 
 /* donut */
 .donutwrap { display: flex; align-items: center; gap: 1.2rem; }

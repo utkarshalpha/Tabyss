@@ -21,6 +21,214 @@ function svg(tag, attrs) {
   return e;
 }
 
+/* ---------- intention-first focus session ---------- */
+let focusSnapshot = null;
+let focusTimer = null;
+let focusCheckoutOpen = false;
+let focusReviewRequested = false;
+
+function showFocusError(message) {
+  const box = document.getElementById("focusError");
+  box.textContent = message || "The focus session could not be updated.";
+  box.hidden = false;
+}
+
+function clearFocusError() {
+  const box = document.getElementById("focusError");
+  box.textContent = "";
+  box.hidden = true;
+}
+
+async function focusRequest(type, payload = {}) {
+  clearFocusError();
+  const response = await chrome.runtime.sendMessage({ type, ...payload });
+  if (!response || response.ok !== true) throw new Error(response?.error || "The background worker did not accept the request.");
+  return response;
+}
+
+function focusLiveElapsed(focus, now = Date.now()) {
+  if (!focus) return 0;
+  const extra = focus.status === "running" ? Math.max(0, now - focus.snapshotAt) : 0;
+  const limit = focus.mode === "timer" ? focus.targetMs : FOCUS_MAX_RUNNING_MS;
+  return Math.min(limit, focus.elapsedMs + extra);
+}
+
+function focusClockText(ms) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return hours
+    ? `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function renderFocusClock() {
+  const focus = focusSnapshot;
+  if (!focus) return;
+  const elapsed = focusLiveElapsed(focus);
+  const clock = document.getElementById("focusClock");
+  const hint = document.getElementById("focusClockHint");
+  const progress = document.getElementById("focusProgress");
+  const fill = document.getElementById("focusProgressFill");
+  const limit = focus.mode === "timer" ? focus.targetMs : FOCUS_MAX_RUNNING_MS;
+
+  if (focus.mode === "timer") {
+    const remaining = Math.max(0, focus.targetMs - elapsed);
+    clock.textContent = focusClockText(remaining);
+    hint.textContent = focus.status === "review" ? "ready to review" : focus.status === "paused" ? "remaining · paused" : "remaining";
+    progress.setAttribute("aria-valuemin", "0");
+    progress.setAttribute("aria-valuemax", String(focus.targetMs));
+    progress.setAttribute("aria-valuenow", String(Math.round(elapsed)));
+  } else {
+    clock.textContent = focusClockText(elapsed);
+    hint.textContent = focus.status === "review" ? "safety check-in" : focus.status === "paused" ? "elapsed · paused" : "elapsed";
+    progress.setAttribute("aria-valuemin", "0");
+    progress.setAttribute("aria-valuemax", String(FOCUS_MAX_RUNNING_MS));
+    progress.setAttribute("aria-valuenow", String(Math.round(elapsed)));
+  }
+  fill.style.width = `${Math.min(100, (elapsed / limit) * 100)}%`;
+
+  if (focus.status === "running" && elapsed >= limit && !focusReviewRequested) {
+    focusReviewRequested = true;
+    refreshFocus().catch((error) => showFocusError(error.message));
+  }
+}
+
+function populateRecentIntentions(sessions) {
+  const list = document.getElementById("recentIntentions");
+  list.innerHTML = "";
+  const seen = new Set();
+  for (const session of [...sessions].reverse()) {
+    if (!session?.intention || seen.has(session.intention)) continue;
+    seen.add(session.intention);
+    const option = document.createElement("option");
+    option.value = session.intention;
+    list.append(option);
+    if (seen.size >= 6) break;
+  }
+}
+
+function renderFocus(data) {
+  focusSnapshot = data.focus || null;
+  populateRecentIntentions(Array.isArray(data.focusSessions) ? data.focusSessions : []);
+  if (data.focusHistoryAvailable === false) {
+    showFocusError("Focus history could not be validated. Restore a known-good backup or clear local data before starting another session.");
+  }
+  const create = document.getElementById("focusCreate");
+  const activeBox = document.getElementById("focusActive");
+  const status = document.getElementById("focusStatus");
+  if (focusTimer) clearInterval(focusTimer);
+  focusTimer = null;
+  focusReviewRequested = false;
+
+  if (!focusSnapshot) {
+    create.hidden = false;
+    activeBox.hidden = true;
+    status.hidden = true;
+    focusCheckoutOpen = false;
+    return;
+  }
+
+  create.hidden = true;
+  activeBox.hidden = false;
+  status.hidden = false;
+  status.textContent = focusSnapshot.status;
+  document.getElementById("focusTitle").textContent = focusSnapshot.intention;
+  const success = document.getElementById("focusSuccessView");
+  success.textContent = focusSnapshot.successDefinition || "";
+  success.hidden = !focusSnapshot.successDefinition;
+
+  const pause = document.getElementById("focusPause");
+  pause.textContent = focusSnapshot.status === "paused" ? "Resume" : "Pause";
+  pause.hidden = focusSnapshot.status === "review";
+  document.getElementById("focusExtend").hidden = focusSnapshot.mode !== "timer";
+  if (focusSnapshot.status === "review") focusCheckoutOpen = true;
+  document.getElementById("focusCheckout").hidden = !focusCheckoutOpen;
+  document.getElementById("focusControls").hidden = focusCheckoutOpen;
+  renderFocusClock();
+  focusTimer = setInterval(renderFocusClock, 500);
+}
+
+async function refreshFocus() {
+  const data = await focusRequest("GET_FOCUS_DATA");
+  renderFocus(data);
+}
+
+function announceFocus(message) {
+  document.getElementById("focusAnnouncement").textContent = message;
+}
+
+document.getElementById("focusCreate").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const duration = document.getElementById("focusDuration").value;
+  const button = event.submitter || event.currentTarget.querySelector("button[type=submit]");
+  button.disabled = true;
+  try {
+    const data = await focusRequest("START_FOCUS", {
+      intention: document.getElementById("focusIntention").value,
+      successDefinition: document.getElementById("focusSuccess").value,
+      mode: duration === "stopwatch" ? "stopwatch" : "timer",
+      targetMinutes: duration === "stopwatch" ? null : Number(duration),
+    });
+    focusCheckoutOpen = false;
+    renderFocus(data);
+    announceFocus("Focus session started.");
+  } catch (error) {
+    showFocusError(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("focusPause").addEventListener("click", async () => {
+  try {
+    const type = focusSnapshot?.status === "paused" ? "RESUME_FOCUS" : "PAUSE_FOCUS";
+    renderFocus(await focusRequest(type));
+    announceFocus(type === "RESUME_FOCUS" ? "Focus session resumed." : "Focus session paused.");
+  } catch (error) { showFocusError(error.message); }
+});
+
+document.getElementById("focusExtend").addEventListener("click", async () => {
+  try {
+    focusCheckoutOpen = false;
+    renderFocus(await focusRequest("EXTEND_FOCUS", { minutes: 10 }));
+    announceFocus("Focus session extended by 10 minutes.");
+  } catch (error) { showFocusError(error.message); }
+});
+
+document.getElementById("focusFinish").addEventListener("click", () => {
+  focusCheckoutOpen = true;
+  document.getElementById("focusCheckout").hidden = false;
+  document.getElementById("focusControls").hidden = true;
+  document.getElementById("focusNote").focus();
+});
+
+document.getElementById("focusCheckoutBack").addEventListener("click", () => {
+  focusCheckoutOpen = false;
+  document.getElementById("focusCheckout").hidden = true;
+  document.getElementById("focusControls").hidden = false;
+});
+
+async function closeFocus(type, announcement) {
+  try {
+    const data = await focusRequest(type, {
+      note: document.getElementById("focusNote").value,
+      reason: type === "ABANDON_FOCUS" ? document.getElementById("focusReason").value : "",
+    });
+    document.getElementById("focusNote").value = "";
+    document.getElementById("focusReason").value = "";
+    document.getElementById("focusIntention").value = "";
+    document.getElementById("focusSuccess").value = "";
+    focusCheckoutOpen = false;
+    renderFocus(data);
+    announceFocus(announcement);
+  } catch (error) { showFocusError(error.message); }
+}
+
+document.getElementById("focusComplete").addEventListener("click", () => closeFocus("COMPLETE_FOCUS", "Focus session marked completed."));
+document.getElementById("focusAbandon").addEventListener("click", () => closeFocus("ABANDON_FOCUS", "Focus session ended unfinished."));
+
 function categoryTotals(usageDay, overrides) {
   const totals = {};
   for (const [domain, secs] of Object.entries(usageDay)) {
@@ -319,4 +527,6 @@ document.getElementById("reset").addEventListener("click", async (e) => {
   location.reload();
 });
 
-load();
+Promise.allSettled([load(), refreshFocus()]).then((results) => {
+  if (results[1].status === "rejected") showFocusError(results[1].reason?.message);
+});

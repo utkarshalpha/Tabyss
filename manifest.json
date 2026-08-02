@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tabyss — Know Your Scroll",
   "version": "1.5.0",
-  "description": "Your browsing personality, weekly Wrapped, focus score, watch-time and doomscroll tracking, eye breaks & office mode. 100% on-device",
+  "description": "Plan focus sessions, understand browsing time, spot doomscrolling, and protect wellbeing — private and 100% on-device.",
   "minimum_chrome_version": "111",
   "permissions": ["tabs", "storage", "idle", "alarms", "notifications", "favicon"],
   "background": { "service_worker": "background.js" },

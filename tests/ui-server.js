@@ -25,7 +25,7 @@ http.createServer((request, response) => {
       return;
     }
     let body = buffer;
-    if (relative === "options.html") {
+    if (["options.html", "popup.html", "dashboard.html"].includes(relative)) {
       body = buffer.toString("utf8").replace(
         '<script src="common.js"></script>',
         '<script src="tests/chrome-mock.js"></script>\n    <script src="common.js"></script>'

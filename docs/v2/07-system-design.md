@@ -226,6 +226,22 @@ accumulating -> prewarned -> due -> shown -> completed | snoozed | skipped | sup
 
 Every transition is persisted before relying on a future worker wakeup.
 
+Wave 1A implements the deliberately smaller ADR-019 machine while ADR-005 remains
+Proposed:
+
+```text
+none -> running <-> paused
+          |          |
+          +--------> review -> running (extend)
+          |             |
+          +-------------+-> completed | abandoned -> none
+```
+
+`focusActive` is the restart-recovery record; `focusSessions` is a bounded outcome
+view. Elapsed time is derived from timestamps and accumulated running segments.
+The `focus-end` alarm is reconciled whenever a fresh worker is evaluated and is a
+wake-up hint, not the clock or evidence of completion.
+
 ## Concurrency and correctness
 
 - Replace one global promise chain with named transactional queues where independent domains permit concurrency.

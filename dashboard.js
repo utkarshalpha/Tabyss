@@ -2,6 +2,7 @@
  * rabbit holes, trend, rollups, calendar, badges, sites. */
 
 let usage = {}, hours = {}, switches = {}, holes = {}, notified = {}, media = {}, wellness = {};
+let focusSessions = [], focusActive = null, focusHistoryAvailable = false;
 let settings = DEFAULT_SETTINGS;
 let selected = dateKey(Date.now());
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -31,6 +32,67 @@ function catTotalsFor(key) {
   return t;
 }
 function dataBundle() { return { usage, hours, switches, holes, notified, settings }; }
+
+function focusOutcomeLabel(record) {
+  if (record.outcome === "completed") return "Completed";
+  const labels = {
+    "changed-priority": "Priority changed",
+    interrupted: "Interrupted",
+    "too-long": "Scope was too large",
+    other: "Other reason",
+  };
+  return labels[record.abandonedReason] || "Ended unfinished";
+}
+
+function renderFocusSessions() {
+  const wrap = document.getElementById("focusHistory");
+  const summary = document.getElementById("focusDaySummary");
+  wrap.innerHTML = "";
+  summary.innerHTML = "";
+  if (!focusHistoryAvailable) {
+    wrap.append(el("div", "empty", "Focus history could not be validated. Restore a known-good backup or clear local data before recording another session."));
+    return;
+  }
+  const sessions = focusSessions.filter((record) => record.day === selected).sort((a, b) => b.endedAt - a.endedAt);
+  const activeToday = focusActive && dateKey(focusActive.startedAt) === selected ? focusActive : null;
+  const totalMs = sessions.reduce((sum, record) => sum + record.focusedMs, 0) + (activeToday?.elapsedMs || 0);
+  const completed = sessions.filter((record) => record.outcome === "completed").length;
+
+  if (sessions.length || activeToday) {
+    summary.append(
+      el("span", "focus-summary-chip mono", fmtShort(totalMs / 1000)),
+      el("span", "focus-summary-chip", `${completed}/${sessions.length} completed`)
+    );
+  }
+
+  if (activeToday) {
+    const row = el("article", "focus-history-row active");
+    const body = el("div", "focus-history-body");
+    body.append(el("div", "focus-history-title", activeToday.intention));
+    const meta = activeToday.mode === "timer"
+      ? `${fmtShort(activeToday.elapsedMs / 1000)} focused · ${activeToday.status}`
+      : `${fmtShort(activeToday.elapsedMs / 1000)} elapsed · ${activeToday.status}`;
+    body.append(el("div", "focus-history-meta", meta));
+    row.append(el("span", "focus-outcome running", activeToday.status === "review" ? "Review" : "Active"), body);
+    wrap.append(row);
+  }
+
+  for (const record of sessions) {
+    const row = el("article", "focus-history-row");
+    const body = el("div", "focus-history-body");
+    body.append(el("div", "focus-history-title", record.intention));
+    const target = record.mode === "timer" && record.targetMinutes ? ` · ${record.targetMinutes}m target` : " · open-ended";
+    body.append(el("div", "focus-history-meta", `${fmtShort(record.focusedMs / 1000)} focused${target}`));
+    if (record.successDefinition) body.append(el("div", "focus-history-detail", `Done meant: ${record.successDefinition}`));
+    if (record.note) body.append(el("div", "focus-history-detail", record.note));
+    row.append(el("span", `focus-outcome ${record.outcome}`, focusOutcomeLabel(record)), body);
+    wrap.append(row);
+  }
+
+  if (!wrap.children.length) {
+    wrap.append(el("div", "empty", "No intentional sessions on this day. Start one from the Tabyss popup."));
+  }
+}
 
 /* Count-up animation for plain-number tile values. */
 function countUp(elm, target) {
@@ -475,6 +537,7 @@ function renderDay() {
 function renderAll() {
   renderHero();
   renderTiles();
+  renderFocusSessions();
   renderDonut();
   renderHeat();
   renderCompare();
@@ -493,16 +556,21 @@ document.getElementById("opts").addEventListener("click", () => chrome.runtime.o
 document.getElementById("wrappedBtn").addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("wrapped.html") });
 });
-document.getElementById("export").addEventListener("click", () => {
-  const data = JSON.stringify(buildExportPayload({
-    usage, hours, switches, holes, notified, media, wellness, settings,
-  }), null, 2);
-  const blob = new Blob([data], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `tabyss-export-${dateKey(Date.now())}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+document.getElementById("export").addEventListener("click", async () => {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "EXPORT_DATA" });
+    if (!response || response.ok !== true || !response.data) {
+      throw new Error(response?.error || "Tabyss could not create a consistent export.");
+    }
+    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `tabyss-export-${dateKey(Date.now())}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+  } catch (error) {
+    alert(`Export stopped. ${error && error.message ? error.message : "The background worker could not create a consistent backup."}`);
+  }
 });
 
 (async function init() {
@@ -519,6 +587,14 @@ document.getElementById("export").addEventListener("click", () => {
   notified = store.notified || {};
   media = store.media || {};
   wellness = store.wellness || {};
+  try {
+    const focusData = await chrome.runtime.sendMessage({ type: "GET_FOCUS_DATA" });
+    if (focusData?.ok === true) {
+      focusSessions = Array.isArray(focusData.focusSessions) ? focusData.focusSessions : [];
+      focusActive = focusData.focus || null;
+      focusHistoryAvailable = focusData.focusHistoryAvailable !== false;
+    }
+  } catch (_) { focusHistoryAvailable = false; }
   settings = await getSettings();
   renderAll();
 })();
