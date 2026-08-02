@@ -1,7 +1,8 @@
 # Calm Optimistic Design System
 
 Status: Foundation accepted in ADR-020; ADR-022 restores the original V1.5 mark;
-ADR-024 makes the popup session secondary and minimal.
+ADR-024 makes the popup session secondary and minimal; ADR-025 makes its outcome
+actions direct and adds compact visited-site context.
 
 ## Brand idea
 
@@ -47,7 +48,7 @@ palette and must always be paired with labels or patterns.
 - Sentence case is the default. Uppercase is reserved for short kickers and never
   used for destructive warnings.
 - Keep body copy at or above 13px in the popup and 14px on full pages.
-- Prefer direct verbs: Start, Finish session, Save current page, Open dashboard.
+- Prefer direct verbs: Start, Complete, End, Save current page, Open dashboard.
 
 ## State vocabulary
 
@@ -70,7 +71,9 @@ palette and must always be paired with labels or patterns.
   primary action.
 - **Quiet action:** text/icon action for navigation or optional detail.
 - **Session card:** a neutral secondary popup card; holds one task, one duration, or
-  compact live controls. It is optional and must not use hero treatment.
+  compact live controls. It is optional and must not use hero treatment. Active
+  state shows bounded site chips plus direct Complete and secondary End actions,
+  without a separate checkout screen.
 - **Today card:** compact total, intentional/productive context, focus ring, and up
   to two next cues.
 - **Disclosure:** secondary analytics and controls use a clearly named native

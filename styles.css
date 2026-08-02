@@ -158,14 +158,24 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .focus-clock-hint { color: var(--muted); font-size: 0.7rem; }
 .focus-progress { height: 6px; overflow: hidden; border-radius: 99px; background: var(--track); margin: 0.35rem 0 0.8rem; }
 .focus-progress span { display: block; height: 100%; width: 0; background: var(--grad); border-radius: inherit; transition: width 0.25s linear; }
+.focus-sites { display: grid; gap: 0.38rem; }
+.focus-sites-label { color: var(--ink2); font-size: 0.72rem; font-weight: 650; }
+.focus-site-list { display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem; }
+.focus-site {
+  display: inline-flex; align-items: center; gap: 0.32rem; min-width: 0; max-width: 155px;
+  padding: 0.25rem 0.42rem; border: 1px solid var(--border); border-radius: 99px;
+  background: var(--card); color: var(--ink2); font-size: 0.68rem;
+}
+.focus-site .chip { width: 16px; height: 16px; font-size: 0.58rem; }
+.focus-site-domain { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.focus-sites-empty, .focus-sites-more { color: var(--muted); font-size: 0.7rem; }
 .focus-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.42rem; }
+.focus-sites + .focus-actions { margin-top: 0.72rem; }
 .focus-actions[hidden] { display: none; }
 .focus-actions .btn { min-height: 36px; padding: 0.46rem 0.68rem; font-size: 0.78rem; }
-.focus-checkout { border-top: 1px solid var(--border); margin-top: 0.72rem; padding-top: 0.72rem; display: grid; gap: 0.52rem; }
-.focus-checkout[hidden] { display: none; }
-.focus-checkout-title { font-size: 0.8rem; font-weight: 680; }
-.focus-checkout textarea { font-size: 0.76rem; }
 .focus-error { color: var(--danger); background: var(--danger-soft); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); border-radius: var(--radius-control); padding: 0.52rem 0.6rem; margin: 0.65rem 0 0; font-size: 0.73rem; }
+.focus-feedback { color: var(--ink2); font-size: 0.74rem; margin: 0.62rem 0 0; }
+.focus-feedback[hidden] { display: none; }
 
 @media (max-width: 340px) {
   .focus-setup-row { grid-template-columns: 1fr; }
@@ -329,6 +339,14 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .focus-history-title { font-weight: 650; overflow-wrap: anywhere; }
 .focus-history-meta { margin-top: 0.18rem; color: var(--ink2); font-size: 0.72rem; }
 .focus-history-detail { margin-top: 0.28rem; color: var(--muted); font-size: 0.72rem; line-height: 1.4; overflow-wrap: anywhere; }
+.focus-history-sites { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
+.focus-history-site {
+  display: inline-flex; align-items: center; gap: 0.3rem; min-width: 0; max-width: 180px;
+  padding: 0.24rem 0.4rem; border: 1px solid var(--border); border-radius: 99px;
+  background: var(--surface); color: var(--ink2); font-size: 0.68rem;
+}
+.focus-history-site .chip { width: 16px; height: 16px; font-size: 0.58rem; }
+.focus-history-site-domain { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 520px) { .focus-history-row { grid-template-columns: 1fr; gap: 0.35rem; } }
 
 /* donut */

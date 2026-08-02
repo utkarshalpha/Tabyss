@@ -16,10 +16,13 @@ To show you how you spend time online, Tabyss records, **locally on your compute
   never reads or stores page content, text you type, or full URLs.
 - **Wellness counts** per day: eye breaks taken/skipped, water and stand-up
   reminders completed.
-- **Intentional session data you enter:** what you are working on, timer/stopwatch
-  state, completed/ended outcome, and an optional result or next-step note. Earlier
-  local V2 session records may also retain a definition of done or ending reason for
-  compatibility. These fields are never taken from page content.
+- **Intentional session data:** what you enter as the task, timer/stopwatch state,
+  completed/ended outcome, and up to 24 unique domains visited while that session is
+  running. Session sites follow the same active-tab rules as normal tracking and
+  exclude Incognito, ignored domains, unsupported pages, and non-counting idle time.
+  Tabyss does not attach full URLs, page titles, page content, or per-site duration to
+  the session. Earlier local V2 records may also retain a definition of done, ending
+  reason, or optional note for compatibility.
 - **Saved pages:** when you choose **Save current page**, Tabyss stores that page's
   full HTTP(S) URL, title, optional note, saved/completed state, and timestamps so
   you can return later. These records are bounded, exclude Incognito, reject
@@ -52,8 +55,9 @@ your stored history.
   above.
 
 ## Permissions, in plain language
-- **tabs** — to read the domain of your active tab so time can be attributed to it,
-  and to save its URL/title or open it again only when you use Saved pages.
+- **tabs** — to read the domain of your active tab so time can be attributed to it
+  and, while you run an Intentional Session, shown in that session's local site list;
+  its URL/title is saved or reopened only when you use Saved pages.
 - **idle** — to pause tracking when you step away.
 - **alarms** — to run the 1-minute tracking tick, periodic cleanup, and wake the
   extension when a focus timer is ready for review.
@@ -72,8 +76,8 @@ your stored history.
 - **Ignore:** an ignored domain also excludes its subdomains; matching respects domain
   boundaries (`example.com` excludes `mail.example.com`, not `evil-example.com`).
 - **Export / Import:** back up or restore your data as a JSON file (Settings → Your data).
-  A full backup includes Saved page URLs/titles and any compatibility records from
-  earlier local V2 builds; treat the file as sensitive.
+  A full backup includes Saved page URLs/titles, session-linked domains, and any
+  compatibility records from earlier local V2 builds; treat the file as sensitive.
   Imports have a file-size limit, are schema-validated twice, and trigger a local
   safety-backup download before any stored section is replaced. An active focus
   session must be checked out first so a restore cannot split its outcome history;

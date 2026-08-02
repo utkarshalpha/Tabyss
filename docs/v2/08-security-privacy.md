@@ -129,6 +129,16 @@ Every new permission needs:
 - Test coverage.
 - Privacy-policy update.
 
+### Session-linked domain context
+
+ADR-025 intentionally links a bounded set of visited domains to an Intentional
+Session. This is more sensitive than daily aggregate domain totals even though it
+remains local. Controls are mandatory: worker-derived input only, normalized domains,
+24 unique entries maximum, no full URL/title/content/per-site duration, normal
+Incognito and ignore exclusions, trusted storage access, validated import/export,
+retention/reset/clear coverage, and explicit Privacy disclosure. No new permission
+or content-script signal is used.
+
 ## Content-script hardening
 
 - Dynamically register only enabled capability/site scopes where feasible.

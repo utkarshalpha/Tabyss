@@ -24,7 +24,6 @@ function svg(tag, attrs) {
 /* ---------- simple intentional session ---------- */
 let focusSnapshot = null;
 let focusTimer = null;
-let focusCheckoutOpen = false;
 let focusReviewRequested = false;
 
 function showFocusError(message) {
@@ -109,6 +108,24 @@ function populateRecentIntentions(sessions) {
   }
 }
 
+function renderFocusSites(domains) {
+  const list = document.getElementById("focusSiteList");
+  list.innerHTML = "";
+  const sites = Array.isArray(domains) ? domains : [];
+  if (!sites.length) {
+    list.append(el("span", "focus-sites-empty", "No tracked sites yet"));
+    return;
+  }
+  for (const domain of sites.slice(0, 6)) {
+    const item = el("span", "focus-site");
+    item.setAttribute("role", "listitem");
+    item.title = domain;
+    item.append(siteChip(domain), el("span", "focus-site-domain", domain));
+    list.append(item);
+  }
+  if (sites.length > 6) list.append(el("span", "focus-sites-more", `+${sites.length - 6} more`));
+}
+
 function renderFocus(data) {
   focusSnapshot = data.focus || null;
   populateRecentIntentions(Array.isArray(data.focusSessions) ? data.focusSessions : []);
@@ -128,7 +145,6 @@ function renderFocus(data) {
     create.hidden = false;
     activeBox.hidden = true;
     status.hidden = true;
-    focusCheckoutOpen = false;
     return;
   }
 
@@ -142,14 +158,12 @@ function renderFocus(data) {
     review: "Ready to review",
   }[focusSnapshot.status] || "Session";
   document.getElementById("focusTitle").textContent = focusSnapshot.intention;
+  renderFocusSites(focusSnapshot.visitedDomains);
 
   const pause = document.getElementById("focusPause");
   pause.textContent = focusSnapshot.status === "paused" ? "Resume" : "Pause";
   pause.hidden = focusSnapshot.status === "review";
   document.getElementById("focusExtend").hidden = focusSnapshot.mode !== "timer";
-  if (focusSnapshot.status === "review") focusCheckoutOpen = true;
-  document.getElementById("focusCheckout").hidden = !focusCheckoutOpen;
-  document.getElementById("focusControls").hidden = focusCheckoutOpen;
   renderFocusClock();
   focusTimer = setInterval(renderFocusClock, 500);
 }
@@ -160,7 +174,9 @@ async function refreshFocus() {
 }
 
 function announceFocus(message) {
-  document.getElementById("focusAnnouncement").textContent = message;
+  const announcement = document.getElementById("focusAnnouncement");
+  announcement.textContent = message;
+  announcement.hidden = !message;
 }
 
 document.getElementById("focusCreate").addEventListener("submit", async (event) => {
@@ -175,7 +191,6 @@ document.getElementById("focusCreate").addEventListener("submit", async (event) 
       mode: duration === "stopwatch" ? "stopwatch" : "timer",
       targetMinutes: duration === "stopwatch" ? null : Number(duration),
     });
-    focusCheckoutOpen = false;
     renderFocus(data);
     announceFocus("Session started.");
   } catch (error) {
@@ -195,37 +210,27 @@ document.getElementById("focusPause").addEventListener("click", async () => {
 
 document.getElementById("focusExtend").addEventListener("click", async () => {
   try {
-    focusCheckoutOpen = false;
     renderFocus(await focusRequest("EXTEND_FOCUS", { minutes: 10 }));
     announceFocus("Session extended by 10 minutes.");
   } catch (error) { showFocusError(error.message); }
 });
 
-document.getElementById("focusFinish").addEventListener("click", () => {
-  focusCheckoutOpen = true;
-  document.getElementById("focusCheckout").hidden = false;
-  document.getElementById("focusControls").hidden = true;
-  document.getElementById("focusNote").focus();
-});
-
-document.getElementById("focusCheckoutBack").addEventListener("click", () => {
-  focusCheckoutOpen = false;
-  document.getElementById("focusCheckout").hidden = true;
-  document.getElementById("focusControls").hidden = false;
-});
-
 async function closeFocus(type, announcement) {
+  const controls = [...document.querySelectorAll("#focusControls button")];
+  for (const control of controls) control.disabled = true;
   try {
     const data = await focusRequest(type, {
-      note: document.getElementById("focusNote").value,
+      note: "",
       reason: "",
     });
-    document.getElementById("focusNote").value = "";
     document.getElementById("focusIntention").value = "";
-    focusCheckoutOpen = false;
     renderFocus(data);
     announceFocus(announcement);
-  } catch (error) { showFocusError(error.message); }
+  } catch (error) {
+    showFocusError(error.message);
+  } finally {
+    for (const control of controls) control.disabled = false;
+  }
 }
 
 document.getElementById("focusComplete").addEventListener("click", () => closeFocus("COMPLETE_FOCUS", "Session completed."));

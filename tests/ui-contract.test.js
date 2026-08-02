@@ -51,13 +51,27 @@ test("popup keeps the optional intentional session simple and secondary", () => 
   assert.match(html, /<option value="25" selected>25 min<\/option>/);
   assert.match(html, />Start<\/button>/);
   assert.match(html, /aria-label="Session progress"/);
+  assert.match(html, /aria-label="Sites visited in this session"/);
+  assert.match(html, /id="focusComplete"[^>]*>Complete<\/button>/);
+  assert.match(html, /id="focusAbandon"[^>]*aria-label="End without completing"[^>]*>End<\/button>/);
   assert.match(js, /successDefinition: ""/);
   assert.match(js, /reason: ""/);
-  for (const removedId of ["focusSuccess", "focusSuccessView", "focusReason"]) {
+  assert.match(js, /note: ""/);
+  for (const removedId of ["focusSuccess", "focusSuccessView", "focusReason", "focusFinish", "focusCheckout", "focusNote", "focusCheckoutBack"]) {
     assert.doesNotMatch(html, new RegExp(`id="${removedId}"`));
     assert.doesNotMatch(js, new RegExp(`getElementById\\("${removedId}"\\)`));
   }
-  for (const removedCopy of ["One thing at a time", "Make space for what matters", "Add a finish line", "End unfinished"]) {
+  for (const removedCopy of ["One thing at a time", "Make space for what matters", "Add a finish line", "End unfinished", "Finish session", "How did this session go?"]) {
     assert.doesNotMatch(html, new RegExp(removedCopy));
   }
+});
+
+test("dashboard session history exposes the domain-only visited-site trail", () => {
+  const html = fs.readFileSync(path.join(root, "dashboard.html"), "utf8");
+  const js = fs.readFileSync(path.join(root, "dashboard.js"), "utf8");
+  assert.match(html, /<h2>Intentional sessions<\/h2>/);
+  assert.match(html, /What you worked on and the sites visited/);
+  assert.match(js, /function focusVisitedSites\(domains\)/);
+  assert.match(js, /aria-label", "Sites visited in this session"/);
+  assert.match(js, /record\.visitedDomains/);
 });

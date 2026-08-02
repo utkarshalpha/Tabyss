@@ -18,6 +18,7 @@
       outcome: "completed",
       abandonedReason: "",
       note: "Shared with the team",
+      visitedDomains: ["docs.example.com", "youtube.com"],
     }],
   };
   let focus = null;
@@ -121,6 +122,7 @@
             targetMs: message.mode === "timer" ? Number(message.targetMinutes) * 60000 : null,
             startedAt: now,
             status: "running",
+            visitedDomains: ["docs.example.com", "example.com"],
             elapsedMs: 0,
             remainingMs: message.mode === "timer" ? Number(message.targetMinutes) * 60000 : null,
             snapshotAt: now,
@@ -158,6 +160,7 @@
             outcome: message.type === "COMPLETE_FOCUS" ? "completed" : "abandoned",
             abandonedReason: message.type === "ABANDON_FOCUS" ? String(message.reason || "") : "",
             note: String(message.note || ""),
+            visitedDomains: Array.isArray(focus.visitedDomains) ? focus.visitedDomains : [],
           });
           focus = null;
         }

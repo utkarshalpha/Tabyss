@@ -54,8 +54,11 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Open-ended mode counts upward; timer mode counts down; neither drifts after
       closing/reopening the popup or sleeping/waking the machine.
 - [ ] Pause freezes elapsed time; Resume continues it; +10 min changes a timer target.
-- [ ] Completed and End now both create the correct dashboard outcome; the optional
-      result/next-step note renders safely as text and no unstated reason is inferred.
+- [ ] Complete and End each commit the correct dashboard outcome in one click, show
+      visible confirmation, and never open a checkout, reason, or note form.
+- [ ] Sites visited appears in the active card and dashboard history with favicon or
+      letter fallback; it is deduplicated, capped at 24 domains, and excludes
+      Incognito, ignored, unsupported, unfocused, paused, and non-counting idle use.
 - [ ] Timer expiry enters Review and does not auto-complete; extend resumes it.
 - [ ] Reload the extension and restart Chrome during running and paused sessions;
       state recovers and the focus alarm is recreated from timestamps.

@@ -275,6 +275,14 @@ view. Elapsed time is derived from timestamps and accumulated running segments.
 The `focus-end` alarm is reconciled whenever a fresh worker is evaluated and is a
 wake-up hint, not the clock or evidence of completion.
 
+ADR-025 adds `visitedDomains` as a backward-compatible bounded field on active and
+completed session records. The worker seeds the current eligible domain, adds unique
+domains during serialized tracking flushes/current-state reconciliation, and caps
+the list at 24. Eligibility reuses active-domain rules, so page scripts cannot submit
+the list and Incognito, ignored, unsupported, unfocused, and non-counting idle
+activity is absent. Outcomes transition directly to completed/abandoned without an
+intermediate checkout state.
+
 ## Concurrency and correctness
 
 - Replace one global promise chain with named transactional queues where independent domains permit concurrency.

@@ -141,6 +141,7 @@ function sendResult(promise, sendResponse, after) {
       FOCUS_IMPORT_ACTIVE: "Finish or end the active focus session before restoring a backup.",
       FOCUS_HISTORY_CORRUPT: "Focus history could not be validated. Restore a known-good backup or clear local data before starting another session.",
       FOCUS_INVALID_MODE: "Choose timer or stopwatch mode.",
+      FOCUS_INVALID_SITES: "Session sites could not be validated.",
       FOCUS_INVALID_TRANSITION: "That action is not available in the current session state.",
       PRODUCT_DATA_CORRUPT: "V2 product data could not be validated. Export a backup before repairing or clearing it.",
       PRODUCT_INVALID_TEXT: "Review the name, intention, or note and keep it within the shown limit.",
@@ -300,7 +301,7 @@ async function doFlush() {
   const now = Date.now();
   const settings = await getSettings();
   const store = await chrome.storage.local.get([
-    "session", "usage", "hours", "switches", "run", "holes", "sunsetLast", "wellnessState",
+    "session", "usage", "hours", "switches", "run", "holes", "sunsetLast", "wellnessState", "focusActive",
   ]);
   const usage = store.usage || {};
   const hours = store.hours || {};
@@ -310,6 +311,8 @@ async function doFlush() {
   let sunsetLast = store.sunsetLast || 0;
   const ws = store.wellnessState || { activeSecs: 0, lastWater: now, lastStand: now, eyeSnoozeUntil: 0 };
   const session = store.session;
+  let focusActive = validStoredFocusActive(store.focusActive);
+  let focusSitesChanged = false;
   const day = dateKey(now);
 
   // A wall-clock gap since the previous flush means sleep/shutdown regardless
@@ -369,6 +372,15 @@ async function doFlush() {
         run = { domain: session.domain, accum: delta };
       }
       await checkGoals(day, usage[day], settings);
+      if (
+        focusActive?.status === "running" &&
+        Number.isFinite(focusActive.segmentStartedAt) &&
+        Math.max(session.start, focusActive.segmentStartedAt) < now
+      ) {
+        const updatedFocus = focusWithVisitedDomain(focusActive, session.domain);
+        focusSitesChanged = updatedFocus !== focusActive;
+        focusActive = updatedFocus;
+      }
     }
   }
 
@@ -487,10 +499,12 @@ async function doFlush() {
     }
   }
 
-  await chrome.storage.local.set({
+  const storagePatch = {
     usage, hours, switches, holes, run, sunsetLast, wellnessState: ws,
     session: { domain: state.domain, counting: state.counting, start: now },
-  });
+  };
+  if (focusSitesChanged) storagePatch.focusActive = focusActive;
+  await chrome.storage.local.set(storagePatch);
 }
 
 function clampSunsetHour(n) {
@@ -689,7 +703,10 @@ function validStoredFocusActive(value) {
   } else if (value.targetMinutes != null || value.targetMs != null) return null;
   if (value.status === "review" && value.reviewReason !== (value.mode === "timer" ? "timer" : "safety")) return null;
   if (value.status !== "review" && value.reviewReason != null) return null;
-  return value;
+  let visitedDomains;
+  try { visitedDomains = normalizeFocusVisitedDomains(value.visitedDomains); }
+  catch (_) { return null; }
+  return { ...value, visitedDomains };
 }
 
 function readFocusHistory(value) {
@@ -752,9 +769,18 @@ function publicFocusData(active, sessions, now, historyValid = true) {
   return { focus: focusView(active, now), focusSessions: sessions, focusHistoryAvailable: historyValid };
 }
 
+async function captureCurrentFocusSite(active) {
+  if (!active || active.status !== "running") return active;
+  const settings = await getSettings();
+  const state = await computeState(settings);
+  return focusWithVisitedDomain(active, state.domain);
+}
+
 async function doGetFocusData() {
   const state = await loadAndReconcileFocus();
-  return publicFocusData(state.active, state.sessions, state.now, state.historyValid);
+  const active = await captureCurrentFocusSite(state.active);
+  if (active !== state.active) await chrome.storage.local.set({ focusActive: active });
+  return publicFocusData(active, state.sessions, state.now, state.historyValid);
 }
 
 async function doReconcileFocus() {
@@ -769,8 +795,14 @@ async function doFocusCommand(action, payload) {
   const now = Date.now();
   if (action === "start") {
     if (active) focusFailure("FOCUS_ALREADY_ACTIVE");
-    active = createFocusActive(payload, now, newFocusId());
+    const settings = await getSettings();
+    const current = await computeState(settings);
+    active = createFocusActive({
+      ...payload,
+      visitedDomains: current.domain ? [current.domain] : [],
+    }, now, newFocusId());
   } else {
+    active = await captureCurrentFocusSite(active);
     const result = focusTransition(active, action, now, payload);
     active = result.active;
     if (result.record) {

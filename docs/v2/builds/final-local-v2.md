@@ -29,6 +29,9 @@ Recovery architecture as navigation.
 - [ADR-024](../decisions/ADR-024-simple-optional-session.md) puts Today before a
   quieter optional session and reduces setup to one task, one duration, and Start.
   It supersedes ADR-019/020 only for popup hierarchy and input scope.
+- [ADR-025](../decisions/ADR-025-one-click-session-and-sites.md) replaces the
+  remaining checkout step with direct Complete/End and adds a bounded local
+  visited-domain trail. It supersedes ADR-024 only for checkout scope.
 - [ADR-022](../decisions/ADR-022-original-v1-5-brand-mark.md) restores the exact V1.5
   runtime logo and supersedes only ADR-020's regenerated-icon clause.
 - [ADR-021](../decisions/ADR-021-final-local-v2-architecture.md) remains the historical
@@ -66,9 +69,11 @@ Recovery architecture as navigation.
   card rather than a branded hero.
 - Starting requires one visibly labelled task and one duration. The default is 25
   minutes, with 50, 90, and open-ended choices retained.
-- Pause/resume, ten-minute extension, Finish session, Completed, End now, and one
-  optional result/next-step note remain. Definition-of-done and ending-reason
-  questions are absent from new popup sessions.
+- Pause/resume and ten-minute extension remain. Complete and End commit directly in
+  one click; no Finish screen, definition, reason, or note question is shown.
+- The popup and dashboard show up to 24 unique domains visited during the session.
+  These are worker-derived under normal Incognito/ignore/active-tab eligibility,
+  contain no full URLs or per-site durations, and remain local and bounded.
 - The persisted state machine and historical schema remain compatible, so earlier
   richer records stay readable, exportable, and subject to the same recovery and
   retention rules.
@@ -92,7 +97,8 @@ Recovery architecture as navigation.
 - All product data is sanitized on read, write, import, and export. Collections,
   identifiers, strings, timestamps, enums, domains, and URLs are bounded.
 - Captured URLs must be credential-free HTTP(S); Incognito and unsupported schemes
-  are excluded. Passive analytics remain domain-only.
+  are excluded. Passive analytics remain domain-only. Session context stores at most
+  24 eligible domains without full URLs, titles, or per-site duration.
 - Export/import now includes ten restorable sections. Privacy, Settings, store copy,
   PRD, QA, system design, security risks, North Star, backlog disposition, and
   decision ledger match this behavior.
@@ -114,15 +120,16 @@ Recovery architecture as navigation.
 
 - `verify.ps1`: pass.
 - JavaScript syntax: all runtime/test JavaScript passes `node --check`.
-- Node suite: **47/47 pass**.
+- Node suite: **49/49 pass**.
 - Covered boundaries include sender authorization, Incognito, ignore domains,
   notification redaction, focus recovery, compatibility records, reset/retention,
-  product schema/URL limits, backup/import safety, manifest/package policy, zero-
-  network policy, five-page UI reference/accessibility contracts, and explicit
-  absence of the retired side-panel concepts.
+  domain-only session-site capture/bounds/legacy defaults, product schema/URL
+  limits, backup/import safety, manifest/package policy, zero-network policy, five-
+  page UI reference/accessibility contracts, and explicit absence of the retired
+  side-panel concepts.
 - V2 documentation links and git whitespace: pass.
-- Deterministic runtime package: 19 allowlisted files, 95.5 KB, identical builds:
-  `0404ea8eeef1846185a17602999e3c3d15ef7038efa96f31ce17583247c14364`.
+- Deterministic runtime package: 19 allowlisted files, 96.5 KB, identical builds:
+  `d3aa01e2e875e396eb44c91537ebc6f00cbc8ace9df6f09ff9f76b519e958669`.
 
 ### Rendered browser adapter
 
@@ -130,9 +137,11 @@ Recovery architecture as navigation.
   Session card second. The accessibility tree exposed level-one Today and level-two
   Start/Current session headings, a visible task label, selected 25-minute default,
   and a named Session progress bar.
-- Exercised: enter task, Start, active Current session state, Finish session, End now,
-  announcement, and return to the cleared creation form without a definition or
-  reason question.
+- Exercised: enter task, Start, active Current session state, visited-site chips,
+  one-click Complete, visible announcement, and return to the cleared creation form
+  without a checkout, definition, reason, or note question.
+- Dashboard accessibility review exposed the completed session's labelled visited-
+  site list with favicon fallback and preserved historical context.
 - Dark-mode Saved pages rendered with Calm Optimistic tokens, the restored V1.5
   mark, an empty state, and local test data.
 - Exercised: optional note, Save current page, form reset, live success status,

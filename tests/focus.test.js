@@ -17,7 +17,8 @@ const context = vm.createContext({
 });
 vm.runInContext(`${source}\n;globalThis.__focusTest = {
   createFocusActive, focusElapsedMs, focusRemainingMs, focusNeedsReview,
-  focusTransition, focusView, sanitizeFocusSessions, FOCUS_MAX_RUNNING_MS
+  focusTransition, focusView, focusWithVisitedDomain, sanitizeFocusSessions,
+  FOCUS_MAX_RUNNING_MS, FOCUS_MAX_VISITED_DOMAINS
 };`, context);
 
 const api = context.__focusTest;
@@ -68,6 +69,25 @@ test("completion creates a compact outcome record and clears active state", () =
   assert.equal(record.focusedMs, 30 * 60000);
   assert.equal(record.note, "Sent for review");
   assert.equal(record.abandonedReason, "");
+});
+
+test("session sites are domain-only, deduplicated, bounded and portable", () => {
+  let active = api.focusWithVisitedDomain(timer(), "www.docs.example.com");
+  active = api.focusWithVisitedDomain(active, "docs.example.com");
+  active = api.focusWithVisitedDomain(active, "youtube.com");
+  assert.deepEqual(plain(api.focusView(active, START + 1000).visitedDomains), ["docs.example.com", "youtube.com"]);
+  const record = plain(api.focusTransition(active, "complete", START + 60000).record);
+  assert.deepEqual(record.visitedDomains, ["docs.example.com", "youtube.com"]);
+  assert.deepEqual(plain(api.sanitizeFocusSessions(inContext([record])))[0].visitedDomains, record.visitedDomains);
+
+  const legacy = { ...record };
+  delete legacy.visitedDomains;
+  assert.deepEqual(plain(api.sanitizeFocusSessions(inContext([legacy])))[0].visitedDomains, []);
+  const tooMany = Array.from({ length: api.FOCUS_MAX_VISITED_DOMAINS + 1 }, (_, index) => `site${index}.example.com`);
+  assert.throws(
+    () => api.createFocusActive(inContext({ intention: "Work", mode: "timer", targetMinutes: 25, visitedDomains: tooMany }), START, "focus_test_004"),
+    /FOCUS_INVALID_SITES/
+  );
 });
 
 test("abandonment accepts only allowlisted reasons", () => {

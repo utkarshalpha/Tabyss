@@ -538,6 +538,7 @@ const FOCUS_MAX_TEXT = 160;
 const FOCUS_MAX_DETAIL = 240;
 const FOCUS_MAX_RUNNING_MS = 12 * 60 * 60 * 1000;
 const FOCUS_MAX_HISTORY = 2000;
+const FOCUS_MAX_VISITED_DOMAINS = 24;
 
 function focusFailure(code) {
   const error = new Error(code);
@@ -559,12 +560,41 @@ function focusMinutes(value, min, max, code = "FOCUS_INVALID_DURATION") {
   return minutes;
 }
 
+function normalizeFocusVisitedDomains(value) {
+  if (value == null) return [];
+  if (!Array.isArray(value) || value.length > FOCUS_MAX_VISITED_DOMAINS) {
+    focusFailure("FOCUS_INVALID_SITES");
+  }
+  const domains = [];
+  const seen = new Set();
+  for (const raw of value) {
+    if (typeof raw !== "string") focusFailure("FOCUS_INVALID_SITES");
+    const domain = normalizeDomainInput(raw);
+    if (!domain) focusFailure("FOCUS_INVALID_SITES");
+    if (!seen.has(domain)) {
+      seen.add(domain);
+      domains.push(domain);
+    }
+  }
+  return domains;
+}
+
+function focusWithVisitedDomain(active, rawDomain) {
+  if (!active || !rawDomain) return active;
+  const domain = normalizeDomainInput(rawDomain);
+  if (!domain) return active;
+  const visitedDomains = normalizeFocusVisitedDomains(active.visitedDomains);
+  if (visitedDomains.includes(domain) || visitedDomains.length >= FOCUS_MAX_VISITED_DOMAINS) return active;
+  return { ...active, visitedDomains: [...visitedDomains, domain] };
+}
+
 function createFocusActive(input, now, id) {
   if (!isPlainObject(input) || !Number.isFinite(now) || typeof id !== "string" || !id) {
     focusFailure("FOCUS_INVALID_REQUEST");
   }
   const intention = normalizeFocusText(input.intention, FOCUS_MAX_TEXT, true);
   const successDefinition = normalizeFocusText(input.successDefinition, FOCUS_MAX_DETAIL);
+  const visitedDomains = normalizeFocusVisitedDomains(input.visitedDomains);
   const mode = input.mode === "stopwatch" ? "stopwatch" : input.mode === "timer" ? "timer" : null;
   if (!mode) focusFailure("FOCUS_INVALID_MODE");
   const targetMinutes = mode === "timer" ? focusMinutes(input.targetMinutes, 5, 240) : null;
@@ -573,6 +603,7 @@ function createFocusActive(input, now, id) {
     id,
     intention,
     successDefinition,
+    visitedDomains,
     mode,
     targetMinutes,
     targetMs: targetMinutes == null ? null : targetMinutes * 60000,
@@ -613,6 +644,7 @@ function focusView(active, now) {
     id: active.id,
     intention: active.intention,
     successDefinition: active.successDefinition || "",
+    visitedDomains: normalizeFocusVisitedDomains(active.visitedDomains),
     mode: active.mode,
     targetMinutes: active.targetMinutes,
     targetMs: active.targetMs,
@@ -684,6 +716,7 @@ function focusTransition(active, action, now, payload = {}) {
         day: dateKey(active.startedAt),
         intention: active.intention,
         successDefinition: active.successDefinition || "",
+        visitedDomains: normalizeFocusVisitedDomains(active.visitedDomains),
         mode: active.mode,
         targetMinutes: active.targetMinutes,
         startedAt: active.startedAt,
@@ -709,13 +742,14 @@ function sanitizeFocusSessions(value) {
       importError(`${at}.id`, "invalid or duplicate session id");
     }
     ids.add(record.id);
-    let intention, successDefinition, note;
+    let intention, successDefinition, note, visitedDomains;
     try {
       intention = normalizeFocusText(record.intention, FOCUS_MAX_TEXT, true);
       successDefinition = normalizeFocusText(record.successDefinition, FOCUS_MAX_DETAIL);
       note = normalizeFocusText(record.note, FOCUS_MAX_DETAIL);
+      visitedDomains = normalizeFocusVisitedDomains(record.visitedDomains);
     } catch (_) {
-      importError(at, "contains invalid text");
+      importError(at, "contains invalid text or site domains");
     }
     if (!["timer", "stopwatch"].includes(record.mode)) importError(`${at}.mode`, "invalid mode");
     if (!["completed", "abandoned"].includes(record.outcome)) importError(`${at}.outcome`, "invalid outcome");
@@ -739,6 +773,7 @@ function sanitizeFocusSessions(value) {
       day,
       intention,
       successDefinition,
+      visitedDomains,
       mode: record.mode,
       targetMinutes,
       startedAt,

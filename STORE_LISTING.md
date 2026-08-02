@@ -21,7 +21,7 @@ Productivity
 > **What you get**
 > • **Saved pages** — save the current page with an optional note; open, complete,
 >   save again, filter, or delete it from one accessible side panel
-> • **Intentional sessions** — a simple optional timer or open-ended session with honest checkout
+> • **Intentional sessions** — a simple optional timer with one-click Complete/End and a local list of sites visited
 > • **Your Browsing Personality** — 50+ personas computed weekly from your patterns
 > • **Weekly Wrapped** — a full-screen recap with a shareable card (saved locally)
 > • **Focus Score** — a daily 0–100 built from productive share and tab discipline
@@ -43,8 +43,9 @@ Productivity
 
 ## Privacy practices tab — exact answers
 - **Single purpose:** "Helps the user browse intentionally through local focus sessions, explicitly saved pages, and private on-device time/wellbeing insights."
-- **Data collected:** *Website activity* (time spent per domain; full URL/title only
-  for a page the user explicitly saves) AND *User
+- **Data collected:** *Website activity* (time spent per domain; up to 24 domains may
+  be linked to a session the user explicitly starts; full URL/title only for a page
+  the user explicitly saves) AND *User
   activity* (scroll-gesture cadence and media-playback state are observed on-page to
   classify video/shorts/feed-scrolling time per domain; keys are only counted as
   scroll gestures — no content, keystrokes, or clicks are recorded). Declare both.
@@ -57,7 +58,7 @@ Productivity
 - **Privacy policy URL:** host `PRIVACY.md` (e.g. GitHub Pages / Gist) and paste the URL.
 
 ## Permission justifications (paste per permission)
-- **tabs** — "Read the active tab's domain for local time attribution and, only when the user explicitly saves the current page, store its URL and title locally or open it again. Page content and form input are never read."
+- **tabs** — "Read the active tab's domain for local time attribution and a running user-started session and, only when the user explicitly saves the current page, store its URL and title locally or open it again. Page content and form input are never read."
 - **idle** — "Detect when the user is away so tracking pauses and time isn't over-counted."
 - **alarms** — "Run the 1-minute tracking tick, focus timer recovery, and periodic data-retention cleanup."
 - **storage** — "Persist the user's time stats and settings locally on their device."
@@ -68,7 +69,7 @@ Productivity
 
 ## Screenshot plan (1280×800, capture 4)
 1. **Saved pages** — save form and favicon list. Caption: "Keep the page, not the tab."
-2. **Intentional session** — the compact task and timer controls. Caption: "A timer when it helps."
+2. **Intentional session** — compact timer, visited sites, and direct controls. Caption: "A timer when it helps."
 3. **Weekly Wrapped** — persona and local recap. Caption: "See your browsing rhythm."
 4. **Dashboard** — category, focus, and wellbeing insights. Caption: "Your day, understood privately."
 

@@ -8,6 +8,26 @@ Every implementation wave must add an entry here so the prompt method, durable
 decision, code branch, and verification record stay connected rather than living
 only in chat.
 
+### 2026-08-02 — One-click session end and visited sites
+
+- **Owner decision:** remove the multi-step session checkout and show sites visited
+  during an Intentional Session.
+- **Interaction decision:** active sessions expose direct Complete and End buttons;
+  each commits in one click. Pause/Resume and +10 remain. No finish screen, reason,
+  note, or “How did it go?” prompt interrupts the flow.
+- **Context decision:** show normalized visited domains with local favicon fallback in
+  the live popup and dashboard session history.
+- **Privacy decision:** capture no more than 24 unique domains, never URLs, titles,
+  page content, or per-site session duration. Reuse normal tracking eligibility so
+  Incognito, ignored, unsupported, unfocused, and non-counting idle activity stays
+  excluded.
+- **Compatibility decision:** older records default to no visited-site list; older
+  definition/reason/note fields remain readable and portable. The existing focus
+  format, retention, reset, clear, import/export, and restart recovery stay intact.
+- **Evidence:** [ADR-025](docs/v2/decisions/ADR-025-one-click-session-and-sites.md),
+  state/worker/UI contracts, rendered one-click completion, dashboard history review,
+  full verification, and deterministic package hash.
+
 ### 2026-08-02 — Intentional Session simplification
 
 - **Owner decision:** keep Intentional Session, but make it much simpler and give it

@@ -83,8 +83,8 @@ manual unpacked-extension and policy gates in `QA_CHECKLIST.md`.
 |----|-------------|-----------|
 | V2-FR-1 | Simple optional session | Today's insight leads; a secondary session card needs one labelled action ≤160 characters, one duration, and Start; recent intentions are reusable |
 | V2-FR-2 | Timer and open-ended focus | 5–240 minute initial timer or stopwatch; elapsed/remaining time derives from persisted timestamps |
-| V2-FR-3 | Session controls | Running sessions can pause, resume, extend by an allowlisted duration, or enter checkout |
-| V2-FR-4 | Honest checkout | Timer expiry enters Review; only the user can choose Completed or End now, with one optional result/next-step note |
+| V2-FR-3 | Session controls | Running sessions can pause, resume, extend by an allowlisted duration, Complete, or End directly |
+| V2-FR-4 | One-click outcome | Timer expiry enters Review; Complete and End commit immediately from the active card without a checkout form, note, or reason question |
 | V2-FR-5 | Recovery | Popup closure, worker suspension, browser restart, delayed alarms, reset, retention, clear, export, and restore have explicit behavior |
 | V2-FR-6 | Reflection | Dashboard shows active and historical intentional sessions per day without folding them into passive Focus Score |
 | V2-FR-7 | Local privacy | Intentions/outcomes remain in trusted local extension storage; only `sidePanel` is added, with no network request, account, or telemetry |
@@ -93,6 +93,7 @@ manual unpacked-extension and policy gates in `QA_CHECKLIST.md`.
 | V2-FR-10 | Accessible state | Native controls, visible label, pressed filter state, live feedback/count, busy state, favicon fallback, and narrow-layout support |
 | V2-FR-11 | Compatibility preservation | Retired Plan/Space/checkpoint records remain validated, local, and portable without active schedules, guards, or destructive migration |
 | V2-FR-12 | Portable V2 data | Product schema 1 participates in validated format-4 export/import, clear, and local-only storage |
+| V2-FR-13 | Session sites | Show at most 24 unique normalized domains visited during the session in popup and dashboard history; exclude Incognito/ignored/non-counting activity and never attach full URLs or per-site duration |
 
 V2 deliberately does not claim cloud sync, remote AI, accounts, public or household
 comparison, employee/parental monitoring, or hard blocking. Those are not hidden

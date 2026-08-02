@@ -41,7 +41,39 @@ function focusOutcomeLabel(record) {
     "too-long": "Scope was too large",
     other: "Other reason",
   };
-  return labels[record.abandonedReason] || "Ended unfinished";
+  return labels[record.abandonedReason] || "Ended";
+}
+
+function focusVisitedSites(domains) {
+  if (!Array.isArray(domains) || !domains.length) return null;
+  const list = el("div", "focus-history-sites");
+  list.setAttribute("role", "list");
+  list.setAttribute("aria-label", "Sites visited in this session");
+  for (const domain of domains.slice(0, 8)) {
+    const item = el("span", "focus-history-site");
+    item.setAttribute("role", "listitem");
+    item.title = domain;
+    const chip = el("span", "chip");
+    const fav = faviconUrl(domain, 24);
+    const fallback = () => {
+      chip.innerHTML = "";
+      chip.classList.remove("fav");
+      chip.style.background = `hsl(${hueOf(domain)} 50% 45%)`;
+      chip.textContent = (domain[0] || "?").toUpperCase();
+    };
+    if (fav) {
+      chip.classList.add("fav");
+      const img = document.createElement("img");
+      img.src = fav;
+      img.alt = "";
+      img.addEventListener("error", fallback);
+      chip.append(img);
+    } else fallback();
+    item.append(chip, el("span", "focus-history-site-domain", domain));
+    list.append(item);
+  }
+  if (domains.length > 8) list.append(el("span", "focus-sites-more", `+${domains.length - 8} more`));
+  return list;
 }
 
 function renderFocusSessions() {
@@ -73,6 +105,8 @@ function renderFocusSessions() {
       ? `${fmtShort(activeToday.elapsedMs / 1000)} focused · ${activeToday.status}`
       : `${fmtShort(activeToday.elapsedMs / 1000)} elapsed · ${activeToday.status}`;
     body.append(el("div", "focus-history-meta", meta));
+    const activeSites = focusVisitedSites(activeToday.visitedDomains);
+    if (activeSites) body.append(activeSites);
     row.append(el("span", "focus-outcome running", activeToday.status === "review" ? "Review" : "Active"), body);
     wrap.append(row);
   }
@@ -85,6 +119,8 @@ function renderFocusSessions() {
     body.append(el("div", "focus-history-meta", `${fmtShort(record.focusedMs / 1000)} focused${target}`));
     if (record.successDefinition) body.append(el("div", "focus-history-detail", `Done meant: ${record.successDefinition}`));
     if (record.note) body.append(el("div", "focus-history-detail", record.note));
+    const visitedSites = focusVisitedSites(record.visitedDomains);
+    if (visitedSites) body.append(visitedSites);
     row.append(el("span", `focus-outcome ${record.outcome}`, focusOutcomeLabel(record)), body);
     wrap.append(row);
   }

@@ -118,14 +118,15 @@ recent-intention reuse in the popup; relevant-site/tab linking remains deferred.
 
 ### FOC-01 Focus session - Core
 
-Wave 1A status: implemented from the popup for timer/stopwatch, pause, resume,
-extend, complete, abandon, restart recovery, checkout note, and dashboard reflection.
-Other entry surfaces and relevant-tab controls remain deferred.
+Final V2 status: implemented from the popup for timer/stopwatch, pause, resume,
+extend, one-click Complete/End, restart recovery, a bounded local visited-domain
+trail, and dashboard reflection. Other entry surfaces and relevant-tab controls
+remain unselected.
 
 - Start from popup, side panel, new tab, keyboard shortcut, context menu, dashboard, or saved plan.
-- Show task, elapsed/remaining time, active controls, and relevant tabs.
+- Show task, elapsed/remaining time, active controls, and up to 24 visited domains.
 - Pause, extend, complete, abandon, and emergency-exit states.
-- Completion check-out and optional note.
+- Direct Complete/End without a separate checkout form.
 
 ### FOC-02 Protection ladder - Power
 

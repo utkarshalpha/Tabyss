@@ -83,24 +83,19 @@
           <div id="focusProgress" class="focus-progress" role="progressbar" aria-label="Session progress">
             <span id="focusProgressFill"></span>
           </div>
+          <div class="focus-sites" aria-labelledby="focusSitesLabel">
+            <div id="focusSitesLabel" class="focus-sites-label">Sites visited</div>
+            <div id="focusSiteList" class="focus-site-list" role="list" aria-label="Sites visited in this session"></div>
+          </div>
           <div id="focusControls" class="focus-actions">
             <button id="focusPause" class="btn" type="button">Pause</button>
             <button id="focusExtend" class="btn" type="button">+10 min</button>
-            <button id="focusFinish" class="btn primary" type="button">Finish session</button>
+            <button id="focusComplete" class="btn primary" type="button">Complete</button>
+            <button id="focusAbandon" class="btn" type="button" aria-label="End without completing">End</button>
           </div>
-          <form id="focusCheckout" class="focus-checkout" hidden>
-            <div class="focus-checkout-title">Finish session</div>
-            <label class="sr-only" for="focusNote">Session note</label>
-            <textarea id="focusNote" maxlength="240" rows="2" placeholder="Add a result or next step (optional)"></textarea>
-            <div class="focus-actions">
-              <button id="focusComplete" class="btn primary" type="button">Completed</button>
-              <button id="focusAbandon" class="btn" type="button">End now</button>
-              <button id="focusCheckoutBack" class="link muted" type="button">Back</button>
-            </div>
-          </form>
         </div>
         <p id="focusError" class="focus-error" role="alert" hidden></p>
-        <p id="focusAnnouncement" class="sr-only" aria-live="polite"></p>
+        <p id="focusAnnouncement" class="focus-feedback" aria-live="polite" hidden></p>
       </section>
 
       <details class="popup-more">

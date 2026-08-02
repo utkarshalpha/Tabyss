@@ -97,7 +97,7 @@ vm.runInContext(`${common}\n${product}\n${background}\n;globalThis.__backgroundT
   isExtensionPageSender, isContentScriptSender, computeState,
   recapNotificationMessage, sunsetNotificationMessage,
   doFocusCommand, doGetFocusData, doImportData, doExportData,
-  doMaintenance, doResetToday, doProductCommand, ACTIVE_PRODUCT_ACTIONS
+  doFlush, doMaintenance, doResetToday, doProductCommand, ACTIVE_PRODUCT_ACTIONS
 };`, context);
 const api = context.__backgroundTest;
 const inContext = (value) => vm.runInContext(`JSON.parse(${JSON.stringify(JSON.stringify(value))})`, context);
@@ -162,6 +162,8 @@ test("focus commands persist active state, schedule recovery and export outcomes
   delete storageState.focusActive;
   delete storageState.focusSessions;
   delete state.alarms["focus-end"];
+  state.tabs = null;
+  state.tab = { id: 7, active: true, url: "https://docs.example.com/brief", audible: false, incognito: false };
 
   const started = await api.doFocusCommand("start", inContext({
     intention: "Write the launch brief",
@@ -170,11 +172,17 @@ test("focus commands persist active state, schedule recovery and export outcomes
     targetMinutes: 25,
   }));
   assert.equal(started.focus.status, "running");
+  assert.deepEqual(JSON.parse(JSON.stringify(started.focus.visitedDomains)), ["docs.example.com"]);
   assert.equal(storageState.focusActive.intention, "Write the launch brief");
   assert.ok(state.alarms["focus-end"].when > Date.now());
 
+  storageState.session = { domain: "research.example.com", counting: true, start: Date.now() - 5000 };
+  state.tab.url = "https://youtube.com/watch?v=1";
+  await api.doFlush();
+  assert.deepEqual(JSON.parse(JSON.stringify(storageState.focusActive.visitedDomains)), ["docs.example.com", "research.example.com"]);
   const recovered = await api.doGetFocusData();
   assert.equal(recovered.focus.id, started.focus.id);
+  assert.deepEqual(JSON.parse(JSON.stringify(recovered.focus.visitedDomains)), ["docs.example.com", "research.example.com", "youtube.com"]);
   const dueAt = Date.now() - 25 * 60000 - 1000;
   storageState.focusActive.startedAt = dueAt;
   storageState.focusActive.segmentStartedAt = dueAt;
@@ -192,11 +200,13 @@ test("focus commands persist active state, schedule recovery and export outcomes
   assert.equal(completed.focus, null);
   assert.equal(completed.focusSessions.length, 1);
   assert.equal(completed.focusSessions[0].outcome, "completed");
+  assert.deepEqual(JSON.parse(JSON.stringify(completed.focusSessions[0].visitedDomains)), ["docs.example.com", "research.example.com", "youtube.com"]);
   assert.equal(state.alarms["focus-end"], undefined);
 
   const exported = await api.doExportData();
   assert.equal(exported.data.formatVersion, 4);
   assert.equal(exported.data.focusSessions[0].note, "Shared with the team");
+  assert.deepEqual(JSON.parse(JSON.stringify(exported.data.focusSessions[0].visitedDomains)), ["docs.example.com", "research.example.com", "youtube.com"]);
 });
 
 test("retention and reset-today also govern focus outcomes and active state", async () => {

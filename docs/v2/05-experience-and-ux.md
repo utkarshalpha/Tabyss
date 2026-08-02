@@ -11,11 +11,11 @@ not become navigation or require onboarding before value.
 
 Content order:
 
-1. Current state: Focused, Drifting, Break due, Paused, or No plan.
-2. Primary action: Start focus, Return to plan, Take break, or Set intention.
-3. Today progress against the chosen outcome.
-4. Compact focus score/time.
-5. Open Saved pages, dashboard, or settings.
+1. Today snapshot, Focus Score, and next wellbeing cue.
+2. Optional simple session: task, duration, Start, or compact active controls.
+3. Active session context: bounded visited-domain chips and direct Complete/End.
+4. Expandable sites, goals, persona, wellbeing, and category detail.
+5. Open Saved pages, dashboard, weekly story, or settings.
 
 The popup should not contain the full category legend, long site list, multiple reminders, goals, persona details, and reset controls simultaneously. Those belong in expandable or larger surfaces.
 
@@ -73,17 +73,14 @@ Exit criteria: user can explain what is tracked, has one configured outcome, and
 
 ## End-to-end journey 2: start focused work
 
-1. Open popup/side panel/shortcut.
+1. Open the popup.
 2. Choose recent task or type intention.
 3. Choose duration/mode; recommended value preselected.
-4. Select or open a Space.
-5. Preview protection: tabs parked, sites limited, breaks scheduled.
-6. Start.
-7. Work with persistent minimal timer.
-8. Capture distractions without opening them.
-9. Complete or abandon with reason.
-10. Restore prior tab state.
-11. Show result, not a celebratory interruption that blocks the next action.
+4. Start.
+5. Work with the persistent minimal timer while eligible visited domains appear.
+6. Pause/resume or extend when needed.
+7. Choose Complete or End once; the outcome commits immediately.
+8. Review duration and visited sites later in dashboard history.
 
 ## End-to-end journey 3: unplanned drift
 
