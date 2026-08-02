@@ -1,12 +1,12 @@
 # Calm Optimistic Design System
 
-Status: Foundation accepted in ADR-020; surface migration is incremental.
+Status: Foundation accepted in ADR-020; ADR-022 restores the original V1.5 mark.
 
 ## Brand idea
 
 Tabyss helps attention move through a healthy cycle: choose, focus, pause, and
 return. The hourglass represents time without feeling like a stopwatch or warning.
-Its softened waist and sunrise gradient add warmth while preserving the existing
+The original V1.5 white hourglass and sunrise gradient preserve the established
 toolbar identity.
 
 ## Color language
@@ -91,8 +91,10 @@ the dashboard/Command Center and settings.
 
 ## Icon usage
 
-- Canonical vector source: `assets/brand/tabyss-mark.svg`.
-- Runtime bitmap sizes: `icon16.png`, `icon48.png`, and `icon128.png`.
+- Canonical runtime sources: the original V1.5 `icon16.png`, `icon48.png`, and
+  `icon128.png` restored byte-for-byte under ADR-022.
+- `assets/brand/tabyss-mark.svg` is a superseded V2 design study, not the canonical
+  logo and not part of the runtime package.
 - Never place text inside the mark or recolor semantic-state icons with the brand
   gradient.
 - Use the 48px bitmap for extension-page lockups; let CSS size it to 24–28px.

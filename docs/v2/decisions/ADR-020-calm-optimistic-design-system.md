@@ -78,4 +78,5 @@ tracking-behavior change.
 ## Status
 
 Accepted - the owner selected the Calm Optimistic direction and authorized its
-implementation as the V2 design foundation.
+implementation as the V2 design foundation. ADR-022 supersedes only the regenerated
+icon clause; the remaining visual and interaction system stays accepted.

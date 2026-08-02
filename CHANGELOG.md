@@ -4,6 +4,10 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
 
 ## [2.0.0] — 2026-08-02 · "Intentional Browsing"
 
+### Brand continuity
+- Restored the exact V1.5 logo at 16px, 48px, and 128px. The Calm Optimistic UI
+  system remains, while the established product mark stays unchanged.
+
 ### Command Center and plans
 - Added the V2 side-panel Command Center with Personal, Work, Study, and bounded
   custom Profiles; it opens from the popup or with `Alt+Shift+T`.

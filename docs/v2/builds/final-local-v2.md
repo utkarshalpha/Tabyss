@@ -26,6 +26,8 @@ that tempted them, return to their intention, and recover the original tabs late
 
 ## Decisions and scope
 
+- [ADR-022](../decisions/ADR-022-original-v1-5-brand-mark.md) restores the exact V1.5
+  runtime logo and supersedes only ADR-020's regenerated-icon clause.
 - [ADR-021](../decisions/ADR-021-final-local-v2-architecture.md) accepts the final
   bounded local architecture, `sidePanel` capability, explicit URL/title capture
   boundary, observe/nudge protection, and connected-feature exclusion.
@@ -126,13 +128,13 @@ that tempted them, return to their intention, and recover the original tabs late
   backup/import safety, manifest/package policy, zero-network policy, and five-page
   UI reference/accessibility contracts.
 - V2 documentation links and git whitespace: pass.
-- Deterministic runtime package: 19 allowlisted files, 105.9 KB, identical builds:
-  `975f4fb0d3e86ddd5f8a72a3978cf24d6b2291545e658c2026ddf7c10708e61a`.
+- Deterministic runtime package: 19 allowlisted files, 105.6 KB, identical builds:
+  `e519880ddee81f1aee9cfddf2130ee2da2dd6e651f5b8405d169979604ad18f7`.
 
 ### Rendered browser adapter
 
-- Dark-mode Command Center and popup rendered with the Calm Optimistic icon, tokens,
-  hierarchy, and local test data.
+- Dark-mode Command Center and popup rendered with Calm Optimistic tokens,
+  hierarchy, the restored V1.5 icon, and local test data.
 - Exercised: empty Plans, starter Plan, full Plan editor, Plan save, Contract preview,
   Contract start, active focus card, Space save, Return Capsule save, Recovery view,
   duplicate review/second confirmation, and post-action feedback.

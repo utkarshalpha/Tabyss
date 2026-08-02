@@ -8,6 +8,22 @@ Every implementation wave must add an entry here so the prompt method, durable
 decision, code branch, and verification record stay connected rather than living
 only in chat.
 
+### 2026-08-02 — Original V1.5 logo restoration
+
+- **Owner direction:** keep the exact logo used in V1.5 rather than the regenerated
+  V2 interpretation.
+- **Verified provenance:** both V1.5 commits contain the same three icon blobs; the
+  assets changed only in the V2 Calm Optimistic foundation commit.
+- **Selected decision:** restore all three runtime PNGs byte-for-byte from commit
+  `50301b3`; do not redraw or approximate the logo.
+- **Scope:** ADR-022 supersedes only ADR-020's icon clause. The rest of the color,
+  language, component, accessibility, and interaction system remains in force.
+- **Product boundary:** website favicons identify saved pages, while the stable V1.5
+  mark continues to identify Tabyss itself.
+- **Feature-audit boundary:** no Command Center feature is removed in this change.
+  Plans, Spaces, Later, Recovery, Profiles, and local metrics are being ranked for a
+  separate owner decision before implementation.
+
 ### 2026-08-02 — Exact-page favicon identity pass
 
 - **Owner direction:** when a user opens and explicitly saves a web page in Tabyss,
