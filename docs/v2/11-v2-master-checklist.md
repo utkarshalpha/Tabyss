@@ -42,7 +42,7 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [x] Notification privacy defaults implemented.
 - [ ] Typed message contract established.
 - [x] Storage access restricted appropriately.
-- [ ] CI and reproducible package established.
+- [x] CI and reproducible package established locally; hosted run awaits push.
 - [ ] Design tokens and accessibility baseline established.
 
 ## 4. Intentional core gate

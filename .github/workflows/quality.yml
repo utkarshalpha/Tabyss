@@ -1,0 +1,29 @@
+name: V2 quality gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "codex/v2-*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify extension
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Run quality, policy, and reproducibility gates
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\verify.ps1

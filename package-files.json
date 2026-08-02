@@ -1,0 +1,18 @@
+[
+  "manifest.json",
+  "background.js",
+  "common.js",
+  "content.js",
+  "popup.html",
+  "popup.js",
+  "dashboard.html",
+  "dashboard.js",
+  "options.html",
+  "options.js",
+  "wrapped.html",
+  "wrapped.js",
+  "styles.css",
+  "icon16.png",
+  "icon48.png",
+  "icon128.png"
+]

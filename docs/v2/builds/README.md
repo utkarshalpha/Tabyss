@@ -4,6 +4,7 @@ Every implementation branch gets a build record before merge. The record connect
 
 | Wave | Branch | Record | State |
 |---|---|---|---|
+| 0B | `codex/v2-wave0-quality-system` | [Quality and packaging system](wave-0b-quality-system.md) | Implemented and locally verified |
 | 0 | `codex/v2-wave0-hardening` | [Trust foundation](wave-0-trust-foundation.md) | Implemented; manual unpacked-extension gates remain |
 
 ## Required build record fields

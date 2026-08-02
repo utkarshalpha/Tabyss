@@ -4,6 +4,7 @@ Decisions are newest-on-top once accepted. Proposed records provide options and 
 
 | ID | Decision | Status |
 |---|---|---|
+| [ADR-018](ADR-018-quality-and-packaging-baseline.md) | Quality and packaging baseline | Accepted |
 | [ADR-017](ADR-017-runtime-trust-boundaries.md) | Runtime trust boundaries | Accepted |
 | [ADR-016](ADR-016-backup-restore-safety.md) | Backup and restore safety | Accepted |
 | [ADR-015](ADR-015-private-browsing-boundaries.md) | Private browsing boundaries | Accepted |

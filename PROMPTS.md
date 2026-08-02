@@ -54,6 +54,21 @@ Steps:
 Rules: Core stays local-first and Chrome-extension-only. No dependency, permission, telemetry, connection, or remote code without an Accepted ADR.
 ```
 
+## Release verification
+
+```text
+Role: Release owner and product-security reviewer.
+Task: Verify a Tabyss branch without changing user data or publishing anything.
+Steps:
+1. Run verify.ps1 and preserve the complete pass/fail output.
+2. Confirm manifest permissions, content-script scope, CSP/local assets, and package-files.json against Accepted ADRs.
+3. Build twice and require identical SHA-256 plus exact runtime entries.
+4. Run the unpacked-extension QA checklist for worker lifecycle, Incognito, permissions, notifications, import/download, and browser-origin messages.
+5. Record automated, Chrome, manual, accessibility, performance, and policy evidence separately; never convert a missing manual gate into a pass.
+6. Update the wave build record with known issues, artifact hash, rollback, and go/no-go status.
+Output: Evidence-backed build record and release recommendation. Do not push, publish, or submit to a store without explicit owner authorization.
+```
+
 ## Architecture decision
 
 ```text

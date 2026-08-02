@@ -19,6 +19,10 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
 ### Quality
 - Added dependency-free regression tests for domain privacy rules, settings bounds,
   legacy/current backup compatibility, malformed data, and unsafe object keys.
+- Added manifest, permission, package-content, local-asset, and zero-network policy
+  tests plus a single local/CI verification command.
+- Packaging now reads one explicit runtime contract and produces stable entry order,
+  timestamps, and SHA-256 output; CI rebuilds twice to detect non-reproducibility.
 
 ## [1.4.0] — 2026-07-27 · "The Refinement Update" (final)
 ### Changed — from real-usage feedback

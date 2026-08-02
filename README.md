@@ -68,10 +68,21 @@ Run the dependency-free security and data-contract suite:
 node --test tests/common.test.js tests/background.test.js
 ```
 
+Run the complete local/CI gate, including deterministic packaging:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\verify.ps1
+```
+
 For a local visual smoke test of the real Settings HTML/CSS/JS without installing
 the extension, run `node tests/ui-server.js` and open
 `http://127.0.0.1:4173/options.html`. The adapter is test-only and is not included
 by `package.ps1`. The unpacked-extension checklist remains the release authority.
+
+Create the Chrome Web Store ZIP with `package.ps1`. Its exact runtime whitelist
+lives in `package-files.json`; timestamps and entry order are fixed so identical
+source produces an identical archive on the supported build runner. Pass
+`-OutputPath path.zip` to avoid replacing the default local artifact.
 
 ## Install
 
