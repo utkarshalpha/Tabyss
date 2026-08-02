@@ -5,6 +5,7 @@ const test = require("node:test");
 const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "common.js"), "utf8");
+const productSource = fs.readFileSync(path.join(__dirname, "..", "product.js"), "utf8");
 const context = vm.createContext({
   URL,
   Date,
@@ -15,7 +16,7 @@ const context = vm.createContext({
     storage: { local: { get: async () => ({}) } },
   },
 });
-vm.runInContext(`${source}\n;globalThis.__tabyssTest = {
+vm.runInContext(`${source}\n${productSource}\n;globalThis.__tabyssTest = {
   normalizeDomainInput, isIgnoredDomain, sanitizeSettings, validateImportData,
   buildExportPayload, EXPORT_SCHEMA_VERSION
 };`, context);
@@ -83,6 +84,8 @@ test("current exports include version metadata and all restorable sections", () 
     assert.deepEqual(payload[key], {});
   }
   assert.deepEqual(payload.focusSessions, []);
+  assert.equal(payload.product.version, 1);
+  assert.equal(payload.product.profiles.length, 3);
   assert.doesNotThrow(() => api.validateImportData(jsonInContext(payload)));
 });
 

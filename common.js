@@ -38,7 +38,7 @@ function weekdayShort(key) {
 }
 
 /* ---------- storage schema / retention ---------- */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 // Delete date-keyed entries older than the retention window. Keys are
 // YYYY-MM-DD, which sort chronologically as strings. Mutates `map`; returns count.
@@ -741,8 +741,8 @@ function sanitizeFocusSessions(value) {
 }
 
 /* ---------- portable backup schema ---------- */
-const EXPORT_SCHEMA_VERSION = 3;
-const EXPORT_DATA_KEYS = ["usage", "hours", "switches", "holes", "notified", "media", "wellness", "focusSessions", "settings"];
+const EXPORT_SCHEMA_VERSION = 4;
+const EXPORT_DATA_KEYS = ["usage", "hours", "switches", "holes", "notified", "media", "wellness", "focusSessions", "settings", "product"];
 const IMPORT_MAX_FILE_BYTES = 5 * 1024 * 1024;
 const DANGEROUS_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
@@ -756,6 +756,7 @@ function buildExportPayload(source) {
   for (const key of EXPORT_DATA_KEYS) {
     if (key === "settings") out.settings = sanitizeSettings(data.settings);
     else if (key === "focusSessions") out.focusSessions = sanitizeFocusSessions(Array.isArray(data.focusSessions) ? data.focusSessions : []);
+    else if (key === "product") out.product = sanitizeProductData(data.product);
     else out[key] = isPlainObject(data[key]) ? data[key] : {};
   }
   return out;
@@ -939,6 +940,13 @@ function validateImportData(value) {
     const ignoredSettings = Object.keys(value.settings).filter((key) => !allowedSettings.has(key));
     if (ignoredSettings.length) warnings.push(`Ignored unknown settings: ${ignoredSettings.join(", ")}.`);
     patch.settings = sanitizeSettings(value.settings);
+  }
+  if (importedKeys.includes("product")) {
+    try {
+      patch.product = sanitizeProductData(value.product);
+    } catch (_) {
+      importError("product", "could not be validated");
+    }
   }
 
   const knownTopLevel = new Set([...EXPORT_DATA_KEYS, "exportedFrom", "formatVersion", "exportedAt"]);

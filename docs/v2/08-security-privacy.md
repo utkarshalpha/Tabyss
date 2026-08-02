@@ -57,23 +57,37 @@ Data never changes class merely because it is aggregated. A detailed timeline ag
 - Optional telemetry endpoint versus personal analytics.
 - Share/export action versus private data.
 
-## Current findings to address before V2 feature expansion
+## Findings and final-local-V2 status
 
 ### High priority
 
-1. Import accepts recognized top-level objects without schema, size, nesting, numeric, date, or domain validation. Malformed data can corrupt analytics or exhaust storage.
-2. If the user enables the extension in incognito, current state computation does not explicitly reject incognito tabs.
-3. Ignore behavior is exact-host based, so ignoring a base domain may not exclude subdomains as users expect.
-4. The all-HTTP/HTTPS content script increases permission/trust surface even when users only want tracking.
-5. Domain/top-site notification content can appear on OS lock screens.
+1. **Resolved:** imports have a UI size limit, safe-tree checks, versioned allowlists,
+   bounded values/collections, dangerous-key rejection, double validation, preview,
+   and a pre-import local safety backup.
+2. **Resolved:** foreground, media, explicit-capture, Space, checkpoint, and recovery
+   paths exclude Incognito tabs.
+3. **Resolved:** ignore matching is canonical and respects hostname label boundaries.
+4. **Accepted residual:** the all-HTTP/HTTPS content script is still required for
+   media classification, wellbeing overlays, and the Focus Contract guard. It has no
+   storage access, receives no secrets, reads no page text/form values, and its
+   message actions are sender-allowlisted. Optional-host migration remains possible
+   but is not represented as complete.
+5. **Resolved by default:** domain names are redacted from OS notification copy unless
+   the user explicitly opts in. Local schedule notifications use generic copy and a
+   daily budget; user-written Plan names and intentions stay off the lock screen.
 
 ### Defense-in-depth
 
-1. Restrict `chrome.storage.local` to trusted extension contexts.
-2. Validate message sender, message type, version, payload shape, and rate.
+1. **Implemented:** restrict `chrome.storage.local` to trusted extension contexts.
+2. **Partially implemented:** allowlist message sender, type, and bounded payload;
+   content signals are additionally rate/budget constrained where applicable. A
+   fully versioned generated message contract remains future hardening.
 3. Encrypt exported backups that contain restricted data.
-4. Add explicit quota, corruption, and migration recovery.
-5. Add a sensitive-context deny/suppress policy for overlays.
+4. **Partially implemented:** bounded schemas, corruption fail-closed behavior,
+   deterministic backup/restore, and recovery checkpoints are present; near-quota
+   UX remains a release hardening item.
+5. **Implemented for the guard:** fullscreen and login/auth/payment/checkout paths
+   suppress the intervention locally.
 6. Add share/export previews and safe defaults.
 
 ## Permission strategy
@@ -86,6 +100,7 @@ Data never changes class merely because it is aggregated. A detailed timeline ag
 - `alarms`
 - `notifications`
 - `favicon`
+- `sidePanel`
 - HTTP/HTTPS content-script matches
 
 ### Proposed capability grouping
@@ -215,5 +230,27 @@ Each case requires prevention, detection, recovery, and user communication.
 - Website DOM changes can break supported-site controls.
 - OS notifications may be visible beyond the browser unless content is redacted.
 - A Chrome extension cannot guarantee OS-wide digital-wellbeing enforcement.
+
+Final local V2 adds these explicit compromises:
+
+- User-saved Space, Plan-page, Return Capsule, and checkpoint URLs/titles are
+  sensitive and are stored unencrypted in the browser profile. A full JSON backup
+  contains them. Local-device or browser-profile compromise can expose them.
+- `tabs` is a broad capability. Sender allowlists and explicit-capture UX constrain
+  Tabyss behavior, but Chrome's permission warning cannot express that narrower use.
+- The mindful guard is an in-page, agency-preserving intervention. A hostile page can
+  style over, remove, or interfere with injected UI; Tabyss fails open and never
+  treats display as enforcement.
+- Sensitive-context suppression is a conservative local path heuristic plus
+  fullscreen detection. It cannot identify every confidential workflow without
+  reading page content, which Tabyss deliberately refuses to do.
+- Spaces/checkpoints restore safe HTTP(S) pages but do not preserve tab groups,
+  navigation history, scroll position, form state, or page session state. Restoring
+  a URL can re-run normal site navigation behavior.
+- Current-window operations are deliberate. Multi-window grouping and full crash
+  history would require more complex reconciliation and are not silently inferred.
+- There is no encrypted sync, key recovery, remote deletion, account revocation,
+  moderation, or abuse system. Therefore cloud and social/family capabilities are
+  absent rather than weakly implemented.
 
 These limits must be stated honestly rather than hidden in legal text.

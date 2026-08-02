@@ -50,6 +50,54 @@ only in chat.
 - **Build branch:** `codex/v2-wave1-intent-session`.
 - **Evidence/rollback:** [Wave 1 build record](docs/v2/builds/wave-1-intent-session.md).
 
+### 2026-08-02 — Final local V2 product build
+
+- **Owner direction:** treat V2 as the complete Chrome-extension product rather than
+  deferring core value to a hypothetical V3; implement the agreed design and product
+  loop on a separate branch and preserve every durable decision in this ledger.
+- **Build branch:** `codex/v2-final-build` from the accepted Calm Optimistic design
+  foundation.
+- **Verified product gap:** the popup focus action and passive insights were strong
+  isolated features, but there was no joined way to reuse a plan, arrange tabs,
+  preserve a detour, return from drift, or undo browser cleanup.
+- **Options considered:** cosmetic finalization; a bounded complete local product;
+  or cloud accounts/sync/AI/social plus a larger event-platform and hard-blocking
+  rewrite in one release.
+- **Selected decision:** ADR-021's bounded local product. Ship a side-panel Command
+  Center, Profiles, Plans/schedules, previewable Focus Contracts, Spaces, Return
+  Capsules, mindful guard, duplicates, checkpoints, and post-focus restore. Keep the
+  aggregate engine; do not invent an unproven IndexedDB migration.
+- **Permission/schema decision:** add only `sidePanel`; support Chrome 116+; storage
+  metadata schema 3; portable backup format 4; bounded product schema 1 validated on
+  every read/write/import/export.
+- **Safety decisions:** save rollback state before tab mutation; exclude Incognito;
+  accept only credential-free HTTP(S) captured URLs; allow-only rules are complete
+  when present; restores only open missing tabs; duplicate close requires two clicks;
+  notification copy stays generic; guard stays dismissible and quiet on fullscreen
+  and sensitive paths.
+- **Connected-feature decision:** no account, encrypted sync, remote AI, friend or
+  family comparison, leaderboard, or remote integration is exposed. Without a real
+  identity, encryption/key-recovery, deletion, abuse, moderation, incident, and
+  operations system, those would be insecure theater rather than a finished feature.
+- **Design decisions:** Calm Optimistic tokens remain linked to the hourglass icon;
+  action-first hierarchy, progressive plan-editor disclosure, starter plans, plain
+  language, semantic colors, 10/12/16/24px geometry, keyboard focus, dark/reduced-
+  motion/high-contrast support, and text-safe rendering are required.
+- **Analytics decision:** no telemetry. The user-facing local North Star is weekly
+  intentional outcome days (`3` is the visible target), with focus minutes and
+  successful returns as supporting signals. Passive Focus Score remains separate
+  from chosen outcomes.
+- **Quality decision:** product-model and worker tests cover URL/schema limits,
+  Focus Contract ordering, guard decisions, schedules, duplicate identity, backup,
+  permissions, package/network policy, and UI references. Browser adapter QA covers
+  the empty state, editor, Plan save, Contract preview, start, Space save, and
+  responsive rendered layout; unpacked-extension lifecycle/policy checks remain
+  explicit release gates.
+- **Evidence/rollback:**
+  [ADR-021](docs/v2/decisions/ADR-021-final-local-v2-architecture.md) and the final V2
+  build record. Rollback is the prior `codex/v2-final-design-foundation` commit; local
+  format-4 export is the user-data recovery path.
+
 This ledger records decisions actually taken. Future ideas stay in the V2 catalog
 or Proposed ADRs until their own implementation wave is authorized and verified.
 

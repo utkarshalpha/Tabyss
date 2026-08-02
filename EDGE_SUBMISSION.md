@@ -1,6 +1,6 @@
 # Tabyss — Microsoft Edge Add-ons Submission Guide
 
-Edge is Chromium: the same `tabyss-v1.5.0.zip` uploads unchanged. Registration is
+Edge is Chromium: the same `tabyss-v2.0.0.zip` uploads unchanged. Registration is
 **free** (no $5, unlike Chrome). Total cost: ₹0 / $0.
 
 ## 1. Register (one time, ~5 min)
@@ -13,7 +13,7 @@ Put `PRIVACY.md` at a public URL — easiest: a free GitHub Gist → copy the ra
 link. You'll paste this URL in the listing.
 
 ## 3. Submit
-Partner Center → **Create new extension** → upload `tabyss-v1.5.0.zip`, then fill:
+Partner Center → **Create new extension** → upload `tabyss-v2.0.0.zip`, then fill:
 
 | Field | Value |
 |---|---|
@@ -49,7 +49,7 @@ Partner Center → **Create new extension** → upload `tabyss-v1.5.0.zip`, then
 ## Compatibility notes (already verified in code)
 - Manifest V3, all `chrome.*` APIs used (tabs, storage, idle, alarms,
   notifications) are supported by Chromium Edge.
-- `minimum_chrome_version: 111` is honored by Edge's Chromium version mapping.
+- `minimum_chrome_version: 116` is honored by Edge's Chromium version mapping.
 - The `favicon` permission / `_favicon/` endpoint is Chromium-standard; if a
   particular Edge build lacks a cached icon, the UI's letter-chip fallback shows
   automatically (already built in).

@@ -2,7 +2,44 @@
 
 All notable changes to Tabyss. Format based on Keep a Changelog; versioning is SemVer.
 
-## [Unreleased] — V2 Waves 0–1: Trust foundation and intentional focus
+## [2.0.0] — 2026-08-02 · "Intentional Browsing"
+
+### Command Center and plans
+- Added the V2 side-panel Command Center with Personal, Work, Study, and bounded
+  custom Profiles; it opens from the popup or with `Alt+Shift+T`.
+- Added reusable Plans with intention, definition of done, timer/open-ended mode,
+  observe/mindful-nudge protection, allow-only or pause-site rules, selected pages,
+  linked Space, tab parking, post-focus restore, and local recurring reminders.
+- Added a Focus Contract preview showing every tab that will open or park before the
+  user confirms. A durable checkpoint is written before any tab mutation.
+- Added a cross-surface active-session card with pause/resume, extension, honest
+  completed/unfinished checkout, and post-focus workspace restoration.
+
+### Context, detours, and recovery
+- Added Spaces to save the current window and restore only missing HTTP(S) tabs.
+- Added Return Capsules to explicitly save the active URL/title and optional note,
+  reopen it, mark the loop done, reopen it, or delete it.
+- Added mindful drift recovery during protected Plans: Return to plan, Save for later
+  and return, or Continue for a bounded period. Fullscreen, login, authentication,
+  payment, and checkout paths stay quiet.
+- Added duplicate detection with fragment-safe URL normalization, two-step close
+  confirmation, and an automatic pre-cleanup checkpoint.
+- Added manual and automatic bounded checkpoints with de-duplicated restore.
+- Added a local weekly North Star (intentional outcome days) with focus minutes and
+  successful returns in the Command Center. No telemetry or external product
+  analytics were added.
+
+### Schema, permissions, and trust
+- Added versioned and bounded local product schema 1; storage metadata is now schema
+  3 and portable backups are format 4 with Plans, Spaces, Capsules, checkpoints, and
+  recovery records included.
+- Added only the `sidePanel` permission and raised the supported Chrome baseline to
+  116. Connected sync, remote AI, accounts, social comparison, and hard blocking are
+  absent rather than simulated.
+- Added product-model and worker integration coverage for safe URL capture, limits,
+  relationship repair, Focus Contract recovery ordering, guard decisions, schedules,
+  duplicate cleanup, permissions, packaging, and UI contracts.
+
 ### Intentional focus
 - Added an intention-first popup flow with 25/50/90-minute timers or an open-ended
   stopwatch, optional definition of done, pause/resume, ten-minute extension, and
@@ -12,7 +49,7 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
 - Active sessions recover across popup closure, worker suspension, and browser
   restart using persisted timestamps; timer expiry enters review instead of
   auto-completing work, and open-ended sessions have a 12-hour safety review.
-- Focus outcomes follow retention/reset/clear behavior and portable backup format 3.
+- Focus outcomes follow retention/reset/clear behavior and portable backup format 4.
   Restores are blocked while a valid focus session is active.
 
 ### Security & privacy

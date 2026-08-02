@@ -18,6 +18,31 @@ The core magic moment is not “a site was blocked.” It is: **I noticed I had 
 Tabyss preserved what tempted me, and I returned to the thing I chose without losing
 context.**
 
+## Final local V2 disposition
+
+ADR-021 turns the signature loop into the final local V2 build:
+
+- Implemented: Profiles, reusable Plans and local schedules, Focus Contract preview,
+  Focus Workspace open/park/restore, Spaces, Return Capsules, observe/nudge
+  protection, Return/Save/Continue drift recovery, intervention cooldowns, bounded
+  checkpoints, duplicate cleanup, existing-tab de-duplication, honest checkout,
+  weekly intentional minutes, recovery counts, and a side-panel Command Center.
+- Integrated from the existing product: quick intention, timer/stopwatch recovery,
+  domain analytics, focus score, media/doomscroll classification, wellbeing, goals,
+  dashboard, persona, Wrapped, export/import, retention, and clear/reset controls.
+- Deliberately absent rather than deferred behind fake UI: cloud sync, accounts,
+  remote AI, friend/family comparison, collaboration, public leaderboards, employee
+  or parental surveillance, and hard DNR locking. Those need operating systems that
+  do not exist in this local extension (identity, encryption/key recovery, deletion,
+  abuse prevention, moderation, incident response, and support).
+- Not claimed by the release: precise resource/memory measurement, tab-group or form
+  state restoration, OS-wide blocking, medical/ADHD outcomes, or a full crash-history
+  database. The residual compromises are recorded in the security plan rather than
+  hidden as “coming soon.”
+
+The remaining ideas below stay as evaluated opportunity evidence, not a V3 promise
+or a claim that every conceivable productivity feature belongs in one safe release.
+
 ## Benchmark evidence
 
 The opportunity set was checked against official product materials available on

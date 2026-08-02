@@ -1,4 +1,4 @@
-/* Tabyss — background service worker (v1.3)
+/* Tabyss — background service worker (v2.0)
  *
  * On-device tracking: time per domain/day/hour, site switches, rabbit-hole
  * runs, media accounting (video / shorts / feed-scroll via content-script
@@ -7,7 +7,7 @@
  * anywhere.
  */
 
-importScripts("common.js");
+importScripts("common.js", "product.js");
 
 const MAX_DELTA_S = 90; // cap a single commit so machine-sleep gaps aren't counted
 const HOLE_MIN_S = 25 * 60; // continuous same-site run that counts as a rabbit hole
@@ -63,7 +63,8 @@ restrictStorageAccess();
 
 // Clicking a Tabyss notification opens the dashboard.
 chrome.notifications.onClicked.addListener((id) => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
+  if (id.startsWith("plan-schedule:")) openCommandCenter();
+  else chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
   chrome.notifications.clear(id);
 });
 
@@ -83,16 +84,44 @@ chrome.notifications.onButtonClicked.addListener((id, btn) => {
 });
 
 chrome.alarms.onAlarm.addListener((a) => {
-  if (a.name === "tick") flush();
+  if (a.name === "tick") {
+    flush();
+    checkScheduledPlans().catch(() => {});
+  }
   else if (a.name === "maintenance") maintenance();
   else if (a.name === "focus-end") reconcileFocus();
 });
 chrome.tabs.onActivated.addListener(() => flush());
 chrome.tabs.onUpdated.addListener((_id, info, tab) => {
-  if (info.url && tab.active) flush();
+  if (info.url && tab.active) {
+    flush();
+    maybeShowGuard(tab).catch(() => {});
+  }
+});
+chrome.tabs.onActivated.addListener(async (info) => {
+  try {
+    const tab = await chrome.tabs.get(info.tabId);
+    await maybeShowGuard(tab);
+  } catch (_) {}
 });
 chrome.windows.onFocusChanged.addListener(() => flush());
 chrome.idle.onStateChanged.addListener(() => flush());
+
+async function openCommandCenter() {
+  try {
+    const win = await chrome.windows.getLastFocused();
+    if (!win || !Number.isInteger(win.id)) throw new Error("No browser window");
+    await chrome.sidePanel.open({ windowId: win.id });
+  } catch (_) {
+    await chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") });
+  }
+}
+
+if (chrome.commands?.onCommand) {
+  chrome.commands.onCommand.addListener((command) => {
+    if (command === "open-command-center") openCommandCenter();
+  });
+}
 
 function isOwnSender(sender) {
   return !!sender && sender.id === chrome.runtime.id;
@@ -121,6 +150,21 @@ function sendResult(promise, sendResponse, after) {
       FOCUS_HISTORY_CORRUPT: "Focus history could not be validated. Restore a known-good backup or clear local data before starting another session.",
       FOCUS_INVALID_MODE: "Choose timer or stopwatch mode.",
       FOCUS_INVALID_TRANSITION: "That action is not available in the current session state.",
+      PRODUCT_DATA_CORRUPT: "V2 product data could not be validated. Export a backup before repairing or clearing it.",
+      PRODUCT_INVALID_TEXT: "Review the name, intention, or note and keep it within the shown limit.",
+      PRODUCT_INVALID_ID: "That saved item could not be identified safely.",
+      PRODUCT_INVALID_URL: "Only valid HTTP or HTTPS pages can be saved.",
+      PRODUCT_INVALID_DOMAIN: "Review the site rules and enter domains such as example.com.",
+      PRODUCT_INVALID_PROFILE: "That profile could not be validated.",
+      PRODUCT_INVALID_PLAN: "That plan could not be validated.",
+      PRODUCT_INVALID_SPACE: "That Space could not be validated.",
+      PRODUCT_INVALID_CAPSULE: "That Return Capsule could not be validated.",
+      PRODUCT_INVALID_CHECKPOINT: "That browser checkpoint could not be validated.",
+      PRODUCT_INVALID_CONTRACT: "That Focus Contract could not be validated.",
+      PRODUCT_TAB_LIMIT: "This action needs a complete recovery point. Reduce the window to 100 savable tabs and try again.",
+      PRODUCT_CHECKPOINT_IN_USE: "That checkpoint protects the current Focus Contract. Restore or keep the current tabs first.",
+      PRODUCT_NOT_FOUND: "That saved item no longer exists.",
+      PRODUCT_CONFIRM_REQUIRED: "Review the affected tabs before confirming this action.",
     };
     sendResponse({ ok: false, code: error && error.code || null, error: safeErrors[error && error.code] || "The request could not be completed safely." });
   });
@@ -163,6 +207,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       return extensionPage ? sendResult(focusCommand("complete", msg), sendResponse) : false;
     case "ABANDON_FOCUS":
       return extensionPage ? sendResult(focusCommand("abandon", msg), sendResponse) : false;
+    case "GET_PRODUCT_DATA":
+      return extensionPage ? sendResult(productCommand("get", msg, sender), sendResponse) : false;
+    case "PRODUCT_COMMAND":
+      return extensionPage ? sendResult(productCommand(msg.action, msg, sender), sendResponse) : false;
+    case "GUARD_DECISION":
+      return contentScript ? sendResult(guardDecision(msg, sender), sendResponse) : false;
     case "MEDIA_BEAT":
       return contentScript ? sendResult(mediaBeat(msg, sender), sendResponse) : false;
     case "BREAK_SNOOZE":
@@ -250,6 +300,8 @@ function exportData() { return withStore(doExportData); }
 function getFocusData() { return withStore(doGetFocusData); }
 function focusCommand(action, payload) { return withStore(() => doFocusCommand(action, payload)); }
 function reconcileFocus() { return withStore(doReconcileFocus); }
+function productCommand(action, payload, sender) { return withStore(() => doProductCommand(action, payload, sender)); }
+function guardDecision(payload, sender) { return withStore(() => doGuardDecision(payload, sender)); }
 
 async function doFlush() {
   const now = Date.now();
@@ -735,6 +787,7 @@ async function doFocusCommand(action, payload) {
   }
   await chrome.storage.local.set({ focusActive: active, focusSessions: sessions });
   await syncFocusAlarm(active, now);
+  if (action === "complete" || action === "abandon") await finishActiveContract();
   return publicFocusData(active, sessions, now);
 }
 
@@ -744,13 +797,524 @@ async function doExportData() {
   return { data: buildExportPayload(data) };
 }
 
+/* ---------- V2 plans, Spaces, Return Capsules and recovery ---------- */
+
+function newProductId(prefix) {
+  return `${prefix}_${crypto.randomUUID().toLowerCase()}`;
+}
+
+async function loadProductData() {
+  const { product } = await chrome.storage.local.get("product");
+  return sanitizeProductData(product);
+}
+
+async function saveProductData(product) {
+  const safe = sanitizeProductData(product);
+  await chrome.storage.local.set({ product: safe });
+  return safe;
+}
+
+function currentProductProfile(product, requested) {
+  const id = requested || product.activeProfileId;
+  return product.profiles.some((profile) => profile.id === id) ? id : product.activeProfileId;
+}
+
+function productTabRecord(tab) {
+  try {
+    const url = productUrl(tab.url);
+    const rawTitle = typeof tab.title === "string" ? tab.title.trim() : "";
+    return {
+      url,
+      title: productText((rawTitle || new URL(url).hostname).slice(0, PRODUCT_LIMITS.title), PRODUCT_LIMITS.title, true),
+      pinned: tab.pinned === true,
+      index: boundedNumber(tab.index, 0, 10000, 0),
+    };
+  } catch (_) { return null; }
+}
+
+async function currentWindowTabs() {
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  return (Array.isArray(tabs) ? tabs : []).filter((tab) => !tab.incognito);
+}
+
+function checkpointInto(product, tabs, label, reason) {
+  const records = tabs.map(productTabRecord).filter(Boolean);
+  if (records.length > PRODUCT_LIMITS.tabsPerSpace) productFailure("PRODUCT_TAB_LIMIT");
+  const checkpoint = sanitizeProductCheckpoint({
+    id: newProductId("checkpoint"),
+    label: productText(label || "Browser checkpoint", 80, true),
+    tabs: records,
+    createdAt: Date.now(),
+    reason,
+  });
+  product.checkpoints = [checkpoint, ...product.checkpoints].slice(0, PRODUCT_LIMITS.checkpoints);
+  return checkpoint;
+}
+
+async function restoreProductTabs(records, preserveCopies = false) {
+  const existing = await chrome.tabs.query({});
+  const keys = new Set();
+  const existingCounts = new Map();
+  for (const tab of existing || []) {
+    const key = productUrlKey(tab.url);
+    if (!key) continue;
+    keys.add(key);
+    existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
+  }
+  const desiredCounts = new Map();
+  let opened = 0;
+  let skipped = 0;
+  let failed = 0;
+  for (const record of records) {
+    const key = productUrlKey(record.url);
+    if (!key) { skipped++; continue; }
+    if (preserveCopies) {
+      const desired = (desiredCounts.get(key) || 0) + 1;
+      desiredCounts.set(key, desired);
+      if (desired <= (existingCounts.get(key) || 0)) { skipped++; continue; }
+    } else if (keys.has(key)) { skipped++; continue; }
+    try {
+      await chrome.tabs.create({ url: record.url, active: false, pinned: record.pinned === true });
+      keys.add(key);
+      opened++;
+    } catch (_) { failed++; }
+  }
+  return { opened, skipped, failed };
+}
+
+function planById(product, id) {
+  const plan = product.plans.find((item) => item.id === id);
+  if (!plan) productFailure("PRODUCT_NOT_FOUND");
+  return plan;
+}
+
+function spaceById(product, id) {
+  const space = product.spaces.find((item) => item.id === id);
+  if (!space) productFailure("PRODUCT_NOT_FOUND");
+  return space;
+}
+
+function contractForTabs(product, plan, tabs) {
+  const unrelated = tabs.filter((tab) => !tab.incognito && !tab.pinned && !productTabIsPlanned(tab, plan));
+  const sourceUrls = [...plan.relevantUrls];
+  if (plan.spaceId) {
+    const space = product.spaces.find((item) => item.id === plan.spaceId);
+    if (space) sourceUrls.push(...space.tabs.map((tab) => tab.url));
+  }
+  const currentKeys = new Set(tabs.map((tab) => productUrlKey(tab.url)).filter(Boolean));
+  const open = [];
+  const seen = new Set();
+  for (const url of sourceUrls) {
+    const key = productUrlKey(url);
+    if (!key || currentKeys.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    open.push({ url, domain: new URL(url).hostname });
+  }
+  return {
+    planId: plan.id,
+    planName: plan.name,
+    intention: plan.intention,
+    protection: plan.protection,
+    restoreOnFinish: plan.restoreOnFinish,
+    parkUnrelated: plan.parkUnrelated,
+    unrelated: unrelated.map((tab) => ({ id: tab.id, title: String(tab.title || "Untitled tab").slice(0, 120), domain: normalizeDomainInput(new URL(tab.url).hostname) || "site" })),
+    open,
+  };
+}
+
+function recordRecovery(product, kind) {
+  const day = dateKey(Date.now());
+  const counts = product.recoveryByDay[day] || { shown: 0, returned: 0, continued: 0, saved: 0 };
+  if (Object.hasOwn(counts, kind)) counts[kind] = Math.min(100000, counts[kind] + 1);
+  product.recoveryByDay[day] = counts;
+  const days = Object.keys(product.recoveryByDay).sort();
+  for (const old of days.slice(0, Math.max(0, days.length - PRODUCT_LIMITS.recoveryDays))) delete product.recoveryByDay[old];
+}
+
+async function publicProductData(product) {
+  const tabs = await currentWindowTabs();
+  const duplicates = productDuplicateGroups(tabs);
+  return {
+    product,
+    duplicates,
+  };
+}
+
+async function doProductCommand(action, payload) {
+  const product = await loadProductData();
+  const now = Date.now();
+  if (action === "get") return publicProductData(product);
+
+  if (action === "upsert-profile") {
+    const incoming = isPlainObject(payload.profile) ? payload.profile : {};
+    const id = incoming.id || newProductId("profile");
+    const existing = product.profiles.find((profile) => profile.id === id);
+    const profile = sanitizeProductProfile({
+      id,
+      name: incoming.name,
+      color: incoming.color || PRODUCT_PROFILE_COLORS[product.profiles.length % PRODUCT_PROFILE_COLORS.length],
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    });
+    if (!existing && product.profiles.length >= PRODUCT_LIMITS.profiles) productFailure("PRODUCT_INVALID_PROFILE");
+    product.profiles = existing
+      ? product.profiles.map((item) => item.id === id ? { ...profile, builtIn: item.builtIn } : item)
+      : [...product.profiles, profile];
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "set-profile") {
+    const id = productId(payload.profileId, "profile");
+    if (!product.profiles.some((profile) => profile.id === id)) productFailure("PRODUCT_NOT_FOUND");
+    product.activeProfileId = id;
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "delete-profile") {
+    const id = productId(payload.profileId, "profile");
+    const profile = product.profiles.find((item) => item.id === id);
+    if (!profile || profile.builtIn) productFailure("PRODUCT_NOT_FOUND");
+    const activePlan = product.activeContract && product.plans.find((item) => item.id === product.activeContract.planId);
+    if (product.activeContract?.status === "active" && activePlan?.profileId === id) productFailure("PRODUCT_CONFIRM_REQUIRED");
+    product.profiles = product.profiles.filter((item) => item.id !== id);
+    product.plans = product.plans.filter((item) => item.profileId !== id);
+    product.spaces = product.spaces.filter((item) => item.profileId !== id);
+    product.capsules = product.capsules.filter((item) => item.profileId !== id);
+    if (product.activeProfileId === id) product.activeProfileId = "profile_personal";
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "upsert-plan") {
+    const incoming = isPlainObject(payload.plan) ? payload.plan : {};
+    const id = incoming.id || newProductId("plan");
+    const existing = product.plans.find((plan) => plan.id === id);
+    const plan = sanitizeProductPlan({
+      ...incoming,
+      id,
+      profileId: currentProductProfile(product, incoming.profileId),
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    });
+    if (!existing && product.plans.length >= PRODUCT_LIMITS.plans) productFailure("PRODUCT_INVALID_PLAN");
+    if (plan.spaceId && !product.spaces.some((space) => space.id === plan.spaceId)) productFailure("PRODUCT_NOT_FOUND");
+    product.plans = existing ? product.plans.map((item) => item.id === id ? plan : item) : [plan, ...product.plans];
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "delete-plan") {
+    const id = productId(payload.planId, "plan");
+    if (product.activeContract?.planId === id && product.activeContract.status === "active") productFailure("PRODUCT_CONFIRM_REQUIRED");
+    product.plans = product.plans.filter((item) => item.id !== id);
+    product.capsules = product.capsules.map((item) => item.planId === id ? { ...item, planId: "" } : item);
+    if (product.activeContract?.planId === id) product.activeContract = null;
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "save-space") {
+    const incoming = isPlainObject(payload.space) ? payload.space : {};
+    const tabs = await currentWindowTabs();
+    const id = incoming.id || newProductId("space");
+    const existing = product.spaces.find((space) => space.id === id);
+    const space = sanitizeProductSpace({
+      id,
+      profileId: currentProductProfile(product, incoming.profileId),
+      name: incoming.name,
+      tabs: tabs.map(productTabRecord).filter(Boolean),
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    });
+    if (!existing && product.spaces.length >= PRODUCT_LIMITS.spaces) productFailure("PRODUCT_INVALID_SPACE");
+    product.spaces = existing ? product.spaces.map((item) => item.id === id ? space : item) : [space, ...product.spaces];
+    await saveProductData(product);
+    return { ...(await publicProductData(product)), savedSpace: space };
+  }
+
+  if (action === "delete-space") {
+    const id = productId(payload.spaceId, "space");
+    product.spaces = product.spaces.filter((item) => item.id !== id);
+    product.plans = product.plans.map((item) => item.spaceId === id ? { ...item, spaceId: "" } : item);
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "restore-space") {
+    const space = spaceById(product, productId(payload.spaceId, "space"));
+    return { ...(await publicProductData(product)), restore: await restoreProductTabs(space.tabs) };
+  }
+
+  if (action === "save-capsule") {
+    let source = payload.capsule;
+    if (!isPlainObject(source) || !source.url) {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = tabs[0];
+      if (!tab) productFailure("PRODUCT_NOT_FOUND");
+      source = { url: tab.url, title: tab.title, note: payload.note };
+    }
+    const capsule = sanitizeProductCapsule({
+      id: newProductId("capsule"),
+      profileId: currentProductProfile(product, source.profileId),
+      planId: source.planId || product.activeContract?.planId || "",
+      url: source.url,
+      title: source.title,
+      note: source.note,
+      status: "saved",
+      savedAt: now,
+      updatedAt: now,
+    });
+    product.capsules = [capsule, ...product.capsules].slice(0, PRODUCT_LIMITS.capsules);
+    await saveProductData(product);
+    return { ...(await publicProductData(product)), savedCapsule: capsule };
+  }
+
+  if (action === "update-capsule") {
+    const id = productId(payload.capsuleId, "capsule");
+    if (!product.capsules.some((item) => item.id === id)) productFailure("PRODUCT_NOT_FOUND");
+    product.capsules = product.capsules.map((item) => item.id === id
+      ? { ...item, status: payload.status === "done" ? "done" : "saved", note: productText(payload.note ?? item.note, PRODUCT_LIMITS.note), updatedAt: now }
+      : item);
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "delete-capsule") {
+    const id = productId(payload.capsuleId, "capsule");
+    product.capsules = product.capsules.filter((item) => item.id !== id);
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "contract-preview") {
+    const plan = planById(product, productId(payload.planId, "plan"));
+    return { ...(await publicProductData(product)), contract: contractForTabs(product, plan, await currentWindowTabs()) };
+  }
+
+  if (action === "start-plan") {
+    const plan = planById(product, productId(payload.planId, "plan"));
+    const tabs = await currentWindowTabs();
+    const contract = contractForTabs(product, plan, tabs);
+    const focusState = await loadAndReconcileFocus();
+    if (focusState.active) focusFailure("FOCUS_ALREADY_ACTIVE");
+    if (contract.parkUnrelated && contract.unrelated.length && payload.confirmed !== true) {
+      return { ...(await publicProductData(product)), contract, requiresConfirmation: true };
+    }
+    const checkpoint = checkpointInto(product, tabs, `Before ${plan.name}`, "focus");
+    // Persist the rollback point before opening or removing any tabs. If the
+    // worker is interrupted mid-transition, recovery remains available.
+    await saveProductData(product);
+    if (plan.spaceId) await restoreProductTabs(spaceById(product, plan.spaceId).tabs);
+    await restoreProductTabs(plan.relevantUrls.map((url, index) => ({ url, title: new URL(url).hostname, pinned: false, index })));
+    if (contract.parkUnrelated && contract.unrelated.length) {
+      await chrome.tabs.remove(contract.unrelated.map((tab) => tab.id));
+    }
+    const focusData = await doFocusCommand("start", {
+      intention: plan.intention,
+      successDefinition: plan.successDefinition,
+      mode: plan.mode,
+      targetMinutes: plan.targetMinutes,
+    });
+    product.activeProfileId = plan.profileId;
+    product.activeContract = {
+      planId: plan.id,
+      checkpointId: checkpoint.id,
+      startedAt: now,
+      finishedAt: 0,
+      restoreOnFinish: plan.restoreOnFinish,
+      status: "active",
+    };
+    await saveProductData(product);
+    return { ...(await publicProductData(product)), focus: focusData.focus, focusSessions: focusData.focusSessions, contract };
+  }
+
+  if (action === "restore-contract") {
+    if (product.activeContract?.status !== "finished" || !product.activeContract.checkpointId) productFailure("PRODUCT_NOT_FOUND");
+    const checkpoint = product.checkpoints.find((item) => item.id === product.activeContract.checkpointId);
+    if (!checkpoint) productFailure("PRODUCT_NOT_FOUND");
+    const restore = await restoreProductTabs(checkpoint.tabs, true);
+    product.activeContract = null;
+    await saveProductData(product);
+    return { ...(await publicProductData(product)), restore };
+  }
+
+  if (action === "dismiss-contract") {
+    if (product.activeContract?.status !== "finished") productFailure("PRODUCT_NOT_FOUND");
+    product.activeContract = null;
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "checkpoint") {
+    const checkpoint = checkpointInto(product, await currentWindowTabs(), payload.label || "Manual checkpoint", "manual");
+    await saveProductData(product);
+    return { ...(await publicProductData(product)), checkpoint };
+  }
+
+  if (action === "restore-checkpoint") {
+    const id = productId(payload.checkpointId, "checkpoint");
+    const checkpoint = product.checkpoints.find((item) => item.id === id);
+    if (!checkpoint) productFailure("PRODUCT_NOT_FOUND");
+    return { ...(await publicProductData(product)), restore: await restoreProductTabs(checkpoint.tabs, true) };
+  }
+
+  if (action === "delete-checkpoint") {
+    const id = productId(payload.checkpointId, "checkpoint");
+    if (product.activeContract?.checkpointId === id) productFailure("PRODUCT_CHECKPOINT_IN_USE");
+    product.checkpoints = product.checkpoints.filter((item) => item.id !== id);
+    await saveProductData(product);
+    return publicProductData(product);
+  }
+
+  if (action === "close-duplicates") {
+    if (payload.confirmed !== true) productFailure("PRODUCT_CONFIRM_REQUIRED");
+    const tabs = await currentWindowTabs();
+    const groups = productDuplicateGroups(tabs);
+    const remove = [];
+    for (const group of groups) {
+      const keeper = group.find((tab) => tab.active) || group[0];
+      remove.push(...group.filter((tab) => tab.id !== keeper.id).map((tab) => tab.id));
+    }
+    if (!remove.length) return { ...(await publicProductData(product)), closed: 0 };
+    checkpointInto(product, tabs, "Before closing duplicate tabs", "duplicates");
+    await saveProductData(product);
+    await chrome.tabs.remove(remove);
+    return { ...(await publicProductData(product)), closed: remove.length };
+  }
+
+  if (action === "guard-shown") {
+    recordRecovery(product, "shown");
+    await saveProductData(product);
+    return {};
+  }
+
+  productFailure("PRODUCT_NOT_FOUND");
+}
+
+async function finishActiveContract() {
+  let product;
+  try { product = await loadProductData(); } catch (_) { return; }
+  if (!product.activeContract || product.activeContract.status !== "active") return;
+  product.activeContract.status = "finished";
+  product.activeContract.finishedAt = Date.now();
+  await saveProductData(product);
+}
+
+async function returnToPlannedTab(plan, currentTab) {
+  try {
+    const tabs = await chrome.tabs.query({ windowId: currentTab.windowId });
+    const target = tabs.find((tab) => tab.id !== currentTab.id && productTabIsPlanned(tab, plan));
+    if (target) {
+      await chrome.tabs.update(target.id, { active: true });
+      return;
+    }
+    if (plan.relevantUrls[0]) await chrome.tabs.create({ url: plan.relevantUrls[0], active: true });
+  } catch (_) {}
+}
+
+async function doGuardDecision(payload, sender) {
+  const product = await loadProductData();
+  const contract = product.activeContract;
+  if (!contract || contract.status !== "active" || !sender?.tab) productFailure("PRODUCT_NOT_FOUND");
+  const plan = planById(product, contract.planId);
+  const domain = productDomain(new URL(sender.tab.url).hostname);
+  const decision = ["return", "continue", "save"].includes(payload.decision) ? payload.decision : null;
+  if (!decision) productFailure("PRODUCT_NOT_FOUND");
+  if (decision === "continue") {
+    const minutes = boundedNumber(payload.minutes, 1, 60, 10);
+    product.guardBypasses[domain] = Date.now() + minutes * 60000;
+    recordRecovery(product, "continued");
+  } else if (decision === "save") {
+    product.capsules = [sanitizeProductCapsule({
+      id: newProductId("capsule"),
+      profileId: plan.profileId,
+      planId: plan.id,
+      url: sender.tab.url,
+      title: String(sender.tab.title || domain).slice(0, PRODUCT_LIMITS.title),
+      note: "Saved during focus",
+      status: "saved",
+      savedAt: Date.now(),
+      updatedAt: Date.now(),
+    }), ...product.capsules].slice(0, PRODUCT_LIMITS.capsules);
+    recordRecovery(product, "saved");
+    await returnToPlannedTab(plan, sender.tab);
+  } else {
+    recordRecovery(product, "returned");
+    await returnToPlannedTab(plan, sender.tab);
+  }
+  await saveProductData(product);
+  return { decision };
+}
+
+const guardShownRecently = new Map();
+async function maybeShowGuard(tab) {
+  if (!tab || tab.incognito || !tab.active || typeof tab.url !== "string" || !/^https?:\/\//.test(tab.url)) return;
+  const store = await chrome.storage.local.get(["focusActive", "product"]);
+  const active = validStoredFocusActive(store.focusActive);
+  if (!active || active.status !== "running") return;
+  const product = sanitizeProductData(store.product);
+  const contract = product.activeContract;
+  if (!contract || contract.status !== "active") return;
+  const plan = product.plans.find((item) => item.id === contract.planId);
+  if (!plan || plan.protection !== "nudge" || productTabIsPlanned(tab, plan)) return;
+  const domain = productDomain(new URL(tab.url).hostname);
+  if ((product.guardBypasses[domain] || 0) > Date.now()) return;
+  const key = `${active.id}:${tab.id}:${domain}`;
+  if (Date.now() - (guardShownRecently.get(key) || 0) < 60000) return;
+  guardShownRecently.set(key, Date.now());
+  const response = await chrome.tabs.sendMessage(tab.id, {
+    type: "SHOW_GUARD",
+    cfg: {
+      intention: active.intention,
+      domain,
+      reason: plan.blockedDomains.length && productDomainMatches(domain, plan.blockedDomains)
+        ? "This site is on the plan’s pause list."
+        : "This site is outside the current Focus Contract.",
+    },
+  });
+  if (response?.shown === true) await productCommand("guard-shown", { domain }, null);
+}
+
+async function checkScheduledPlans() {
+  const product = await loadProductData();
+  const { focusActive } = await chrome.storage.local.get("focusActive");
+  if (validStoredFocusActive(focusActive)) return;
+  const now = new Date();
+  const minute = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  const promptKey = `${dateKey(now.getTime())}T${minute}`;
+  const todayPrefix = `${dateKey(now.getTime())}T`;
+  let remaining = Math.max(0, product.preferences.notificationBudget -
+    Object.values(product.schedulePrompts).filter((key) => key.startsWith(todayPrefix)).length);
+  if (!remaining) return;
+  let changed = false;
+  for (const plan of product.plans) {
+    if (!remaining || !plan.schedule.enabled || plan.schedule.time !== minute ||
+        !plan.schedule.days.includes(now.getDay()) || product.schedulePrompts[plan.id] === promptKey) continue;
+    try {
+      await chrome.notifications.create(`plan-schedule:${plan.id}`, {
+        type: "basic",
+        iconUrl: "icon128.png",
+        title: "Your scheduled focus plan is ready",
+        message: "Open Tabyss to review the plan before anything changes.",
+        priority: 0,
+      });
+      product.schedulePrompts[plan.id] = promptKey;
+      remaining--;
+      changed = true;
+    } catch (_) {}
+  }
+  if (changed) await saveProductData(product);
+}
+
 /* ---------- housekeeping & reset ---------- */
 
 // Periodic housekeeping: prune all date-keyed maps beyond the retention window.
 async function doMaintenance() {
   const settings = await getSettings();
   const store = await chrome.storage.local.get([
-    "usage", "hours", "notified", "switches", "holes", "media", "wellness", "focusSessions",
+    "usage", "hours", "notified", "switches", "holes", "media", "wellness", "focusSessions", "product",
   ]);
   const days = settings.retentionDays;
   let pruned = 0;
@@ -770,6 +1334,18 @@ async function doMaintenance() {
   const focusChanged = focusSessions.length !== storedFocusCount ||
     (store.focusSessions != null && !Array.isArray(store.focusSessions));
   if (focusChanged) out.focusSessions = focusSessions;
+  if (store.product != null) {
+    try {
+      const product = sanitizeProductData(store.product);
+      const productPruned = pruneByRetention(product.recoveryByDay, days);
+      if (productPruned) {
+        pruned += productPruned;
+        out.product = product;
+      }
+    } catch (error) {
+      console.warn("Tabyss product maintenance skipped:", error?.code || "invalid product data");
+    }
+  }
   if (pruned || focusChanged) await chrome.storage.local.set(out);
 }
 
@@ -790,6 +1366,18 @@ async function doResetToday() {
   if (!active || dateKey(active.startedAt) === day) {
     store.focusActive = null;
     await chrome.alarms.clear("focus-end");
+  }
+  try {
+    const product = await loadProductData();
+    delete product.recoveryByDay[day];
+    if (product.activeContract?.status === "active" && dateKey(product.activeContract.startedAt) === day) {
+      product.activeContract.status = "finished";
+      product.activeContract.finishedAt = Date.now();
+    }
+    await saveProductData(product);
+  } catch (_) {
+    // Product corruption fails closed; reset must not overwrite a record the user
+    // may still be able to recover from an export.
   }
   await chrome.storage.local.set({ ...store, run: null, session: null });
 }

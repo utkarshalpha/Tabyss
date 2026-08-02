@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Tabyss — Know Your Scroll",
-  "version": "1.5.0",
-  "description": "Plan focus sessions, understand browsing time, spot doomscrolling, and protect wellbeing — private and 100% on-device.",
-  "minimum_chrome_version": "111",
-  "permissions": ["tabs", "storage", "idle", "alarms", "notifications", "favicon"],
+  "name": "Tabyss — Intentional Browsing",
+  "version": "2.0.0",
+  "description": "Turn tabs into intentional plans, reusable Spaces, calm focus, and reversible recovery — private and on-device.",
+  "minimum_chrome_version": "116",
+  "permissions": ["tabs", "storage", "idle", "alarms", "notifications", "favicon", "sidePanel"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
@@ -17,6 +17,13 @@
     "default_popup": "popup.html",
     "default_title": "Tabyss",
     "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+  },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "commands": {
+    "open-command-center": {
+      "suggested_key": { "default": "Alt+Shift+T" },
+      "description": "Open the Tabyss Command Center"
+    }
   },
   "options_ui": { "page": "options.html", "open_in_tab": true },
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }

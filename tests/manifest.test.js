@@ -7,12 +7,12 @@ const root = path.resolve(__dirname, "..");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
 const packaged = JSON.parse(fs.readFileSync(path.join(root, "package-files.json"), "utf8"));
 const packageSet = new Set(packaged);
-const allowedPermissions = new Set(["tabs", "storage", "idle", "alarms", "notifications", "favicon"]);
+const allowedPermissions = new Set(["tabs", "storage", "idle", "alarms", "notifications", "favicon", "sidePanel"]);
 
 test("manifest stays MV3 and uses only the accepted permission set", () => {
   assert.equal(manifest.manifest_version, 3);
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
-  assert.ok(Number(manifest.minimum_chrome_version) >= 111);
+  assert.ok(Number(manifest.minimum_chrome_version) >= 116);
   assert.deepEqual(
     [...manifest.permissions].sort(),
     [...allowedPermissions].sort(),
@@ -24,7 +24,7 @@ test("manifest stays MV3 and uses only the accepted permission set", () => {
 });
 
 test("manifest executable references are local, present and packaged", () => {
-  const references = [manifest.background.service_worker];
+  const references = [manifest.background.service_worker, manifest.side_panel.default_path];
   for (const script of manifest.content_scripts || []) {
     assert.deepEqual(script.matches, ["http://*/*", "https://*/*"]);
     references.push(...(script.js || []), ...(script.css || []));

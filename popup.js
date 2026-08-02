@@ -1,4 +1,4 @@
-/* Tabyss — popup: today at a glance (v1.4) */
+/* Tabyss — popup: intention and today at a glance (v2.0) */
 
 const today = dateKey(Date.now());
 let resetArmed = false;
@@ -518,6 +518,15 @@ document.getElementById("wrapped").addEventListener("click", () =>
   chrome.tabs.create({ url: chrome.runtime.getURL("wrapped.html") })
 );
 document.getElementById("opts").addEventListener("click", () => chrome.runtime.openOptionsPage());
+document.getElementById("commandCenter").addEventListener("click", async () => {
+  try {
+    const win = await chrome.windows.getCurrent();
+    await chrome.sidePanel.open({ windowId: win.id });
+    window.close();
+  } catch (_) {
+    chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") });
+  }
+});
 document.getElementById("reset").addEventListener("click", async (e) => {
   if (!resetArmed) {
     resetArmed = true;

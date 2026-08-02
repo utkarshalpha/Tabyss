@@ -9,6 +9,45 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Icons show on the toolbar and in `chrome://extensions`.
 - [ ] Reloading the extension keeps existing data.
 
+## V2 Command Center and Profiles
+- [ ] Popup Command Center button and `Alt+Shift+T` open the side panel; full-tab
+      fallback remains usable if side-panel opening is unavailable.
+- [ ] Personal, Work, and Study are present; a custom Profile can be added, selected,
+      and removed only after confirmation. Removing it deletes only its Plans, Spaces,
+      and Return Capsules.
+- [ ] Empty Plans view offers Deep work and Study sprint starters without creating
+      data until selected.
+- [ ] Plan editor validates bounded name/intention, HTTP(S) pages, canonical domains,
+      timer/open-ended mode, observe/nudge protection, optional Space, parking,
+      restore preference, and local schedule.
+- [ ] Allow-only rules form the complete plan when present; the pause list is used
+      only when the allow-only list is blank.
+- [ ] Local schedule notifies once for the configured minute/day, stays within the
+      daily budget, uses generic lock-screen copy, and never starts work automatically.
+
+## Focus Contract, drift, and recovery
+- [ ] Preview lists every unpinned tab to park and missing Plan/Space page to open;
+      Cancel changes nothing.
+- [ ] Confirm writes a checkpoint before any open/close operation, opens missing
+      context without duplicates, parks only previewed tabs, and starts the focus
+      state visible in popup and Command Center.
+- [ ] Observe mode never injects a guard. Nudge mode offers Return to plan, Save for
+      later & return, and Continue for 10 minutes on an outside-plan domain.
+- [ ] Guard stays quiet on fullscreen and login/signin/auth/payment/checkout paths;
+      it never reads or includes page content.
+- [ ] Finishing or ending a Plan offers its pre-focus checkpoint; Restore opens only
+      missing tabs, while Keep current tabs leaves the browser unchanged.
+- [ ] Save active page creates a Return Capsule with local URL/title and optional
+      note; Open, Mark done, Reopen loop, and Delete all behave correctly.
+- [ ] Saving/updating/restoring a Space de-duplicates URLs and excludes Incognito and
+      unsupported URL schemes.
+- [ ] Duplicate cleanup shows the repeated-page and extra-tab count, requires two
+      clicks, keeps the active/first copy, and creates a restorable checkpoint first.
+- [ ] Manual checkpoint and restore work with partial failures; restore never closes
+      current tabs or repeats already-open pages.
+- [ ] Multi-window, 100-tab boundary, worker interruption during a confirmed action,
+      corrupt product data, and near-storage-quota paths fail safely.
+
 ## Tracking accuracy
 - [ ] Browse a focused tab ~2 min → that domain's time increases (~1-min granularity).
 - [ ] Switch tabs → time moves to the new domain, not double-counted.
@@ -65,7 +104,7 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Category override changes a site's category everywhere after save.
 - [ ] Ignore list + idle + retention persist across reload.
 - [ ] Export → Clear all → Import restores the data.
-- [ ] Export contains `exportedFrom`, `formatVersion`, `exportedAt`, and all nine
+- [ ] Export contains `exportedFrom`, `formatVersion`, `exportedAt`, and all ten
       restorable sections.
 - [ ] Import preview lists the sections that will change and downloads a
       `tabyss-before-import-*.json` safety backup before restore.
@@ -76,7 +115,7 @@ Run before every store submission. Load unpacked from `chrome://extensions`
       reappearing on the next tracking tick.
 - [ ] Import during an active focus session is refused without changing stored data;
       checkout first, then the same import succeeds.
-- [ ] Format-2 backups remain readable; format-3 focus outcomes round-trip.
+- [ ] Format-2/3 backups remain readable; format-4 focus and product records round-trip.
 - [ ] Retention: entries older than the window are pruned (verify via export).
 
 ## v1.2 — Personality, Wrapped, focus & detectors

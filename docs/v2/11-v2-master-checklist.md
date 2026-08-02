@@ -33,7 +33,8 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 ## 3. Foundation gate
 
-- [ ] V2 schema registry established.
+- [x] V2 schema registry established for the final local product document, focus
+      outcomes, aggregate storage metadata, and portable backup format.
 - [ ] Current export samples collected and anonymized for migration tests.
 - [ ] Pre-migration backup and rollback implemented.
 - [x] Incognito exclusion fixed.
@@ -50,12 +51,12 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 - [ ] Outcome onboarding.
 - [ ] Calibration/sparse-data flow.
-- [ ] Profiles.
+- [x] Profiles.
 - [x] Quick intention.
-- [ ] Plans and schedules.
+- [x] Plans and local schedules.
 - [ ] Timer, stopwatch, Pomodoro, and flow execution.
 - [x] Action popup.
-- [ ] Side-panel Command Center.
+- [x] Side-panel Command Center.
 - [x] Intent-aligned timer/stopwatch session model.
 - [x] Completion and abandonment check-out.
 - [ ] Empty, denied, paused, and recovery states (implemented for this slice;
@@ -63,34 +64,35 @@ This is the step-by-step control list for taking V2 from product definition to a
 
 ## 5. Guard/control gate
 
-- [ ] Protection ladder.
+- [x] Local protection ladder: observe and agency-preserving nudge.
 - [ ] DNR rule generation and reconciliation.
 - [ ] Safe block page and permanent recovery route.
-- [ ] Mindful pause.
+- [x] Mindful pause.
 - [ ] Re-intervention.
-- [ ] Return-to-plan recovery.
-- [ ] Fatigue/cooldown policy.
-- [ ] Quiet/sensitive contexts.
+- [x] Return-to-plan recovery.
+- [x] Per-domain continue cooldown plus guard repeat suppression.
+- [x] Fullscreen and sensitive-path quiet contexts for the guard.
 - [ ] Permission grant/revoke behavior.
 - [ ] Supported-site control fail-open tests.
 
 ## 6. Spaces/capture gate
 
-- [ ] Automatic checkpoints.
-- [ ] Crash recovery.
-- [ ] Task-linked Spaces.
+- [x] Automatic checkpoints before supported bulk mutations.
+- [x] Persisted checkpoint recovery for interrupted/reopened extension state.
+- [x] Plan-linked Spaces.
 - [ ] Tab group preservation.
-- [ ] Duplicate/stale/snooze/parking tools.
-- [ ] Focus workspace open/restore.
-- [ ] Bulk operations with preview and undo.
-- [ ] Local Action Capture.
-- [ ] Context menu and keyboard shortcuts.
+- [x] Duplicate detection/cleanup, Return Capsules, and plan tab parking.
+- [x] Focus workspace open/restore.
+- [x] Previewed plan mutation and checkpoint-backed duplicate cleanup.
+- [x] Local explicit page capture through Return Capsules.
+- [ ] Context menu; Command Center keyboard shortcut is implemented.
 - [ ] Optional integration payload preview and fallback, if accepted.
 
 ## 7. Insight/wellbeing gate
 
 - [ ] Today timeline.
-- [ ] Planned versus unplanned result.
+- [x] Local guard shown/returned/continued/saved recovery outcomes; a detailed
+      planned-versus-unplanned time timeline is not claimed.
 - [ ] Explainable V2 score.
 - [ ] Versioned historical score treatment.
 - [ ] Weekly review.
@@ -98,14 +100,16 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] Personal experiment flow.
 - [ ] Wrapped/persona integration.
 - [ ] Sustainable-work guardrails.
-- [ ] Shared notification budget.
+- [ ] One shared budget across all legacy modules; scheduled Plans have a bounded
+      daily budget now.
 - [ ] Accessible chart alternatives.
 
 ## 8. Security/privacy gate
 
-- [ ] Feature threat models reviewed.
-- [ ] Data classification enforced.
-- [ ] Least-privilege permission review complete.
+- [x] Final local V2 threat model and residual compromises recorded.
+- [x] Passive-domain versus explicit URL/title capture boundaries enforced.
+- [x] `sidePanel` is the only V2 permission addition; broader optional permissions
+      and DNR were rejected for this build.
 - [ ] Import/message/rule fuzzing complete.
 - [ ] Content-script hostile-page testing complete.
 - [ ] Share/export redaction verified.

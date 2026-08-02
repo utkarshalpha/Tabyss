@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabyss Command Center</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="command-center">
+    <header class="cc-header">
+      <a class="brand-lockup cc-brand" href="dashboard.html" target="_blank" aria-label="Open Tabyss dashboard">
+        <img class="brandmark" src="icon48.png" alt="" />
+        <span class="brand-copy"><strong>Tabyss</strong><small>Command Center · on-device</small></span>
+      </a>
+      <div class="cc-header-actions">
+        <button id="ccDashboard" class="iconbtn" type="button" title="Dashboard" aria-label="Open dashboard">↗</button>
+        <button id="ccSettings" class="iconbtn" type="button" title="Settings" aria-label="Open settings">⚙</button>
+      </div>
+    </header>
+
+    <main class="cc-main">
+      <section class="cc-hero" aria-labelledby="ccGreeting">
+        <div>
+          <div class="eyebrow">Your intentional browser</div>
+          <h1 id="ccGreeting">Choose the mode for this moment</h1>
+          <p>Plans set intention. Spaces restore context. Recovery keeps every cleanup reversible.</p>
+        </div>
+        <div class="profile-row">
+          <label for="profileSelect">Profile</label>
+          <select id="profileSelect" aria-label="Active profile"></select>
+          <button id="profileAdd" class="btn compact" type="button">New</button>
+          <button id="profileDelete" class="btn compact quiet-danger" type="button" hidden>Remove</button>
+        </div>
+        <form id="profileForm" class="inline-create" hidden>
+          <label class="sr-only" for="profileName">Profile name</label>
+          <input id="profileName" maxlength="40" placeholder="Profile name" required />
+          <button class="btn primary compact" type="submit">Add profile</button>
+          <button id="profileCancel" class="btn compact" type="button">Cancel</button>
+        </form>
+      </section>
+
+      <section id="focusNow" class="cc-focus" aria-labelledby="focusNowTitle" hidden>
+        <div class="cc-section-head">
+          <div><div class="eyebrow">In focus now</div><h2 id="focusNowTitle"></h2></div>
+          <span id="focusNowStatus" class="status-chip"></span>
+        </div>
+        <p id="focusNowSuccess" class="cc-muted"></p>
+        <div class="cc-focus-clock"><strong id="focusNowClock" class="mono">00:00</strong><span id="focusNowHint"></span></div>
+        <div class="focus-progress" role="progressbar" aria-label="Focus session progress"><span id="focusNowProgress"></span></div>
+        <div class="button-row">
+          <button id="focusNowPause" class="btn" type="button">Pause</button>
+          <button id="focusNowExtend" class="btn" type="button">+10 min</button>
+          <button id="focusNowComplete" class="btn primary" type="button">Mark finished</button>
+          <button id="focusNowEnd" class="btn quiet-danger" type="button">End unfinished</button>
+        </div>
+      </section>
+
+      <section id="restoreOffer" class="recovery-offer" aria-labelledby="restoreOfferTitle" hidden>
+        <div><div class="eyebrow">Easy return</div><h2 id="restoreOfferTitle">Bring back your pre-focus tabs?</h2></div>
+        <p>Your checkpoint is ready. Existing tabs will not be duplicated.</p>
+        <div class="button-row">
+          <button id="restoreContract" class="btn primary" type="button">Restore workspace</button>
+          <button id="dismissContract" class="btn" type="button">Keep current tabs</button>
+        </div>
+      </section>
+
+      <section class="cc-impact" aria-label="This week's intentional browsing">
+        <div><span class="eyebrow">Outcome days</span><strong id="impactDays" class="mono">0/3</strong><small>local weekly North Star</small></div>
+        <div><span class="eyebrow">Focus</span><strong id="impactMinutes" class="mono">0m</strong><small>intentional minutes</small></div>
+        <div><span class="eyebrow">Recovery</span><strong id="impactReturns" class="mono">0</strong><small>returns to plan</small></div>
+      </section>
+
+      <nav class="cc-tabs" aria-label="Command Center sections">
+        <button class="cc-tab active" type="button" data-view="plans" aria-controls="viewPlans" aria-selected="true">Plans</button>
+        <button class="cc-tab" type="button" data-view="spaces" aria-controls="viewSpaces" aria-selected="false">Spaces</button>
+        <button class="cc-tab" type="button" data-view="later" aria-controls="viewLater" aria-selected="false">Later</button>
+        <button class="cc-tab" type="button" data-view="recovery" aria-controls="viewRecovery" aria-selected="false">Recovery</button>
+      </nav>
+
+      <p id="ccFeedback" class="cc-feedback" role="status" aria-live="polite" hidden></p>
+
+      <section id="viewPlans" class="cc-view" data-panel="plans" aria-labelledby="plansTitle">
+        <div class="cc-section-head">
+          <div><div class="eyebrow">Reusable focus contracts</div><h2 id="plansTitle">Plans</h2></div>
+          <button id="newPlan" class="btn primary compact" type="button">New plan</button>
+        </div>
+        <p class="cc-section-copy">Preview every tab change before starting. Protection is a calm nudge, never an unescapable lock.</p>
+
+        <form id="planForm" class="editor-card" hidden>
+          <input id="planId" type="hidden" />
+          <div class="editor-heading"><h3 id="planFormTitle">New plan</h3><button id="planCancel" class="iconbtn" type="button" aria-label="Close plan editor">×</button></div>
+          <label for="planName">Plan name</label>
+          <input id="planName" maxlength="80" placeholder="Deep work" required />
+          <label for="planIntention">What will you work on?</label>
+          <input id="planIntention" maxlength="160" placeholder="Finish the launch brief" required />
+          <label for="planSuccess">What does done look like? <span>Optional</span></label>
+          <textarea id="planSuccess" maxlength="240" rows="2" placeholder="A decision-ready draft"></textarea>
+          <div class="field-grid">
+            <label>Session
+              <select id="planMode">
+                <option value="25">25 min</option><option value="50" selected>50 min</option>
+                <option value="90">90 min</option><option value="stopwatch">Open-ended</option>
+              </select>
+            </label>
+            <label>Protection
+              <select id="planProtection">
+                <option value="observe">Observe only</option><option value="nudge">Mindful nudge</option>
+              </select>
+            </label>
+          </div>
+          <details class="editor-advanced">
+            <summary>Context, site rules &amp; schedule <span>Optional</span></summary>
+            <div>
+          <label for="planAllowed">Sites in this plan <span>One domain per line; blank allows all except pause list</span></label>
+          <textarea id="planAllowed" rows="2" placeholder="docs.google.com&#10;figma.com"></textarea>
+          <label for="planBlocked">Sites to pause on <span>Used when “Sites in this plan” is blank</span></label>
+          <textarea id="planBlocked" rows="2" placeholder="youtube.com&#10;reddit.com"></textarea>
+          <label for="planUrls">Pages to open <span>Full http(s) links, one per line</span></label>
+          <textarea id="planUrls" rows="3" placeholder="https://docs.example.com/project"></textarea>
+          <label for="planSpace">Open a saved Space</label>
+          <select id="planSpace"><option value="">No Space</option></select>
+          <fieldset class="schedule-box">
+            <legend>Optional schedule</legend>
+            <label class="checkline"><input id="scheduleEnabled" type="checkbox" /> Remind me locally</label>
+            <div class="day-picker" aria-label="Schedule days">
+              <label><input type="checkbox" name="scheduleDay" value="1" aria-label="Monday" />M</label>
+              <label><input type="checkbox" name="scheduleDay" value="2" aria-label="Tuesday" />T</label>
+              <label><input type="checkbox" name="scheduleDay" value="3" aria-label="Wednesday" />W</label>
+              <label><input type="checkbox" name="scheduleDay" value="4" aria-label="Thursday" />T</label>
+              <label><input type="checkbox" name="scheduleDay" value="5" aria-label="Friday" />F</label>
+              <label><input type="checkbox" name="scheduleDay" value="6" aria-label="Saturday" />S</label>
+              <label><input type="checkbox" name="scheduleDay" value="0" aria-label="Sunday" />S</label>
+              <input id="scheduleTime" type="time" value="09:00" aria-label="Schedule time" />
+            </div>
+          </fieldset>
+          <label class="checkline"><input id="planPark" type="checkbox" /> Park unrelated tabs after preview</label>
+            </div>
+          </details>
+          <label class="checkline"><input id="planRestore" type="checkbox" checked /> Offer to restore the pre-focus checkpoint when I finish</label>
+          <div class="button-row"><button class="btn primary" type="submit">Save plan</button><button id="planCancelBottom" class="btn" type="button">Cancel</button></div>
+        </form>
+        <div id="planList" class="card-list"></div>
+      </section>
+
+      <section id="viewSpaces" class="cc-view" data-panel="spaces" aria-labelledby="spacesTitle" hidden>
+        <div class="cc-section-head"><div><div class="eyebrow">Context in one click</div><h2 id="spacesTitle">Spaces</h2></div></div>
+        <p class="cc-section-copy">Save the current window as a reusable set. Restoring skips pages already open.</p>
+        <form id="spaceForm" class="inline-create">
+          <label class="sr-only" for="spaceName">Space name</label>
+          <input id="spaceName" maxlength="80" placeholder="Project launch · current window" required />
+          <button class="btn primary" type="submit">Save window</button>
+        </form>
+        <div id="spaceList" class="card-list"></div>
+      </section>
+
+      <section id="viewLater" class="cc-view" data-panel="later" aria-labelledby="laterTitle" hidden>
+        <div class="cc-section-head"><div><div class="eyebrow">Leave without losing</div><h2 id="laterTitle">Return Capsules</h2></div></div>
+        <p class="cc-section-copy">Save the active page locally, return to your plan, and close the loop later.</p>
+        <form id="capsuleForm" class="inline-create stacked-mobile">
+          <label class="sr-only" for="capsuleNote">Optional note</label>
+          <input id="capsuleNote" maxlength="240" placeholder="Why this is worth returning to (optional)" />
+          <button class="btn primary" type="submit">Save active page</button>
+        </form>
+        <div class="filter-row" role="group" aria-label="Return Capsule filter">
+          <button class="filter-chip active" data-capsule-filter="saved" type="button">To revisit</button>
+          <button class="filter-chip" data-capsule-filter="done" type="button">Done</button>
+          <button class="filter-chip" data-capsule-filter="all" type="button">All</button>
+        </div>
+        <div id="capsuleList" class="card-list"></div>
+      </section>
+
+      <section id="viewRecovery" class="cc-view" data-panel="recovery" aria-labelledby="recoveryTitle" hidden>
+        <div class="cc-section-head"><div><div class="eyebrow">Reversible by design</div><h2 id="recoveryTitle">Tab recovery</h2></div></div>
+        <div id="duplicateCard" class="recovery-tool"></div>
+        <form id="checkpointForm" class="inline-create">
+          <label class="sr-only" for="checkpointName">Checkpoint name</label>
+          <input id="checkpointName" maxlength="80" placeholder="Checkpoint name (optional)" />
+          <button class="btn" type="submit">Save current window</button>
+        </form>
+        <h3 class="list-heading">Recent checkpoints</h3>
+        <div id="checkpointList" class="card-list"></div>
+      </section>
+    </main>
+
+    <dialog id="contractDialog" class="contract-dialog" aria-labelledby="contractTitle">
+      <form method="dialog" class="dialog-shell">
+        <div class="eyebrow">Preview before change</div>
+        <h2 id="contractTitle">Review Focus Contract</h2>
+        <p id="contractIntention" class="dialog-intention"></p>
+        <div class="contract-summary"><strong id="contractSummary"></strong><span>Nothing changes until you confirm.</span></div>
+        <div id="contractParkBlock"><h3>Tabs to park</h3><div id="contractParkList" class="preview-list"></div></div>
+        <div id="contractOpenBlock"><h3>Pages to open</h3><div id="contractOpenList" class="preview-list"></div></div>
+        <p class="privacy-note">A checkpoint is saved first. Page content is never read.</p>
+        <div class="button-row dialog-actions">
+          <button id="contractStart" class="btn primary" type="button">Confirm and start</button>
+          <button class="btn" value="cancel">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="common.js"></script>
+    <script src="product.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

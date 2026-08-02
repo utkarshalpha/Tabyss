@@ -4,7 +4,7 @@ const path = require("node:path");
 const test = require("node:test");
 
 const root = path.join(__dirname, "..");
-const pages = ["popup", "dashboard", "options", "wrapped"];
+const pages = ["popup", "dashboard", "options", "wrapped", "sidepanel"];
 
 for (const page of pages) {
   test(`${page} UI ids and accessibility references resolve`, () => {
