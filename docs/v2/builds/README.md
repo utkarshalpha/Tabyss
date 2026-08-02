@@ -4,6 +4,7 @@ Every implementation branch gets a build record before merge. The record connect
 
 | Wave | Branch | Record | State |
 |---|---|---|---|
+| 1B | `codex/v2-final-design-foundation` | [Calm Optimistic design foundation](wave-1b-final-design-foundation.md) | Implemented and locally verified; manual unpacked-extension gates remain |
 | 1A | `codex/v2-wave1-intent-session` | [Intentional-session vertical slice](wave-1-intent-session.md) | Implemented and locally verified; manual unpacked-extension gates remain |
 | 0B | `codex/v2-wave0-quality-system` | [Quality and packaging system](wave-0b-quality-system.md) | Implemented and locally verified |
 | 0 | `codex/v2-wave0-hardening` | [Trust foundation](wave-0-trust-foundation.md) | Implemented; manual unpacked-extension gates remain |

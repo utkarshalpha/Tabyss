@@ -7,140 +7,157 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="popup">
-    <header class="hdr">
-      <span class="brand"><span class="dot"></span>Tabyss</span>
+    <header class="popup-header">
+      <span class="brand-lockup">
+        <img class="brandmark" src="icon48.png" alt="" />
+        <span class="brand-copy"><strong>Tabyss</strong><small>Private on this device</small></span>
+      </span>
       <button id="opts" class="iconbtn" title="Settings" aria-label="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
     </header>
 
-    <section class="focuscard" aria-labelledby="focusHeading">
-      <div class="focuscard-head">
-        <div>
-          <div class="focus-kicker">Intentional session</div>
-          <h1 id="focusHeading">What matters now?</h1>
-        </div>
-        <span id="focusStatus" class="focus-status" hidden></span>
-      </div>
-
-      <form id="focusCreate" class="focus-create">
-        <label class="sr-only" for="focusIntention">Your intention</label>
-        <input id="focusIntention" class="focus-intention" type="text" maxlength="160"
-          list="recentIntentions" autocomplete="off" placeholder="Finish the launch brief…" required />
-        <datalist id="recentIntentions"></datalist>
-        <div class="focus-setup-row">
-          <label class="sr-only" for="focusDuration">Session duration</label>
-          <select id="focusDuration" aria-label="Session duration">
-            <option value="25">25 min</option>
-            <option value="50" selected>50 min</option>
-            <option value="90">90 min</option>
-            <option value="stopwatch">Open-ended</option>
-          </select>
-          <button class="btn primary focus-primary" type="submit">Start focus</button>
-        </div>
-        <details class="focus-details">
-          <summary>Define done <span>optional</span></summary>
-          <label class="sr-only" for="focusSuccess">What does done look like?</label>
-          <textarea id="focusSuccess" maxlength="240" rows="2"
-            placeholder="A reviewed draft with the final metrics added"></textarea>
-        </details>
-      </form>
-
-      <div id="focusActive" class="focus-active" hidden>
-        <p id="focusTitle" class="focus-title"></p>
-        <p id="focusSuccessView" class="focus-success" hidden></p>
-        <div class="focus-clock-row">
-          <span id="focusClock" class="focus-clock mono">00:00</span>
-          <span id="focusClockHint" class="focus-clock-hint"></span>
-        </div>
-        <div id="focusProgress" class="focus-progress" role="progressbar" aria-label="Focus session progress">
-          <span id="focusProgressFill"></span>
-        </div>
-        <div id="focusControls" class="focus-actions">
-          <button id="focusPause" class="btn" type="button">Pause</button>
-          <button id="focusExtend" class="btn" type="button">+10 min</button>
-          <button id="focusFinish" class="btn primary" type="button">Check out</button>
-        </div>
-        <form id="focusCheckout" class="focus-checkout" hidden>
-          <div class="focus-checkout-title">How did it go?</div>
-          <label class="sr-only" for="focusNote">Session note</label>
-          <textarea id="focusNote" maxlength="240" rows="2" placeholder="Result or next step (optional)"></textarea>
-          <label class="sr-only" for="focusReason">Reason for ending</label>
-          <select id="focusReason" aria-label="Reason if not completed">
-            <option value="">No reason selected</option>
-            <option value="changed-priority">Priority changed</option>
-            <option value="interrupted">Interrupted</option>
-            <option value="too-long">Scope was too large</option>
-            <option value="other">Other</option>
-          </select>
-          <div class="focus-actions">
-            <button id="focusComplete" class="btn primary" type="button">Completed</button>
-            <button id="focusAbandon" class="btn" type="button">End unfinished</button>
-            <button id="focusCheckoutBack" class="link muted" type="button">Back</button>
+    <main class="popup-main">
+      <section class="focuscard" aria-labelledby="focusHeading">
+        <div class="focuscard-head">
+          <div>
+            <div class="focus-kicker">One thing at a time</div>
+            <h1 id="focusHeading">Make space for what matters</h1>
           </div>
+          <span id="focusStatus" class="focus-status" hidden></span>
+        </div>
+
+        <form id="focusCreate" class="focus-create">
+          <label class="sr-only" for="focusIntention">What would feel good to finish?</label>
+          <input id="focusIntention" class="focus-intention" type="text" maxlength="160"
+            list="recentIntentions" autocomplete="off" placeholder="What would feel good to finish?" required />
+          <datalist id="recentIntentions"></datalist>
+          <div class="focus-setup-row">
+            <label class="sr-only" for="focusDuration">Session duration</label>
+            <select id="focusDuration" aria-label="Session duration">
+              <option value="25">25 min</option>
+              <option value="50" selected>50 min</option>
+              <option value="90">90 min</option>
+              <option value="stopwatch">Open-ended</option>
+            </select>
+            <button class="btn primary focus-primary" type="submit">Begin session</button>
+          </div>
+          <details class="focus-details">
+            <summary>Add a finish line <span>optional</span></summary>
+            <label class="sr-only" for="focusSuccess">What does finished look like?</label>
+            <textarea id="focusSuccess" maxlength="240" rows="2"
+              placeholder="A reviewed draft with the final metrics added"></textarea>
+          </details>
         </form>
-      </div>
-      <p id="focusError" class="focus-error" role="alert" hidden></p>
-      <p id="focusAnnouncement" class="sr-only" aria-live="polite"></p>
-    </section>
 
-    <!-- Hero: the two numbers that matter -->
-    <div class="heroP">
-      <div class="ht">
-        <div class="htotal mono" id="total">0m</div>
-        <div class="hsub" id="prod">tracked today</div>
-      </div>
-      <div class="ringcol">
-        <div class="ringwrap"><svg id="ring" viewBox="0 0 42 42" role="img" aria-label="Focus score"></svg></div>
-        <div class="ringlbl" id="scoreLabel"></div>
-      </div>
-    </div>
+        <div id="focusActive" class="focus-active" hidden>
+          <p id="focusTitle" class="focus-title"></p>
+          <p id="focusSuccessView" class="focus-success" hidden></p>
+          <div class="focus-clock-row">
+            <span id="focusClock" class="focus-clock mono">00:00</span>
+            <span id="focusClockHint" class="focus-clock-hint"></span>
+          </div>
+          <div id="focusProgress" class="focus-progress" role="progressbar" aria-label="Focus session progress">
+            <span id="focusProgressFill"></span>
+          </div>
+          <div id="focusControls" class="focus-actions">
+            <button id="focusPause" class="btn" type="button">Pause</button>
+            <button id="focusExtend" class="btn" type="button">+10 min</button>
+            <button id="focusFinish" class="btn primary" type="button">Check out</button>
+          </div>
+          <form id="focusCheckout" class="focus-checkout" hidden>
+            <div class="focus-checkout-title">How did this session go?</div>
+            <label class="sr-only" for="focusNote">Session note</label>
+            <textarea id="focusNote" maxlength="240" rows="2" placeholder="Result or next step (optional)"></textarea>
+            <label class="sr-only" for="focusReason">Reason for ending</label>
+            <select id="focusReason" aria-label="Reason if not completed">
+              <option value="">No reason selected</option>
+              <option value="changed-priority">Priority changed</option>
+              <option value="interrupted">Interrupted</option>
+              <option value="too-long">Scope was too large</option>
+              <option value="other">Other</option>
+            </select>
+            <div class="focus-actions">
+              <button id="focusComplete" class="btn primary" type="button">Finished</button>
+              <button id="focusAbandon" class="btn" type="button">End unfinished</button>
+              <button id="focusCheckoutBack" class="link muted" type="button">Back</button>
+            </div>
+          </form>
+        </div>
+        <p id="focusError" class="focus-error" role="alert" hidden></p>
+        <p id="focusAnnouncement" class="sr-only" aria-live="polite"></p>
+      </section>
 
-    <button class="personarow" id="personaRow" title="Your browsing personality this week">
-      <canvas id="pDoodle" width="80" height="80"></canvas>
-      <span class="pname" id="pName">…</span>
-      <span class="pchev" id="pChev">▾</span>
-    </button>
-    <div class="pdetail" id="pDetail" hidden>
-      <span class="pepithet" id="pEpithet"></span>
-      <p class="ptag" id="pTagline"></p>
-    </div>
+      <section class="today-card" aria-labelledby="todayHeading">
+        <div class="card-heading-row">
+          <div>
+            <div class="eyebrow">Today</div>
+            <h2 id="todayHeading">A clear view, not a grade</h2>
+          </div>
+          <button id="dash" class="quiet-action" type="button">Open dashboard <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="today-glance">
+          <div class="ht">
+            <div class="htotal mono" id="total">0m</div>
+            <div class="hsub" id="prod">tracking starts as you browse</div>
+          </div>
+          <div class="ringcol">
+            <div class="ringwrap"><svg id="ring" viewBox="0 0 42 42" role="img" aria-label="Focus score"></svg></div>
+            <div class="ringlbl" id="scoreLabel"></div>
+          </div>
+        </div>
+        <div class="next-cue" id="upnextSection">
+          <div class="slabel">Next cue</div>
+          <div id="upnext" class="upnext"></div>
+        </div>
+      </section>
 
-    <div class="section" id="upnextSection">
-      <div class="slabel">Up next</div>
-      <div id="upnext" class="upnext"></div>
-      <label class="switchrow">
-        <span class="swlabel">Office mode <span class="swhint">water &amp; stand reminders</span></span>
-        <span class="switch"><input type="checkbox" id="officeToggle" /><i></i></span>
-      </label>
-    </div>
+      <details class="popup-more">
+        <summary><span>See today’s details</span><span class="summary-hint">Sites, goals &amp; wellbeing</span></summary>
+        <div class="popup-more-body">
+          <button class="personarow" id="personaRow" title="Your browsing personality this week">
+            <canvas id="pDoodle" width="80" height="80"></canvas>
+            <span class="pname" id="pName">…</span>
+            <span class="pchev" id="pChev">▾</span>
+          </button>
+          <div class="pdetail" id="pDetail" hidden>
+            <span class="pepithet" id="pEpithet"></span>
+            <p class="ptag" id="pTagline"></p>
+          </div>
 
-    <div class="section" id="mediaSection" style="display:none">
-      <div class="slabel">Watched today</div>
-      <div id="mediaStrip" class="mediastrip"></div>
-    </div>
+          <div class="section compact-control">
+            <label class="switchrow">
+              <span class="swlabel">Office mode <span class="swhint">Water &amp; stand reminders</span></span>
+              <span class="switch"><input type="checkbox" id="officeToggle" /><i></i></span>
+            </label>
+          </div>
 
-    <div class="section" id="catSection">
-      <div class="slabel">By category</div>
-      <div class="sbar" id="sbar"></div>
-      <div class="legend" id="legend"></div>
-    </div>
+          <div class="section" id="mediaSection" style="display:none">
+            <div class="slabel">Watched today</div>
+            <div id="mediaStrip" class="mediastrip"></div>
+          </div>
 
-    <div class="section" id="budgetSection" style="display:none">
-      <div class="slabel">Goal budgets</div>
-      <div id="budgets" class="budgets"></div>
-    </div>
+          <div class="section" id="catSection">
+            <div class="slabel">By category</div>
+            <div class="sbar" id="sbar"></div>
+            <div class="legend" id="legend"></div>
+          </div>
 
-    <div class="section">
-      <div class="slabel">Top sites</div>
-      <div class="bars" id="list"></div>
-    </div>
+          <div class="section" id="budgetSection" style="display:none">
+            <div class="slabel">Goal budgets</div>
+            <div id="budgets" class="budgets"></div>
+          </div>
+
+          <div class="section">
+            <div class="slabel">Top sites</div>
+            <div class="bars" id="list"></div>
+          </div>
+        </div>
+      </details>
+    </main>
 
     <footer class="foot">
-      <span>
-        <button id="dash" class="link">Dashboard ▸</button>
-        <button id="wrapped" class="link">Wrapped ✦</button>
-      </span>
+      <button id="wrapped" class="link">Weekly story ✦</button>
       <button id="reset" class="link muted">Reset today</button>
     </footer>
 

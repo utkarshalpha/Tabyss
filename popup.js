@@ -133,7 +133,11 @@ function renderFocus(data) {
   create.hidden = true;
   activeBox.hidden = false;
   status.hidden = false;
-  status.textContent = focusSnapshot.status;
+  status.textContent = {
+    running: "In focus",
+    paused: "Paused",
+    review: "Ready to review",
+  }[focusSnapshot.status] || "Focus session";
   document.getElementById("focusTitle").textContent = focusSnapshot.intention;
   const success = document.getElementById("focusSuccessView");
   success.textContent = focusSnapshot.successDefinition || "";
@@ -315,6 +319,7 @@ function renderUpNext(settings, ws, streak, switchCount, tabCount) {
   box.innerHTML = "";
   const now = Date.now();
   const row = (icon, name, value, hint) => {
+    if (box.children.length >= 2) return;
     const r = el("div", "uprow");
     r.append(el("span", "upicon", icon));
     const mid = el("span", "upname", name);

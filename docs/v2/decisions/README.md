@@ -4,6 +4,7 @@ Decisions are newest-on-top once accepted. Proposed records provide options and 
 
 | ID | Decision | Status |
 |---|---|---|
+| [ADR-020](ADR-020-calm-optimistic-design-system.md) | Calm Optimistic design system | Accepted |
 | [ADR-019](ADR-019-intent-session-state.md) | Quick-intention and focus-session state | Accepted |
 | [ADR-018](ADR-018-quality-and-packaging-baseline.md) | Quality and packaging baseline | Accepted |
 | [ADR-017](ADR-017-runtime-trust-boundaries.md) | Runtime trust boundaries | Accepted |

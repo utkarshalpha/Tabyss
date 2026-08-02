@@ -43,7 +43,8 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] Typed message contract established.
 - [x] Storage access restricted appropriately.
 - [x] CI and reproducible package established locally; hosted run awaits push.
-- [ ] Design tokens and accessibility baseline established.
+- [x] Calm Optimistic design tokens and accessibility foundation established; full
+      unpacked-extension assistive-technology and visual matrix remains a release gate.
 
 ## 4. Intentional core gate
 

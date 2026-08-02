@@ -8,6 +8,28 @@ Every implementation wave must add an entry here so the prompt method, durable
 decision, code branch, and verification record stay connected rather than living
 only in chat.
 
+### 2026-08-02 — Wave 1B Calm Optimistic design foundation
+
+- **Delegated task:** act as senior product designer/PM, expand the V2 feature
+  opportunity set beyond the 15 umbrella workstreams, evolve the icon, and rebuild
+  the presentation layer on a separate branch without weakening the trusted engine.
+- **Competitive prompt:** compare current browser blockers, tab/session managers,
+  mindful-intervention tools, and new-tab productivity products; identify a product
+  wedge instead of copying disconnected features.
+- **Product synthesis:** Tabyss differentiates by connecting declared intention,
+  browser context, drift recovery, and honest reflection. The ranked backlog lives in
+  [V2 product opportunities](docs/v2/12-product-opportunity-backlog.md).
+- **Options considered:** cosmetic reskin; coherent design system and presentation
+  rebuild over the trusted engine; or framework-led runtime rewrite.
+- **Selected decision:** the Calm Optimistic system in
+  [ADR-020](docs/v2/decisions/ADR-020-calm-optimistic-design-system.md), including
+  the refined hourglass, semantic tokens, accessible geometry, action-first popup,
+  friendly state language, and progressive disclosure.
+- **Trust choices:** no new dependency, permission, connection, schema, telemetry,
+  account, or page-data capture; public rankings and surveillance remain excluded.
+- **Build branch:** `codex/v2-final-design-foundation`.
+- **Evidence/rollback:** [Wave 1B build record](docs/v2/builds/wave-1b-final-design-foundation.md).
+
 ### 2026-08-02 — Wave 1 intentional-session vertical slice
 
 - **Delegated task:** take senior-PM/engineering decisions and build the next
