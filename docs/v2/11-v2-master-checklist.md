@@ -1,0 +1,143 @@
+# V2 Master Checklist
+
+This is the step-by-step control list for taking V2 from product definition to a production Chrome Web Store release. A checked feature is not complete unless its linked product, UX, data, security, testing, and operational work is also complete.
+
+## 1. Owner decision gate
+
+- [ ] Accept or reject ADR-003 product positioning.
+- [ ] Accept or reject ADR-004 extension surfaces.
+- [ ] Accept or reject ADR-005 event/storage model.
+- [ ] Accept or reject ADR-006 blocking mechanism.
+- [ ] Accept or reject ADR-007 product analytics.
+- [ ] Decide each connected capability separately under ADR-008.
+- [ ] Accept or reject ADR-009 task capture scope.
+- [ ] Accept or reject ADR-010 social/family boundary.
+- [ ] Accept or reject ADR-011 engineering modernization.
+- [ ] Accept or reject ADR-012 permission model.
+- [ ] Accept or reject ADR-013 scoring evolution.
+- [ ] Accept or reject ADR-014 controlled V2 feature waves.
+- [ ] Record target users, business model, team capacity, and release constraint.
+
+## 2. Evidence gate
+
+- [ ] Current feature usage evidence gathered where available.
+- [ ] Current usability problems observed directly.
+- [ ] 8-12 target-user interviews completed.
+- [ ] Tracker versus blocker versus intentional-system concept test completed.
+- [ ] Permission/data-receipt comprehension tested.
+- [ ] Popup/side-panel prototype tested.
+- [ ] Mindful pause/recovery prototype tested.
+- [ ] Space save/restore prototype tested.
+- [ ] North Star definition understood by target users.
+- [ ] Technical spikes completed and written up.
+
+## 3. Foundation gate
+
+- [ ] V2 schema registry established.
+- [ ] Current export samples collected and anonymized for migration tests.
+- [ ] Pre-migration backup and rollback implemented.
+- [ ] Incognito exclusion fixed.
+- [ ] Ignore-domain boundary behavior fixed.
+- [ ] Import validation/staging implemented.
+- [ ] Notification privacy defaults implemented.
+- [ ] Typed message contract established.
+- [ ] Storage access restricted appropriately.
+- [ ] CI and reproducible package established.
+- [ ] Design tokens and accessibility baseline established.
+
+## 4. Intentional core gate
+
+- [ ] Outcome onboarding.
+- [ ] Calibration/sparse-data flow.
+- [ ] Profiles.
+- [ ] Quick intention.
+- [ ] Plans and schedules.
+- [ ] Timer, stopwatch, Pomodoro, and flow execution.
+- [ ] Action popup.
+- [ ] Side-panel Command Center.
+- [ ] Intent-aligned session model.
+- [ ] Completion and abandonment check-out.
+- [ ] Empty, denied, paused, and recovery states.
+
+## 5. Guard/control gate
+
+- [ ] Protection ladder.
+- [ ] DNR rule generation and reconciliation.
+- [ ] Safe block page and permanent recovery route.
+- [ ] Mindful pause.
+- [ ] Re-intervention.
+- [ ] Return-to-plan recovery.
+- [ ] Fatigue/cooldown policy.
+- [ ] Quiet/sensitive contexts.
+- [ ] Permission grant/revoke behavior.
+- [ ] Supported-site control fail-open tests.
+
+## 6. Spaces/capture gate
+
+- [ ] Automatic checkpoints.
+- [ ] Crash recovery.
+- [ ] Task-linked Spaces.
+- [ ] Tab group preservation.
+- [ ] Duplicate/stale/snooze/parking tools.
+- [ ] Focus workspace open/restore.
+- [ ] Bulk operations with preview and undo.
+- [ ] Local Action Capture.
+- [ ] Context menu and keyboard shortcuts.
+- [ ] Optional integration payload preview and fallback, if accepted.
+
+## 7. Insight/wellbeing gate
+
+- [ ] Today timeline.
+- [ ] Planned versus unplanned result.
+- [ ] Explainable V2 score.
+- [ ] Versioned historical score treatment.
+- [ ] Weekly review.
+- [ ] One-action recommendation.
+- [ ] Personal experiment flow.
+- [ ] Wrapped/persona integration.
+- [ ] Sustainable-work guardrails.
+- [ ] Shared notification budget.
+- [ ] Accessible chart alternatives.
+
+## 8. Security/privacy gate
+
+- [ ] Feature threat models reviewed.
+- [ ] Data classification enforced.
+- [ ] Least-privilege permission review complete.
+- [ ] Import/message/rule fuzzing complete.
+- [ ] Content-script hostile-page testing complete.
+- [ ] Share/export redaction verified.
+- [ ] Delete-by-site/date/range/all verified.
+- [ ] Optional connected authentication/key/deletion review complete, if applicable.
+- [ ] Privacy policy and store disclosure match implementation.
+- [ ] Security contact and incident playbook ready.
+
+## 9. Quality gate
+
+- [ ] Unit/property/integration suites passing.
+- [ ] Extension E2E suite passing.
+- [ ] Worker suspension/update/restart scenarios passing.
+- [ ] Migration and rollback matrix passing.
+- [ ] Multi-window and large-tab scenarios passing.
+- [ ] Light/dark/high-contrast/reduced-motion visual QA passing.
+- [ ] Keyboard/screen-reader/200% zoom QA passing.
+- [ ] CPU, memory, page-load, popup, and dashboard budgets passing.
+- [ ] Storage near-quota and corruption recovery passing.
+- [ ] Chrome Web Store policy review complete.
+
+## 10. Release gate
+
+- [ ] Dogfood exit criteria met.
+- [ ] Closed-beta exit criteria met.
+- [ ] Known issues documented.
+- [ ] Support/diagnostics flow verified.
+- [ ] Feature flags and kill switches tested.
+- [ ] Store listing and screenshots updated.
+- [ ] Changelog and user migration explanation ready.
+- [ ] Canary thresholds and rollback owner defined.
+- [ ] Staged rollout monitored.
+- [ ] Post-release review scheduled.
+
+## Completion rule
+
+V2 is not complete because all checkboxes exist. It is complete when enabled modules deliver the end-to-end plan, focus, recover, reflect loop reliably, and every disabled/denied/offline path remains truthful and usable.
