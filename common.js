@@ -66,8 +66,36 @@ const CAT_COLOR = {
   Shopping: { l: "#eb6834", d: "#d95926" },
   Other: { l: "#898781", d: "#898781" },
 };
+
+const THEME_CHOICES = new Set(["system", "light", "dark"]);
+function normalizeTheme(value) {
+  return THEME_CHOICES.has(value) ? value : "system";
+}
+function currentThemeIsDark() {
+  if (typeof document !== "undefined") {
+    const explicit = document.documentElement?.dataset?.theme;
+    if (explicit === "dark") return true;
+    if (explicit === "light") return false;
+  }
+  return !!(typeof window !== "undefined" && window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function applyTheme(value) {
+  const theme = normalizeTheme(value);
+  if (typeof document === "undefined") return theme;
+  const root = document.documentElement;
+  const previous = root.dataset.theme || "system";
+  if (theme === "system") delete root.dataset.theme;
+  else root.dataset.theme = theme;
+  root.style.colorScheme = theme === "system" ? "light dark" : theme;
+  if (previous !== theme && typeof document.dispatchEvent === "function" &&
+      typeof CustomEvent !== "undefined") {
+    document.dispatchEvent(new CustomEvent("tabyss-theme-change", { detail: { theme } }));
+  }
+  return theme;
+}
 function catColor(cat) {
-  const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = currentThemeIsDark();
   return (CAT_COLOR[cat] || CAT_COLOR.Other)[dark ? "d" : "l"];
 }
 
@@ -314,6 +342,7 @@ const PRODUCTIVE_CATS = new Set(["Productive", "Education", "Career"]);
 
 /* ---------- settings defaults ---------- */
 const DEFAULT_SETTINGS = {
+  theme: "system", // follow the device unless the user selects light or dark
   overrides: {}, // domain -> category
   goals: {}, // category -> minutes (0/absent = no goal)
   ignore: [], // domains to never track
@@ -380,6 +409,7 @@ function sanitizeSettings(input) {
 
   const bool = (key, fallback) => typeof source[key] === "boolean" ? source[key] : fallback;
   return {
+    theme: normalizeTheme(source.theme),
     overrides,
     goals,
     ignore,
@@ -529,7 +559,9 @@ function faviconUrl(pageOrDomain, size) {
 
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
-  return sanitizeSettings(settings);
+  const sanitized = sanitizeSettings(settings);
+  if (typeof document !== "undefined") applyTheme(sanitized.theme);
+  return sanitized;
 }
 
 /* ---------- V2 intention / focus-session state machine ---------- */
@@ -1043,10 +1075,7 @@ function focusScoreForDay(usageDay, switchCount, holesArr, overrides) {
 function scoreColor(score) {
   if (score == null) return "#898781";
   // amber must darken on light surfaces (#fab219 is ~1.8:1 there)
-  const dark =
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = currentThemeIsDark();
   return score >= 70 ? "#0ca30c" : score >= 40 ? (dark ? "#fab219" : "#b45309") : "#d03b3b";
 }
 function scoreLabel(score) {
@@ -1355,3 +1384,23 @@ const WRAPPED_COPY = [
   { id: "persona", title: "The data has spoken...", subtitle: "Seven days of clicks, distilled into one true internet self. Own it." },
   { id: "share", title: "Post it or it didn't happen", subtitle: "Save your card and show the group chat. Tracked in private, flexed in public." },
 ];
+
+/* Apply the locally stored appearance choice on every extension page. System is
+ * the no-attribute state, so CSS can continue reacting to OS theme changes. */
+if (typeof document !== "undefined") {
+  getSettings().then((settings) => applyTheme(settings.theme)).catch(() => applyTheme("system"));
+  if (typeof chrome !== "undefined" && chrome.storage?.onChanged?.addListener) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && changes.settings) {
+        applyTheme(sanitizeSettings(changes.settings.newValue).theme);
+      }
+    });
+  }
+  const systemTheme = typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  systemTheme?.addEventListener?.("change", () => {
+    if (!document.documentElement.dataset.theme && typeof CustomEvent !== "undefined") {
+      document.dispatchEvent(new CustomEvent("tabyss-theme-change", { detail: { theme: "system" } }));
+    }
+  });
+}

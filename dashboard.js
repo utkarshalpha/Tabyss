@@ -634,3 +634,5 @@ document.getElementById("export").addEventListener("click", async () => {
   settings = await getSettings();
   renderAll();
 })();
+
+document.addEventListener("tabyss-theme-change", () => renderAll());

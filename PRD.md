@@ -94,6 +94,7 @@ manual unpacked-extension and policy gates in `QA_CHECKLIST.md`.
 | V2-FR-11 | Compatibility preservation | Retired Plan/Space/checkpoint records remain validated, local, and portable without active schedules, guards, or destructive migration |
 | V2-FR-12 | Portable V2 data | Product schema 1 participates in validated format-4 export/import, clear, and local-only storage |
 | V2-FR-13 | Session sites | Show at most 24 unique normalized domains visited during the session in popup and dashboard history; exclude Incognito/ignored/non-counting activity and never attach full URLs or per-site duration |
+| V2-FR-14 | User-selected appearance | Settings offers System (default), Light, and Dark; explicit choices override the OS across extension pages, use Abyss & Ember tokens, preserve the V1.5 logo, and remain local/offline |
 
 V2 deliberately does not claim cloud sync, remote AI, accounts, public or household
 comparison, employee/parental monitoring, or hard blocking. Those are not hidden

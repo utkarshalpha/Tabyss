@@ -294,3 +294,63 @@ Task: Review [flow].
 Check: comprehension, user control, progressive disclosure, interruption cost, permission trust, keyboard/screen-reader access, reduced motion, contrast, zoom, empty/loading/error states, undo, and mobile-size popup constraints.
 Deliver: problems ranked by severity and a revised journey.
 ```
+
+## Implemented decision - Abyss & Ember themes and rounded surfaces
+
+Owner input:
+
+```text
+Use Tabyss Extension Design System.zip as the design source, provide theme in
+Settings, and make the popup/tooltip edge more rounded. Preserve the approved
+product decisions already made.
+```
+
+Facts established before implementation:
+
+- The supplied system is Abyss & Ember, with exact light/dark tokens and a
+  violet-magenta-ember identity gradient.
+- The artifact also contains a newer logo and an older prototype flow. ADR-022 and
+  ADR-025 are later explicit owner decisions, so the V1.5 mark and one-click
+  Complete/End flow remain authoritative.
+- Its named Google fonts cannot be fetched without breaking Tabyss's zero-network,
+  local-asset, CSP, and dependency decisions.
+
+Decision prompt and result:
+
+```text
+Role: Senior product designer, Chrome-extension engineer, privacy reviewer, and
+release owner.
+Compare: token-only reskin; full visual adoption with local System/Light/Dark and
+later owner decisions preserved; literal prototype copy including its fonts/logo/
+older flow.
+Selected: full visual adoption with preserved logo and flow.
+Rules: theme values are allowlisted; default System; no new permission, network,
+font dependency, telemetry, account, or remote asset; use native theme radios;
+preview immediately and persist through the existing Save action; gradient only
+for identity/focus/Wrapped; record the owner's rounded-edge override.
+```
+
+Implemented choices:
+
+- Light: `#F5F3FA` plane, `#FCFBFE` surface, `#17121F` ink, `#7C3AED` brand.
+- Dark: `#0E0B15` plane, `#16121F` surface, `#F4F1FA` ink, `#A78BFA` brand.
+- The `#8D8798` muted reference is retained, while small text uses contrast-adjusted
+  `#716A7D` light and `#A59EAF` dark values for production readability.
+- Identity gradient: `#7C3AED -> #DB2777 -> #F97316`; buttons stay solid.
+- Local font approximations preserve the display/body/micro-label roles.
+- Settings exposes System/Light/Dark; `system` is the sanitized legacy/default value.
+- Popup shell is 22px; heads-up/break cards are 18/24px; controls are 10px and
+  cards are 16px.
+- Exact V1.5 PNGs remain canonical and the supplied prototype is not packaged.
+
+Verification prompt:
+
+```text
+Render Settings in System, forced Light, and forced Dark. Verify accessible native
+radio names, live preview status, exact computed tokens, cross-page theme code, and
+the original logo. Render popup at 380px and verify 22px computed radius, solid
+primary action, Today-first hierarchy, and unchanged direct session outcomes. Run
+syntax, unit/contract/security/docs/package checks and deterministic double-build.
+Keep manual unpacked-extension persistence, 200% zoom, assistive technology, and
+policy checks explicitly gated until performed in the real extension runtime.
+```

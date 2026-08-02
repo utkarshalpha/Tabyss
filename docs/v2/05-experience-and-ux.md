@@ -117,7 +117,7 @@ Exit criteria: user can explain what is tracked, has one configured outcome, and
 - Preserve violet identity and generative persona art.
 - Separate semantic status colors from category colors.
 - Use consistent state vocabulary across popup, side panel, dashboard, notifications, and overlays.
-- Maintain accessible light/dark palettes.
+- Maintain accessible System, forced-Light, and forced-Dark Abyss & Ember palettes.
 - Prefer simple cards and progressive detail over dense dashboard grids.
 - Use charts only when they answer a specific user question.
 - Provide text/table equivalents.

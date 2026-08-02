@@ -44,8 +44,9 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] Typed message contract established.
 - [x] Storage access restricted appropriately.
 - [x] CI and reproducible package established locally; hosted run awaits push.
-- [x] Calm Optimistic design tokens and accessibility foundation established; full
-      unpacked-extension assistive-technology and visual matrix remains a release gate.
+- [x] Abyss & Ember tokens, System/Light/Dark controls, rounded shell, and
+      accessibility foundation established under ADR-026; full unpacked-extension
+      assistive-technology and visual matrix remains a release gate.
 
 ## 4. Intentional core gate
 
@@ -121,7 +122,7 @@ This is the step-by-step control list for taking V2 from product definition to a
 - [ ] Worker suspension/update/restart scenarios passing.
 - [ ] Migration and rollback matrix passing.
 - [ ] Multi-window and large-tab scenarios passing.
-- [ ] Light/dark/high-contrast/reduced-motion visual QA passing.
+- [ ] System/forced-Light/forced-Dark/high-contrast/reduced-motion visual QA passing.
 - [ ] Keyboard/screen-reader/200% zoom QA passing.
 - [ ] CPU, memory, page-load, popup, and dashboard budgets passing.
 - [ ] Storage near-quota and corruption recovery passing.

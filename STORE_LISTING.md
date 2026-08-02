@@ -34,6 +34,10 @@ Productivity
 >   "digital sunset" nudge
 > • Export/import your data anytime; set how long history is kept
 >
+> **Appearance you control**
+> Choose System, Light, or Dark in Settings. Abyss & Ember follows the device by
+> default and keeps the choice on-device.
+>
 > **Private by design**
 > Tabyss has no server and makes zero network requests. Everything stays on your
 > device in Chrome's own storage. Even the share card is rendered locally — and by

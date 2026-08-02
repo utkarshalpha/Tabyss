@@ -133,6 +133,7 @@ function collect() {
     return Number.isFinite(v) && v > 0 ? Math.max(lo, Math.min(hi, Math.round(v))) : dflt;
   };
   return {
+    theme: document.querySelector('input[name="theme"]:checked')?.value || "system",
     overrides, goals, ignore, idleSeconds, retentionDays, sunsetEnabled, sunsetHour,
     eyeEnabled: document.getElementById("eyeOn").checked,
     eyeIntervalMin: num("eyeInterval", 5, 120, 20),
@@ -263,6 +264,22 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" || !changes.settings) return;
   settings = sanitizeSettings(changes.settings.newValue);
   document.getElementById("officeOn").checked = !!settings.officeMode;
+  const themeInput = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
+  if (themeInput) themeInput.checked = true;
+});
+
+for (const input of document.querySelectorAll('input[name="theme"]')) {
+  input.addEventListener("change", () => {
+    if (!input.checked) return;
+    applyTheme(input.value);
+    document.getElementById("themeStatus").textContent =
+      `${input.value === "system" ? "System theme" : `${input.value[0].toUpperCase()}${input.value.slice(1)} theme`} previewed. Select Save to keep it.`;
+  });
+}
+
+document.addEventListener("tabyss-theme-change", () => {
+  renderGoals();
+  renderAssign(document.getElementById("catSearch").value);
 });
 
 document.getElementById("catSearch").addEventListener("input", (e) => renderAssign(e.target.value));
@@ -272,6 +289,10 @@ document.getElementById("openDash").addEventListener("click", () =>
 
 async function init() {
   settings = await getSettings();
+  applyTheme(settings.theme);
+  const themeInput = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
+  if (themeInput) themeInput.checked = true;
+  document.getElementById("themeStatus").textContent = "";
   document.getElementById("ignore").value = (settings.ignore || []).join("\n");
   document.getElementById("idle").value = settings.idleSeconds || 60;
   document.getElementById("retention").value = settings.retentionDays || 180;

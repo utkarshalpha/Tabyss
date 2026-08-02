@@ -90,6 +90,11 @@ Run before every store submission. Load unpacked from `chrome://extensions`
       disable it again → details are redacted.
 
 ## Settings / data
+- [ ] Appearance exposes native System, Light, and Dark choices; each preview is
+      immediate, Save persists it across popup/dashboard/side-panel/Settings reloads,
+      and System follows a live OS-theme change.
+- [ ] Abyss & Ember light/dark tokens render without flashes or unreadable controls;
+      the V1.5 logo remains unchanged and the popup edge is visibly rounded at 22px.
 - [ ] Category override changes a site's category everywhere after save.
 - [ ] Ignore list + idle + retention persist across reload.
 - [ ] Export → Clear all → Import restores the data.
@@ -148,7 +153,8 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 
 ## Accessibility / theming
 - [ ] Tab-key focus rings visible on all controls.
-- [ ] Looks correct in both light and dark OS themes.
+- [ ] Looks correct in System, forced Light, and forced Dark, including a forced
+      theme opposite to the OS theme.
 - [ ] `prefers-reduced-motion` disables transitions.
 
 ## Packaging

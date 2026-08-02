@@ -75,3 +75,37 @@ test("dashboard session history exposes the domain-only visited-site trail", () 
   assert.match(js, /aria-label", "Sites visited in this session"/);
   assert.match(js, /record\.visitedDomains/);
 });
+
+test("settings exposes a persistent accessible theme choice", () => {
+  const html = fs.readFileSync(path.join(root, "options.html"), "utf8");
+  const js = fs.readFileSync(path.join(root, "options.js"), "utf8");
+  const common = fs.readFileSync(path.join(root, "common.js"), "utf8");
+  assert.match(html, /<h2 id="appearanceTitle">Appearance<\/h2>/);
+  for (const theme of ["system", "light", "dark"]) {
+    assert.match(html, new RegExp(`type="radio" name="theme" value="${theme}"`));
+  }
+  assert.match(html, /id="themeStatus"[^>]+role="status"[^>]+aria-live="polite"/);
+  assert.match(js, /theme: document\.querySelector\('input\[name="theme"\]:checked'\)/);
+  assert.match(js, /applyTheme\(input\.value\)/);
+  assert.match(common, /theme: "system"/);
+  assert.match(common, /root\.dataset\.theme = theme/);
+  assert.match(common, /systemTheme\?\.addEventListener\?\.\("change"/);
+  for (const page of ["popup", "dashboard", "options", "wrapped"]) {
+    const pageJs = fs.readFileSync(path.join(root, `${page}.js`), "utf8");
+    assert.match(pageJs, /tabyss-theme-change/, `${page} should redraw theme-dependent UI`);
+  }
+});
+
+test("Abyss and Ember tokens and rounded popup shell are enforced", () => {
+  const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  const content = fs.readFileSync(path.join(root, "content.js"), "utf8");
+  for (const token of ["#f5f3fa", "#17121f", "#7c3aed", "#db2777", "#f97316", "#0e0b15", "#f4f1fa", "#a78bfa"]) {
+    assert.match(css, new RegExp(token));
+  }
+  assert.match(css, /:root\[data-theme="dark"\]/);
+  assert.match(css, /:root:not\(\[data-theme="light"\]\)/);
+  assert.match(css, /--radius-shell: 22px/);
+  assert.match(css, /html:has\(body\.popup\) \{ padding: 4px; \}/);
+  assert.match(css, /\.popup \{[\s\S]*?border-radius: var\(--radius-shell\)/);
+  assert.match(content, /border-radius:24px/);
+});

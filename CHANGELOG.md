@@ -8,6 +8,17 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
 - Restored the exact V1.5 logo at 16px, 48px, and 128px. The Calm Optimistic UI
   system remains, while the established product mark stays unchanged.
 
+### Abyss & Ember appearance
+- Adopted the owner-supplied Abyss & Ember light/dark tokens, display/body/micro-label
+  type roles, solid-violet primary actions, and quieter lavender/deep-plum surfaces
+  across the extension while preserving the original V1.5 logo.
+- Added an accessible System / Light / Dark picker at the top of Settings. It
+  previews immediately, saves locally, follows the device by default, and adds no
+  network, dependency, permission, account, or telemetry.
+- Rounded the popup shell to 22px and the in-page heads-up/break surfaces to 18/24px.
+  Added regression coverage for exact tokens, theme allowlisting, controls, and edge
+  geometry.
+
 ### Simpler product surface
 - Replaced the multi-section Command Center with one accessible **Saved pages** side
   panel that opens from the popup bookmark button or `Alt+Shift+T`.

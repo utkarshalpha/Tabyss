@@ -48,6 +48,7 @@ test("domain input is canonical and ignore rules respect label boundaries", () =
 
 test("settings are allowlisted, bounded and private by default", () => {
   const settings = plain(api.sanitizeSettings(jsonInContext({
+    theme: "midnight",
     idleSeconds: 2,
     retentionDays: 99999,
     notificationDetails: "yes",
@@ -56,6 +57,7 @@ test("settings are allowlisted, bounded and private by default", () => {
     overrides: { "www.example.com": "Education", "bad.test": "Unknown" },
     injected: true,
   })));
+  assert.equal(settings.theme, "system");
   assert.equal(settings.idleSeconds, 15);
   assert.equal(settings.retentionDays, 3650);
   assert.equal(settings.notificationDetails, false);
@@ -63,6 +65,32 @@ test("settings are allowlisted, bounded and private by default", () => {
   assert.deepEqual(settings.goals, { Social: 1440 });
   assert.deepEqual(settings.overrides, { "example.com": "Education" });
   assert.equal(Object.hasOwn(settings, "injected"), false);
+});
+
+test("appearance accepts only system, light and dark", () => {
+  for (const theme of ["system", "light", "dark"]) {
+    assert.equal(plain(api.sanitizeSettings(jsonInContext({ theme }))).theme, theme);
+  }
+  assert.equal(plain(api.sanitizeSettings(jsonInContext({ theme: true }))).theme, "system");
+});
+
+test("appearance applies and removes explicit root themes", () => {
+  const result = plain(vm.runInContext(`(() => {
+    globalThis.document = { documentElement: { dataset: {}, style: {} } };
+    applyTheme("dark");
+    const dark = { theme: document.documentElement.dataset.theme, scheme: document.documentElement.style.colorScheme };
+    applyTheme("light");
+    const light = { theme: document.documentElement.dataset.theme, scheme: document.documentElement.style.colorScheme };
+    applyTheme("system");
+    const system = { hasTheme: Object.hasOwn(document.documentElement.dataset, "theme"), scheme: document.documentElement.style.colorScheme };
+    delete globalThis.document;
+    return { dark, light, system };
+  })()`, context));
+  assert.deepEqual(result, {
+    dark: { theme: "dark", scheme: "dark" },
+    light: { theme: "light", scheme: "light" },
+    system: { hasTheme: false, scheme: "light dark" },
+  });
 });
 
 test("a complete legacy backup validates and is normalized", () => {

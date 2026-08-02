@@ -485,16 +485,16 @@ async function load() {
   renderPersona({ usage, hours, switches, holes, settings });
   renderUpNext(settings, wellnessState, computeStreak(usage, settings.overrides), switches[today], tabCount);
   renderMediaStrip(media[today]);
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
   if (!entries.length) {
     document.getElementById("catSection").style.display = "none";
-    document.getElementById("list").append(
+    list.append(
       el("div", "empty", "Your day will appear here — browse a little and reopen.")
     );
   } else {
     renderStacked(catTotals, total);
-    const list = document.getElementById("list");
-    list.innerHTML = "";
     const max = entries[0][1] || 1;
     for (const [domain, secs] of entries.slice(0, 5)) list.append(siteBar(domain, secs, max));
   }
@@ -547,3 +547,5 @@ document.getElementById("reset").addEventListener("click", async (e) => {
 Promise.allSettled([load(), refreshFocus()]).then((results) => {
   if (results[1].status === "rejected") showFocusError(results[1].reason?.message);
 });
+
+document.addEventListener("tabyss-theme-change", () => load().catch(() => {}));

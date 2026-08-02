@@ -19,7 +19,7 @@ This folder defines V2 as a complete Chrome-extension product generation. It doe
 11. [Research and open questions](10-research-and-open-questions.md)
 12. [V2 master checklist](11-v2-master-checklist.md)
 13. [Product opportunity backlog](12-product-opportunity-backlog.md)
-14. [Calm Optimistic design system](13-design-system.md)
+14. [Abyss & Ember design system](13-design-system.md)
 15. [Decision register](decisions/README.md)
 16. [Build register](builds/README.md)
 

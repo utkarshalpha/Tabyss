@@ -279,3 +279,7 @@ document.getElementById("close").addEventListener("click", () => window.close())
   buildSlides();
   render();
 })();
+
+document.addEventListener("tabyss-theme-change", () => {
+  if (slides.length) render();
+});

@@ -1,54 +1,84 @@
-# Calm Optimistic Design System
+# Abyss & Ember Design System
 
-Status: Foundation accepted in ADR-020; ADR-022 restores the original V1.5 mark;
-ADR-024 makes the popup session secondary and minimal; ADR-025 makes its outcome
-actions direct and adds compact visited-site context.
+Status: Accepted in ADR-026. ADR-022 keeps the original V1.5 runtime mark;
+ADR-024/025 keep the Today-first, minimal, one-click session flow.
 
 ## Brand idea
 
-Tabyss helps attention move through a healthy cycle: choose, focus, pause, and
-return. The hourglass represents time without feeling like a stopwatch or warning.
-The original V1.5 white hourglass and sunrise gradient preserve the established
-toolbar identity.
+Tabyss makes browser behavior visible without turning attention into a game. The
+visual language moves from violet abyss through magenta to ember orange, while the
+established white hourglass remains the recognizable toolbar mark. The experience
+should feel calm, precise, private, and on the user's side.
+
+Principles:
+
+- Calm, not gamified.
+- Honest numbers over hype.
+- Privacy is visible, not hidden in policy copy.
+- Gradient is reserved for identity moments, focus progress, persona art, and
+  Wrapped. Never use it as a routine button, card, or text fill.
 
 ## Color language
 
-| Role | Light reference | Meaning |
-|---|---|---|
-| Canvas | `#F5F2F8` | Quiet warm-neutral page background |
-| Surface | `#FCFBFE` | Popup and inset surface |
-| Card | `#FFFFFF` | Raised, actionable grouping |
-| Ink | `#251B2E` | Primary readable text |
-| Violet | `#5B3FD6` | Primary action and focus |
-| Rose | `#C73F88` | Brand expression, never error |
-| Sunrise | `#E76F3D` | Brand expression and warmth |
-| Mint | `#1E7A58` | Completed, restored, healthy |
-| Amber | `#946112` | Paused, approaching a limit |
-| Coral | `#B83A52` | Destructive action or true error |
-| Sky | `#2F6FBA` | Neutral information and guidance |
+| Role | Light | Dark | Meaning |
+|---|---:|---:|---|
+| Plane | `#F5F3FA` | `#0E0B15` | Page ground: lavender-white to deep abyss |
+| Surface | `#FCFBFE` | `#16121F` | Popup and panel ground |
+| Card | `#FFFFFF` | `#1B1626` | Raised blocks and toasts |
+| Ink | `#17121F` | `#F4F1FA` | Primary text: violet-black, never pure black |
+| Secondary ink | `#4C4458` | `#C2BBD1` | Body and supporting copy |
+| Muted reference | `#8D8798` | `#8D8798` | Artifact reference; preserved as a non-text token |
+| Muted text | `#716A7D` | `#A59EAF` | Contrast-adjusted tertiary labels |
+| Border | `rgba(23,18,31,.13)` | `rgba(244,241,250,.11)` | Quiet component boundaries |
+| Track | `#ECE8F4` | `#262031` | Progress and inactive controls |
+| Brand | `#7C3AED` | `#A78BFA` | Primary action, focus, links |
+| Brand strong | `#6D28D9` | `#C4B5FD` | High-emphasis brand state |
+| Magenta | `#DB2777` | `#F472B6` | Identity-gradient partner |
+| Sand amber | `#E2992F` | `#EFB65A` | Warnings and approaching limits |
+| Coral | `#D6414E` | `#F06A80` | Destructive action or true error only |
+| Good | `#1F9D62` | `#4FCC8E` | Completed, restored, healthy |
 
-Dark mode uses lighter foreground variants on deep plum surfaces. Semantic colors
-remain consistent in meaning. Category/data visualization colors are a separate
-palette and must always be paired with labels or patterns.
+Identity gradient: `linear-gradient(120deg, #7C3AED, #DB2777, #F97316)`.
+Category/data-visualization colors remain a separate eight-hue palette and must
+always be paired with labels or another non-color cue.
+
+## Appearance behavior
+
+- Settings offers native **System**, **Light**, and **Dark** radio choices.
+- System is the default and follows `prefers-color-scheme` live.
+- Light/Dark override the OS on every extension page by applying a root theme.
+- A selection previews immediately and persists with the normal Settings Save
+  action. Invalid/imported values fail safely to System.
+- The setting stays in local extension storage and the validated backup record.
 
 ## Geometry and elevation
 
 - Inputs and selects: 10px radius.
-- Buttons: 12px radius, minimum 36px target in compact surfaces.
+- Buttons: 10px radius, minimum 36px compact target.
 - Cards and panels: 16px radius.
-- Hero/ritual containers: 24px radius.
-- Chips and state labels: pill only when the content is genuinely compact.
-- Use soft plum-tinted shadows, not black floating sheets.
+- Popup outer shell: 22px radius with clipped surface, a 4px abyss reveal around
+  the corners, and soft shadow so the rounding remains visible.
+- Tooltip/heads-up card: 18px radius; full wellbeing overlay: 24px radius.
+- Hero/ritual containers and dialogs: 24px radius.
+- Chips are pills only when the content is truly compact.
+- Use plum-tinted shadows: light float `0 18px 44px rgba(23,18,31,.16)`;
+  dark float `0 18px 44px rgba(0,0,0,.55)`.
 - Spacing follows a practical 4/8px rhythm with 12, 16, 24, and 32px groups.
 
 ## Typography
 
-- Use the platform system sans stack; use a local monospace stack for durations and
-  compact numeric comparisons.
-- Sentence case is the default. Uppercase is reserved for short kickers and never
-  used for destructive warnings.
-- Keep body copy at or above 13px in the popup and 14px on full pages.
-- Prefer direct verbs: Start, Complete, End, Save current page, Open dashboard.
+The supplied design names Bricolage Grotesque, Instrument Sans, and Spline Sans
+Mono. Tabyss cannot fetch remote fonts under its zero-network/CSP contract, so the
+runtime uses local platform approximations:
+
+- Display/headings/large numerals: `ui-rounded`, Arial Rounded MT Bold, Segoe UI,
+  then system sans.
+- Body: Segoe UI Variable Text, Segoe UI, then system sans.
+- Micro labels/small data: Cascadia Code, SFMono, Consolas, then system mono.
+
+Large durations and scores use the display stack. Mono is reserved for compact
+data and short uppercase kickers. Body copy is 12.5–14px in compact surfaces and
+14px on full pages. Use direct verbs: Start, Complete, End, Save, Open.
 
 ## State vocabulary
 
@@ -65,53 +95,46 @@ palette and must always be paired with labels or patterns.
 
 ## Core components
 
-- **Brand lockup:** local icon plus Tabyss wordmark and optional privacy reassurance.
-- **Primary button:** solid accessible violet, one per decision group.
-- **Secondary button:** neutral surface and border; never visually competes with the
-  primary action.
-- **Quiet action:** text/icon action for navigation or optional detail.
-- **Session card:** a neutral secondary popup card; holds one task, one duration, or
-  compact live controls. It is optional and must not use hero treatment. Active
-  state shows bounded site chips plus direct Complete and secondary End actions,
-  without a separate checkout screen.
-- **Today card:** compact total, intentional/productive context, focus ring, and up
-  to two next cues.
-- **Disclosure:** secondary analytics and controls use a clearly named native
-  `details` element and remain fully keyboard accessible.
-- **Status chip:** semantic text plus color; color alone never communicates state.
-- **Error/recovery message:** explains the failed action, preserved state, and next
-  step where possible.
+- **Brand lockup:** exact V1.5 local bitmap plus Tabyss and optional privacy copy.
+- **Primary button:** one solid violet action per decision group; never gradient.
+- **Secondary button:** neutral surface and border.
+- **Theme picker:** three native radios in labelled cards with a live preview status.
+- **Session card:** neutral secondary card with one task, one duration, Start, compact
+  live controls, visited-site chips, and direct Complete/End.
+- **Today card:** total, intentional/productive context, focus ring, and two cues.
+- **Disclosure:** native `details` for secondary analytics and controls.
+- **Status chip:** semantic label plus color; color alone never communicates state.
+- **Error/recovery message:** explains preserved state and the next action.
 
-## Popup information hierarchy
+## Popup hierarchy
 
-1. Brand and private/local state.
-2. Compact Today snapshot and next cue.
-3. One secondary optional session action or the active session.
-4. Expandable browsing details, persona, categories, goals, sites, and Office Mode.
+1. Brand and local/privacy reassurance.
+2. Today snapshot and next cue.
+3. Optional minimal session action or active session.
+4. Expandable browsing details, categories, goals, sites, and Office Mode.
 5. Weekly story and destructive reset as quiet footer actions.
 
-The popup is a launch and glance surface. Saved pages belongs in the side panel;
-deep review and configuration belong on the dashboard and settings.
+Saved pages belongs in the side panel; deep review and configuration belong on the
+dashboard and Settings. The design-system prototype's older checkout flow is not a
+runtime requirement because ADR-024/025 supersede it.
 
 ## Icon usage
 
-- Canonical runtime sources: the original V1.5 `icon16.png`, `icon48.png`, and
-  `icon128.png` restored byte-for-byte under ADR-022.
-- `assets/brand/tabyss-mark.svg` is a superseded V2 design study, not the canonical
-  logo and not part of the runtime package.
-- Never place text inside the mark or recolor semantic-state icons with the brand
-  gradient.
-- Use the 48px bitmap for extension-page lockups; let CSS size it to 24–28px.
-- The 16px icon must preserve the white rails/waist and rounded gradient silhouette.
+- Canonical sources are the original V1.5 `icon16.png`, `icon48.png`, and
+  `icon128.png`, restored byte-for-byte under ADR-022.
+- The mark shown in the supplied Abyss & Ember artifact and
+  `assets/brand/tabyss-mark.svg` are superseded design studies.
+- Website favicons identify sites and Saved pages; they never replace the product
+  mark.
+- Do not place text inside the mark or recolor semantic icons with the gradient.
 
 ## Accessibility and motion
 
-- Visible focus rings must not depend on box shadow alone.
-- Support keyboard-only operation and native semantics before custom ARIA.
+- Use native semantics and visible focus rings before custom ARIA.
 - Every icon-only button needs an accessible name and at least a 36px target.
-- Respect reduced motion; no information may rely on animation.
-- In forced-colors mode, preserve borders, controls, progress, and current state.
-- At 200% zoom, the popup may scroll vertically but must not require horizontal
-  scrolling or hide its primary action.
-- Copy and controls must remain meaningful in empty, loading, paused, review, error,
+- Respect reduced motion; information never relies on animation.
+- Forced-colors/high-contrast modes preserve borders, controls, progress, and state.
+- At 200% zoom the popup scrolls vertically without horizontal overflow or hidden
+  primary actions.
+- Copy and controls remain truthful in empty, loading, paused, review, error,
   disabled, denied, and recovery states.

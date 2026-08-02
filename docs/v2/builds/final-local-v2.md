@@ -23,6 +23,10 @@ Recovery architecture as navigation.
 
 ## Decisions and scope
 
+- [ADR-026](../decisions/ADR-026-abyss-ember-themes.md) adopts the owner-supplied
+  Abyss & Ember tokens, user-selected System/Light/Dark appearance, and rounder
+  popup/heads-up geometry. It supersedes ADR-020 only for visual tokens, typography
+  roles, geometry, and appearance behavior.
 - [ADR-023](../decisions/ADR-023-saved-pages-simplification.md) is the final product-
   surface decision: Focus in the popup, insights in the dashboard, and one Saved
   pages side panel. It supersedes ADR-021's broader visible feature set.
@@ -37,8 +41,9 @@ Recovery architecture as navigation.
 - [ADR-021](../decisions/ADR-021-final-local-v2-architecture.md) remains the historical
   compatibility architecture; its Command Center, Plan, Space, guard, and recovery-
   surface scope is superseded.
-- [ADR-020](../decisions/ADR-020-calm-optimistic-design-system.md) governs the visual
-  system and action-first hierarchy.
+- [ADR-020](../decisions/ADR-020-calm-optimistic-design-system.md) retains the calm,
+  nonjudgmental voice, accessibility, and action hierarchy not superseded by
+  ADR-026.
 - Existing trust, backup, quality, private-browsing, and focus-state ADRs remain in
   force.
 - ADR-005's IndexedDB event platform and ADR-006's DNR hard blocking remain
@@ -49,6 +54,23 @@ Recovery architecture as navigation.
   moderation, incident, and operations systems do not exist and are not simulated.
 
 ## Implemented product behavior
+
+### Abyss & Ember appearance
+
+- Supplied light/dark surface, ink, brand, semantic, track, and identity-gradient
+  tokens now govern every packaged extension surface. Small muted text uses a
+  documented contrast-adjusted derivative instead of the reference swatch.
+- Settings begins with native System, Light, and Dark radios. Selection previews
+  immediately; Save writes one sanitized local `theme` field. System is the legacy
+  and default fallback and continues to follow the OS.
+- Explicit theme choice also drives category/score rendering rather than leaving
+  canvas and generated colors tied only to OS preference.
+- The popup shell uses a 22px radius; in-page heads-up and wellbeing cards use
+  18/24px. Primary buttons remain solid violet and the identity gradient stays
+  limited to focus/brand/persona/Wrapped moments.
+- Offline-safe local font stacks approximate the supplied display, body, and mono
+  roles without a remote font or dependency. The exact V1.5 PNG logo remains
+  canonical; the ZIP's alternative mark and older prototype flow are not packaged.
 
 ### Saved pages
 
@@ -120,19 +142,29 @@ Recovery architecture as navigation.
 
 - `verify.ps1`: pass.
 - JavaScript syntax: all runtime/test JavaScript passes `node --check`.
-- Node suite: **49/49 pass**.
+- Node suite: **53/53 pass**.
 - Covered boundaries include sender authorization, Incognito, ignore domains,
   notification redaction, focus recovery, compatibility records, reset/retention,
   domain-only session-site capture/bounds/legacy defaults, product schema/URL
   limits, backup/import safety, manifest/package policy, zero-network policy, five-
-  page UI reference/accessibility contracts, and explicit absence of the retired
-  side-panel concepts.
+  page UI reference/accessibility contracts, explicit absence of the retired
+  side-panel concepts, theme allowlisting/fallback, native Appearance controls,
+  exact Abyss & Ember tokens, and rounded shell/overlay geometry.
 - V2 documentation links and git whitespace: pass.
-- Deterministic runtime package: 19 allowlisted files, 96.5 KB, identical builds:
-  `d3aa01e2e875e396eb44c91537ebc6f00cbc8ace9df6f09ff9f76b519e958669`.
+- Deterministic runtime package: 19 allowlisted files, 100,659 bytes (98.3 KB),
+  identical builds: `e73d2919429b0d759722379cd0707c4239bf7f42f1fdfd1e4a16db4ee5b371ba`.
 
 ### Rendered browser adapter
 
+- Settings rendered in OS/System dark and forced Light. The accessibility tree
+  exposed one labelled Appearance region, a native Theme group, System/Light/Dark
+  radio names with descriptions, and a polite preview status. Forced Light computed
+  `#F5F3FA`; forced Dark/System computed `#0E0B15`.
+- Popup rendered at a computed 380px width with a computed 22px body radius,
+  Abyss & Ember dark tokens, solid-violet Start, the exact `icon48.png` source, Today
+  first, and the unchanged minimal session card. The local HTTP adapter reinitializes
+  its in-memory storage on reload, so true theme persistence remains an unpacked-
+  extension gate even though settings sanitization/storage contracts are automated.
 - Dark-mode popup rendered with Today first and a visually neutral Intentional
   Session card second. The accessibility tree exposed level-one Today and level-two
   Start/Current session headings, a visible task label, selected 25-minute default,

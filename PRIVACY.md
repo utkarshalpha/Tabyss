@@ -31,8 +31,8 @@ To show you how you spend time online, Tabyss records, **locally on your compute
   Space, schedule, drift, or recovery records remain locally preserved and included
   in full backups so an update does not silently destroy user data. Their interfaces,
   schedule notifications, and drift guard are retired.
-- Your **settings** (categories, goals, breaks, office mode, ignore list,
-  retention window).
+- Your **settings** (appearance theme, categories, goals, breaks, office mode,
+  ignore list, retention window).
 - **Incognito tabs are never recorded**, even if you separately allow the extension
   to run in Incognito from Chrome's extension settings.
 

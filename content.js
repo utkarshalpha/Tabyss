@@ -141,7 +141,7 @@
     const pill = document.createElement("div");
     pill.style.cssText =
       "position:fixed;right:20px;bottom:20px;z-index:2147483646;display:flex;align-items:center;gap:10px;" +
-      "padding:10px 16px;border-radius:100px;background:rgba(18,20,30,0.92);color:#fff;" +
+      "padding:10px 16px;border-radius:18px;background:rgba(22,18,31,0.94);color:#fff;" +
       "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13px;" +
       "border:1px solid rgba(255,255,255,0.16);box-shadow:0 10px 34px rgba(0,0,0,0.4);" +
       "backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);" +
@@ -217,8 +217,8 @@
     const card = document.createElement("div");
     card.style.cssText =
       "max-width:420px;width:calc(100% - 3rem);text-align:center;padding:2rem 1.8rem;" +
-      "background:rgba(20,24,34,0.92);border:1px solid rgba(255,255,255,0.14);" +
-      "border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,0.5);";
+      "background:rgba(22,18,31,0.94);border:1px solid rgba(255,255,255,0.14);" +
+      "border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,0.5);";
 
     const emoji = document.createElement("div");
     emoji.style.cssText = "font-size:3rem;line-height:1;margin-bottom:0.6rem;";
@@ -246,7 +246,7 @@
       const b = document.createElement("button");
       b.textContent = label;
       b.style.cssText =
-        "font:inherit;font-weight:600;cursor:pointer;padding:0.6rem 1.1rem;border-radius:100px;" +
+        "font:inherit;font-weight:600;cursor:pointer;padding:0.6rem 1.1rem;border-radius:12px;" +
         (primary
           ? "background:#fff;color:#101423;border:none;"
           : "background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4);");

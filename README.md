@@ -34,6 +34,10 @@ wellbeing breaks, and a weekly Wrapped-style recap are computed
   <img src="assets/screenshots/3-wrapped.png" width="49%" alt="Wrapped" />
 </p>
 
+Appearance is also under your control: Settings offers **System, Light, and Dark**
+using the Abyss & Ember design language. System follows the device, and the choice
+never leaves local extension storage.
+
 ## Engineering highlights
 
 Built as a **Manifest V3** extension with no frameworks and no external dependencies —
@@ -125,7 +129,7 @@ one-click deletion. See [PRIVACY.md](PRIVACY.md).
 
 Vanilla JavaScript (MV3 service worker + content script), hand-rolled SVG/Canvas
 visualization (donut, heatmaps, rings, generative art), CSS custom properties with
-full light/dark theming, PowerShell build script. **No frameworks, no build step,
+System/Light/Dark theming, PowerShell build script. **No frameworks, no build step,
 no dependencies.**
 
 ## License
