@@ -31,7 +31,7 @@ Turn the V2 foundation into a reviewable, repeatable build instead of relying on
 - Build: `package.ps1`, `package-files.json`, `verify.ps1`, `.gitattributes`.
 - CI: `.github/workflows/quality.yml`.
 - Tests: `tests/manifest.test.js`, `tests/network-policy.test.js` plus the Wave 0 suites.
-- Product record: `README.md`, `CHANGELOG.md`, `PROMPTS.md`, ADR-018, this build record.
+- Product record: `README.md`, `CHANGELOG.md`, ADR-018, and this build record.
 
 ## Evidence
 
