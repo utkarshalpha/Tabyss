@@ -533,17 +533,23 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .empty { color: var(--muted); text-align: center; padding: 1.3rem 0.5rem; line-height: 1.5; }
 
 /* ---------- popup ---------- */
+/* The popup renders as a rounded card inset from its own window: the 4px of
+ * page padding becomes a visible margin in --plane, and the card carries the
+ * shell radius. overflow:hidden is what actually clips the sticky header and
+ * the footer to the corners. */
+html:has(body.popup) { padding: 4px; }
 .popup {
   /* Fixed width: an action popup's viewport starts near zero, so any vw-based
-   * width collapses the popup to its minimum. Chrome caps popups at 800px.
-   * The popup window IS the shell — no inner border/radius, or the page
-   * background shows through as an ugly frame. */
-  width: 380px; max-height: 592px; overflow-y: auto;
+   * width collapses the popup to its minimum. Chrome caps popups at 800px. */
+  width: 380px; max-height: 592px; overflow-y: auto; overflow-x: hidden;
   background: var(--surface);
+  border-radius: var(--radius-shell);
 }
+/* Android sheets fill the screen, so an inset frame there is just wasted edge. */
+html:has(body.popup.compact-screen) { padding: 0; }
 /* Android (class set at runtime — a media query would re-trigger the desktop
  * popup sizing loop): the popup is a full-width sheet. */
-.popup.compact-screen { width: 100%; max-height: none; }
+.popup.compact-screen { width: 100%; max-height: none; border-radius: 0; }
 .popup-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.75rem 0.9rem; background: color-mix(in srgb, var(--surface) 94%, transparent);

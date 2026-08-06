@@ -30,7 +30,7 @@ for (const page of pages) {
 test("Saved pages replaces the multi-section Command Center with accessible controls", () => {
   const html = fs.readFileSync(path.join(root, "sidepanel.html"), "utf8");
   const js = fs.readFileSync(path.join(root, "sidepanel.js"), "utf8");
-  assert.match(html, /<h1 id="savedPageTitle">Saved pages<\/h1>/);
+  assert.match(html, /<h1 id="savedPageTitle"[^>]*>Saved pages<\/h1>/);
   assert.match(html, /aria-label="Filter saved pages"/);
   assert.match(html, /data-saved-filter="saved"[^>]+aria-pressed="true"/);
   assert.match(js, /setAttribute\("aria-pressed", String\(active\)\)/);
@@ -107,13 +107,14 @@ test("settings exposes a persistent accessible theme choice", () => {
   const common = fs.readFileSync(path.join(root, "common.js"), "utf8");
   assert.match(html, /<h2 id="appearanceTitle">Appearance<\/h2>/);
   for (const theme of ["system", "light", "dark"]) {
-    assert.match(html, new RegExp(`type="radio" name="theme" value="${theme}"`));
+    assert.match(html, new RegExp(`type="radio" name="appearance" value="${theme}"`));
   }
   assert.match(html, /id="themeStatus"[^>]+role="status"[^>]+aria-live="polite"/);
-  assert.match(js, /theme: document\.querySelector\('input\[name="theme"\]:checked'\)/);
-  assert.match(js, /applyTheme\(input\.value\)/);
-  assert.match(common, /theme: "system"/);
-  assert.match(common, /root\.dataset\.theme = theme/);
+  assert.match(js, /appearance: document\.querySelector\('input\[name="appearance"\]:checked'\)/);
+  assert.match(js, /applyAppearance\(/);
+  assert.match(common, /appearance: "system"/);
+  assert.match(common, /root\.dataset\.theme = mode/);
+  assert.match(common, /if \(mode === "system"\) delete root\.dataset\.theme;/, "system must clear the override so the OS media query wins");
   assert.match(common, /systemTheme\?\.addEventListener\?\.\("change"/);
   for (const page of ["popup", "dashboard", "options", "wrapped"]) {
     const pageJs = fs.readFileSync(path.join(root, `${page}.js`), "utf8");
@@ -125,7 +126,7 @@ test("Abyss and Ember tokens and rounded popup shell are enforced", () => {
   const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
   const content = fs.readFileSync(path.join(root, "content.js"), "utf8");
   for (const token of ["#f5f3fa", "#17121f", "#7c3aed", "#db2777", "#f97316", "#0e0b15", "#f4f1fa", "#a78bfa"]) {
-    assert.match(css, new RegExp(token));
+    assert.match(css, new RegExp(token, "i")); // tokens are generated upper-case
   }
   assert.match(css, /:root\[data-theme="dark"\]/);
   assert.match(css, /:root:not\(\[data-theme="light"\]\)/);

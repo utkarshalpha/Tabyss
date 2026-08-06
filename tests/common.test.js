@@ -57,7 +57,7 @@ test("settings are allowlisted, bounded and private by default", () => {
     overrides: { "www.example.com": "Education", "bad.test": "Unknown" },
     injected: true,
   })));
-  assert.equal(settings.theme, "system");
+  assert.equal(settings.appearance, "system");
   assert.equal(settings.idleSeconds, 15);
   assert.equal(settings.retentionDays, 3650);
   assert.equal(settings.notificationDetails, false);
@@ -68,20 +68,22 @@ test("settings are allowlisted, bounded and private by default", () => {
 });
 
 test("appearance accepts only system, light and dark", () => {
-  for (const theme of ["system", "light", "dark"]) {
-    assert.equal(plain(api.sanitizeSettings(jsonInContext({ theme }))).theme, theme);
+  for (const appearance of ["system", "light", "dark"]) {
+    assert.equal(plain(api.sanitizeSettings(jsonInContext({ appearance }))).appearance, appearance);
   }
-  assert.equal(plain(api.sanitizeSettings(jsonInContext({ theme: true }))).theme, "system");
+  assert.equal(plain(api.sanitizeSettings(jsonInContext({ appearance: true }))).appearance, "system");
+  // The retired key must not resurrect itself through the allowlist.
+  assert.equal(Object.hasOwn(plain(api.sanitizeSettings(jsonInContext({ theme: "dark" }))), "theme"), false);
 });
 
 test("appearance applies and removes explicit root themes", () => {
   const result = plain(vm.runInContext(`(() => {
     globalThis.document = { documentElement: { dataset: {}, style: {} } };
-    applyTheme("dark");
+    applyAppearance("cobalt", "dark");
     const dark = { theme: document.documentElement.dataset.theme, scheme: document.documentElement.style.colorScheme };
-    applyTheme("light");
+    applyAppearance("cobalt", "light");
     const light = { theme: document.documentElement.dataset.theme, scheme: document.documentElement.style.colorScheme };
-    applyTheme("system");
+    applyAppearance("cobalt", "system");
     const system = { hasTheme: Object.hasOwn(document.documentElement.dataset, "theme"), scheme: document.documentElement.style.colorScheme };
     delete globalThis.document;
     return { dark, light, system };

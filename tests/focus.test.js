@@ -115,7 +115,12 @@ test("invalid text, durations and transitions fail closed", () => {
   assert.throws(() => api.createFocusActive(inContext({ intention: "", mode: "timer", targetMinutes: 25 }), START, "focus_test_003"), /FOCUS_INVALID_TEXT/);
   assert.throws(() => api.createFocusActive(inContext({ intention: "Work", mode: "timer", targetMinutes: 4 }), START, "focus_test_003"), /FOCUS_INVALID_DURATION/);
   assert.throws(() => api.focusTransition(timer(), "resume", START + 1000), /FOCUS_INVALID_TRANSITION/);
-  assert.throws(() => api.focusTransition(timer(), "complete", START - 1), /FOCUS_INVALID_REQUEST/);
+  // A backwards clock jump is clamped, not rejected: a session must always be
+  // completable even if the machine clock moves under it.
+  const rolledBack = api.focusTransition(timer(), "complete", START - 1);
+  assert.equal(rolledBack.record.focusedMs, 0);
+  // A genuinely malformed request still fails closed.
+  assert.throws(() => api.focusTransition(timer(), "complete", NaN), /FOCUS_INVALID_REQUEST/);
 });
 
 test("focus history validation normalizes records and rejects duplicates", () => {
