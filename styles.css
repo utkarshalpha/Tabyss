@@ -1697,3 +1697,13 @@ details.optsec > .secbody { padding: 0.2rem 1.3rem 1.2rem; }
 @media (prefers-contrast: more) {
   .saved-hero, .saved-library, .saved-page-card { border-width: 2px; box-shadow: none; }
 }
+
+/* Two-step destructive controls. A browser confirm() can be permanently
+ * suppressed by the user, which silently disabled Delete; arming the button
+ * itself cannot be turned off and needs no dialog. */
+.filter-chip.danger-chip { margin-left: auto; color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.btn.is-armed, .filter-chip.is-armed {
+  background: var(--danger); border-color: var(--danger); color: #fff;
+  animation: arm-pulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes arm-pulse { from { opacity: 1; } to { opacity: 0.72; } }

@@ -146,7 +146,6 @@ function collect() {
     eyeEnabled: document.getElementById("eyeOn").checked,
     eyeIntervalMin: num("eyeInterval", 1, 120, 20),
     eyeSnoozeMin: num("eyeSnooze", 1, 30, 5),
-    breakStyle: document.querySelector('input[name="breakStyle"]:checked')?.value || "cover",
     officeMode: document.getElementById("officeOn").checked,
     waterIntervalMin: num("waterInterval", 10, 240, 50),
     standIntervalMin: num("standInterval", 15, 240, 60),
@@ -157,8 +156,8 @@ function collect() {
   };
 }
 
-/* Inline, non-blocking status line (role="alert" in the HTML). Destructive
- * confirmations still use confirm(); everything informational lands here. */
+/* Inline, non-blocking status line. Destructive actions arm their own button
+ * rather than calling confirm(), which the user can permanently suppress. */
 let statusTimer = 0;
 function showStatus(message, isError = false) {
   const box = document.getElementById("status");
@@ -193,6 +192,44 @@ async function save() {
   }
   renderAssign();
 }
+
+/* Reset every preference to its shipped default. Two-step on the button, not
+ * confirm(): a suppressed dialog would make this silently do nothing. Only
+ * settings are touched — browsing history, saved pages and sessions are not. */
+let defaultsArmed = 0;
+document.getElementById("resetDefaults").addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+  if (!defaultsArmed) {
+    defaultsArmed = 1;
+    button.textContent = "Reset settings? Tap again";
+    button.classList.add("is-armed");
+    setTimeout(() => {
+      defaultsArmed = 0;
+      button.textContent = "Reset to defaults";
+      button.classList.remove("is-armed");
+    }, 5000);
+    return;
+  }
+  defaultsArmed = 0;
+  button.textContent = "Reset to defaults";
+  button.classList.remove("is-armed");
+  try {
+    // Keep the user's own category overrides, goals and ignore list: those are
+    // data they entered, not a preference the word "default" should erase.
+    const current = await getSettings();
+    const fresh = Object.assign({}, DEFAULT_SETTINGS, {
+      overrides: current.overrides,
+      goals: current.goals,
+      ignore: current.ignore,
+    });
+    const response = await sendWorkerRequest({ type: "SAVE_SETTINGS", settings: fresh });
+    settings = sanitizeSettings(response.settings);
+    await init();
+    showStatus("Settings reset to defaults ✓");
+  } catch (error) {
+    showStatus(`Reset failed. ${error && error.message ? error.message : "Try again."}`, true);
+  }
+});
 
 document.getElementById("save").addEventListener("click", async () => {
   try {
@@ -397,9 +434,6 @@ async function init() {
   document.getElementById("eyeOn").checked = settings.eyeEnabled !== false;
   document.getElementById("eyeInterval").value = settings.eyeIntervalMin || 20;
   document.getElementById("eyeSnooze").value = settings.eyeSnoozeMin || 5;
-  const style = BREAK_STYLES.includes(settings.breakStyle) ? settings.breakStyle : "cover";
-  const styleInput = document.querySelector(`input[name="breakStyle"][value="${style}"]`);
-  if (styleInput) styleInput.checked = true;
   document.getElementById("officeOn").checked = !!settings.officeMode;
   document.getElementById("waterInterval").value = settings.waterIntervalMin || 50;
   document.getElementById("standInterval").value = settings.standIntervalMin || 60;

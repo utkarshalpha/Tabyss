@@ -50,6 +50,13 @@
         if (message.type === "CLEAR_ALL_DATA") {
           for (const key of Object.keys(store)) delete store[key];
         }
+        // Mirrors the workers SAVE_SETTINGS: sanitize, persist, echo back.
+        // Without this the preview could never verify that a settings change
+        // round-trips, which is exactly the thing worth checking.
+        if (message.type === "SAVE_SETTINGS") {
+          store.settings = sanitizeSettings(message.settings);
+          return { ok: true, settings: store.settings };
+        }
         if (message.type === "EXPORT_DATA") {
           return { ok: true, data: buildExportPayload(store) };
         }

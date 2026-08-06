@@ -397,8 +397,6 @@ function categorize(domain, overrides) {
 const PRODUCTIVE_CATS = new Set(["Productive", "Education", "Career"]);
 
 /* ---------- settings defaults ---------- */
-const BREAK_STYLES = ["cover", "side", "notify"];
-
 const DEFAULT_SETTINGS = {
   palette: "cobalt", // colour personality; allowlisted in TABYSS_PALETTES
   appearance: "system", // follow the device unless the user selects light or dark
@@ -413,11 +411,6 @@ const DEFAULT_SETTINGS = {
   eyeEnabled: true, // 20-20-20 eye breaks
   eyeIntervalMin: 20,
   eyeSnoozeMin: 5,
-  // How a due break asks for you. "cover" blurs the page until you act;
-  // "side" parks a card in the corner that stays put but never blocks the
-  // page; "notify" leaves it to the OS notification alone. All three keep the
-  // same Done/Snooze actions, so nothing is lost by turning the blur off.
-  breakStyle: "cover", // cover | side | notify
   notificationSound: true, // let the OS play its notification chime
 
   officeMode: false, // water + stand reminders
@@ -488,7 +481,6 @@ function sanitizeSettings(input) {
     eyeEnabled: bool("eyeEnabled", DEFAULT_SETTINGS.eyeEnabled),
     eyeIntervalMin: boundedNumber(source.eyeIntervalMin, 1, 120, DEFAULT_SETTINGS.eyeIntervalMin),
     eyeSnoozeMin: boundedNumber(source.eyeSnoozeMin, 1, 30, DEFAULT_SETTINGS.eyeSnoozeMin),
-    breakStyle: BREAK_STYLES.includes(source.breakStyle) ? source.breakStyle : DEFAULT_SETTINGS.breakStyle,
     notificationSound: bool("notificationSound", DEFAULT_SETTINGS.notificationSound),
     officeMode: bool("officeMode", DEFAULT_SETTINGS.officeMode),
     waterIntervalMin: boundedNumber(source.waterIntervalMin, 10, 240, DEFAULT_SETTINGS.waterIntervalMin),

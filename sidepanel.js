@@ -102,6 +102,7 @@ function savedPageCard(page) {
   return card;
 }
 
+let disarmTimer = 0;
 function visiblePages() {
   const pages = savedState?.product?.capsules || [];
   return pages.filter((page) => savedFilter === "all" || page.status === savedFilter);
@@ -169,11 +170,11 @@ document.querySelector(".filter-row").addEventListener("click", (event) => {
   renderPages();
 });
 
-document.getElementById("savedPageList").addEventListener("click", async (event) => {
+document.querySelector(".saved-library").addEventListener("click", async (event) => {
   const target = event.target.closest("[data-action]");
   if (!target) return;
   const page = savedState?.product?.capsules.find((item) => item.id === target.dataset.id);
-  if (!page) return;
+  if (!page && target.dataset.action !== "delete-all") return;
   target.disabled = true;
   try {
     if (target.dataset.action === "open") {
@@ -188,10 +189,47 @@ document.getElementById("savedPageList").addEventListener("click", async (event)
       renderPages();
       showFeedback(page.status === "done" ? "Page moved back to Saved." : "Page marked completed.", "success");
     } else if (target.dataset.action === "delete") {
-      if (!confirm(`Delete “${page.title}” from Saved pages?`)) return;
+      // Two-step on the button, not confirm(): once a user ticks Chrome's
+      // "prevent this page from creating additional dialogues", confirm()
+      // returns false forever and Delete silently stops working.
+      if (target.dataset.armed !== "1") {
+        target.dataset.armed = "1";
+        target.textContent = "Confirm?";
+        target.classList.add("is-armed");
+        clearTimeout(disarmTimer);
+        disarmTimer = setTimeout(() => {
+          if (!target.isConnected) return;
+          delete target.dataset.armed;
+          target.textContent = "Delete";
+          target.classList.remove("is-armed");
+        }, 4000);
+        target.disabled = false;
+        return;
+      }
+      clearTimeout(disarmTimer);
       savedState = await productRequest("delete-capsule", { capsuleId: page.id });
       renderPages();
       showFeedback("Saved page deleted.", "success");
+    } else if (target.dataset.action === "delete-all") {
+      if (target.dataset.armed !== "1") {
+        target.dataset.armed = "1";
+        target.textContent = `Delete ${visiblePages().length}? Tap again`;
+        target.classList.add("is-armed");
+        clearTimeout(disarmTimer);
+        disarmTimer = setTimeout(() => {
+          if (!target.isConnected) return;
+          delete target.dataset.armed;
+          target.textContent = "Delete all";
+          target.classList.remove("is-armed");
+        }, 5000);
+        target.disabled = false;
+        return;
+      }
+      clearTimeout(disarmTimer);
+      const doomed = visiblePages().map((p) => p.id);
+      for (const id of doomed) savedState = await productRequest("delete-capsule", { capsuleId: id });
+      renderPages();
+      showFeedback(`${doomed.length} page${doomed.length === 1 ? "" : "s"} deleted.`, "success");
     }
   } catch (error) {
     showFeedback(error.message, "error");

@@ -552,7 +552,6 @@ async function doFlush() {
       body: "Look at something 20 feet away for 20 seconds. Blink slowly — the tabs will wait.",
       seconds: EYE_SECONDS,
       snoozeMin: clampMin(settings.eyeSnoozeMin, 1, 30, 5),
-      style: breakStyleOf(settings),
       silent: settings.notificationSound === false,
     }, "well-eye");
   }
@@ -574,8 +573,7 @@ async function doFlush() {
           emoji: "💧",
           title: "Water o'clock",
           body: "Small sip, big saves.",
-          style: breakStyleOf(settings),
-          silent: settings.notificationSound === false,
+              silent: settings.notificationSound === false,
         }, "well-water");
       }
       if (!breakFired && now - ws.lastStand >= clampMin(settings.standIntervalMin, 15, 240, 60) * 60000) {
@@ -586,8 +584,7 @@ async function doFlush() {
           emoji: "🚶",
           title: "Unfold yourself",
           body: "Ninety seconds on your feet resets the hips and the mind.",
-          style: breakStyleOf(settings),
-          silent: settings.notificationSound === false,
+              silent: settings.notificationSound === false,
         }, "well-stand");
       }
     }
@@ -639,23 +636,15 @@ function sunsetNotificationMessage(domain, settings) {
 
 /* Show a break on the active page (blur overlay); fall back to a notification
  * with Done/Snooze buttons when no content script can be reached. */
-/* Settings may carry a stale or imported value; the page must never be asked
- * to render a style it does not know. */
-function breakStyleOf(settings) {
-  return BREAK_STYLES.includes(settings?.breakStyle) ? settings.breakStyle : "cover";
-}
-
+/* Breaks are delivered as an OS notification, always.
+ *
+ * The page overlay (full blur, or a corner card) was removed because it could
+ * not be relied on: a content script is only injected when a page loads, so
+ * every tab already open when the extension installs or updates has no
+ * receiver, and the overlay silently does nothing there. A notification has no
+ * such dependency, reaches you when Chrome is not focused or not even in
+ * front, and carries the same Done and Snooze buttons. */
 async function triggerBreak(state, cfg, idPrefix) {
-  // "notify" skips the page entirely; the OS notification below carries the
-  // same Done/Snooze buttons, so no action is lost by turning the page UI off.
-  if (cfg.style !== "notify" && state && state.tabId != null) {
-    try {
-      await chrome.tabs.sendMessage(state.tabId, { type: "SHOW_BREAK", cfg });
-      return;
-    } catch (_) {
-      /* no content script on this page (chrome://, store, PDF) — fall back */
-    }
-  }
   // Stable id: a new reminder replaces its predecessor instead of stacking.
   notifySafe(idPrefix, `${cfg.emoji} ${cfg.title}`, cfg.body, [
     { title: cfg.kind === "eye" ? "Done" : "Done ✓" },
