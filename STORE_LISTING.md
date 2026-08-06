@@ -15,7 +15,7 @@ Edge/Chrome build in the repository root is at 2.5.0. Bump and repackage the
 Firefox tree separately when you are ready to push 2.5.0 to AMO.
 
 ## Title
-`Tabyss — Intentional Browsing`
+`Tabyss — Know Your Scroll`
 
 ## Summary (short description, ≤ 132 chars)
 `Understand your browsing, use a simple optional timer, and save pages for later — private, local, and account-free.`

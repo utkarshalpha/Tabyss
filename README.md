@@ -1,4 +1,4 @@
-# ⏳ Tabyss — Intentional Browsing
+# ⏳ Tabyss — Know Your Scroll
 
 [![Edge Add-ons](https://img.shields.io/badge/Microsoft%20Edge-Add--ons-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/bcnealjpndcccogjpceoaokeahmfdkha)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/tabyss-know-your-scroll/)
