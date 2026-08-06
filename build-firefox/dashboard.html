@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabyss — Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="dash">
+      <div class="dashhead">
+        <div>
+          <h1><img class="brandmark page-brandmark" src="icon48.png" alt="" /> Tabyss</h1>
+          <p class="sub">Your time on the web — tracked on this device only, never uploaded.</p>
+        </div>
+        <div class="actions">
+          <button id="export" class="link">Export data</button>
+          <button id="opts" class="link">Settings</button>
+        </div>
+      </div>
+
+      <!-- Persona hero -->
+      <section class="hero" id="hero">
+        <canvas class="hero-doodle" id="heroDoodle" width="144" height="144" aria-hidden="true"></canvas>
+        <div class="hero-body">
+          <div class="hero-kicker">Your browsing personality this week</div>
+          <h2 class="hero-name" id="heroName"></h2>
+          <span class="hero-epithet" id="heroEpithet"></span>
+          <p class="hero-tagline" id="heroTagline"></p>
+          <div class="hero-chips" id="heroChips"></div>
+        </div>
+        <button id="wrappedBtn" class="hero-cta">Wrapped ✦</button>
+      </section>
+
+      <div class="tiles" id="tiles"></div>
+
+      <div class="navrow">
+        <button id="prev" class="navbtn">‹ Prev</button>
+        <span class="day"><span id="dayLabel"></span> · <span id="dayTotal" class="daytotal mono"></span></span>
+        <button id="next" class="navbtn">Next ›</button>
+      </div>
+
+      <section class="panel focus-history-panel">
+        <div class="panel-heading-row">
+          <div>
+            <h2>Intentional sessions</h2>
+            <p class="panel-sub">What you worked on and the sites visited, separate from passive browsing time.</p>
+          </div>
+          <div id="focusDaySummary" class="focus-day-summary"></div>
+        </div>
+        <div id="focusHistory" class="focus-history"></div>
+      </section>
+
+      <div class="grid2">
+        <div class="panel">
+          <h2>By category</h2>
+          <div class="donutwrap">
+            <svg class="donut" id="donut" viewBox="0 0 42 42" role="img" aria-label="Category breakdown"></svg>
+            <div class="legend" id="donutLegend" style="flex-direction:column; align-items:stretch; gap:0.5rem;"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>When you're active</h2>
+          <div class="heat" id="heat"></div>
+          <div class="hlabels" id="heatLabels"></div>
+          <p id="peakNote" class="peaknote"></p>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <h2>vs last week</h2>
+          <div id="compare" class="compare"></div>
+        </div>
+        <div class="panel">
+          <h2>Rabbit holes 🕳️ <span class="panelhint">25m+ unbroken on one site</span></h2>
+          <div id="holesList" class="holes"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:1.8rem;">
+        <h2>Watch time &amp; wellness</h2>
+        <div class="mediagrid" id="mediaGrid"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:1.8rem;">
+        <h2>Last 7 days</h2>
+        <div class="trend" id="trend"></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:1.8rem;">
+        <h2>Weekly &amp; monthly</h2>
+        <div class="tiles" id="rollupTiles" style="margin-bottom:1.3rem;"></div>
+        <div class="calwrap"><div class="cal" id="calendar"></div></div>
+        <div class="callegend"><span>Less</span><span class="calkey" id="calKey"></span><span>More</span></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:1.8rem;">
+        <h2>Badges</h2>
+        <div id="badges" class="badges"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Sites</h2>
+        <div id="dlist" class="dlist"></div>
+      </div>
+
+      <p class="trustline">ZERO NETWORK REQUESTS · ALL DATA IN CHROME.STORAGE.LOCAL · TABYSS</p>
+    </main>
+    <script src="common.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

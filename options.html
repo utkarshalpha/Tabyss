@@ -8,99 +8,189 @@
   </head>
   <body>
     <main class="opt">
+      <!-- Sticky: Save used to sit two thirds down the page between sections,
+           so on a long settings page you could not tell whether your change
+           had been kept without scrolling to find it. -->
       <header class="opthead">
-        <div>
-          <h1><span class="dot"></span> Tabyss settings</h1>
+        <div class="opthead-copy">
+          <h1><img class="brandmark page-brandmark" src="icon48.png" alt="" /> Tabyss settings</h1>
           <p class="sub">Everything is stored on this device. Nothing is uploaded.</p>
         </div>
-        <button id="openDash" class="btn">Open dashboard ▸</button>
+        <div class="opthead-actions">
+          <span id="status" class="saved" role="status" aria-live="polite" hidden></span>
+          <button id="resetDefaults" class="btn" type="button">Reset to defaults</button>
+          <button id="openDash" class="btn">Open dashboard ▸</button>
+          <button id="save" class="btn primary">Save</button>
+        </div>
       </header>
 
-      <section class="optsec">
-        <h2>Daily goals</h2>
-        <p class="hint">Get a desktop notification when a category passes its daily limit. Leave 0 for no limit.</p>
-        <div id="goals"></div>
-      </section>
+      <details class="optsec appearance-section" open>
+        <summary><h2 id="appearanceTitle">Appearance</h2><span class="sumhint">Colour palette &amp; light / dark</span></summary>
+        <div class="secbody">
+          <p class="hint">Pick a colour personality and how Tabyss follows light and dark. Changes preview immediately — Save keeps them.</p>
+          <fieldset class="palette-picker" id="palettePicker">
+            <legend class="sr-only">Colour palette</legend>
+          </fieldset>
+          <fieldset class="theme-picker">
+            <legend class="sr-only">Appearance</legend>
+            <label class="theme-option">
+              <input type="radio" name="appearance" value="system" />
+              <span><strong>System</strong><small>Follow this device.</small></span>
+            </label>
+            <label class="theme-option">
+              <input type="radio" name="appearance" value="light" />
+              <span><strong>Light</strong><small>Always use light surfaces.</small></span>
+            </label>
+            <label class="theme-option">
+              <input type="radio" name="appearance" value="dark" />
+              <span><strong>Dark</strong><small>Always use dark surfaces.</small></span>
+            </label>
+          </fieldset>
+          <p id="themeStatus" class="theme-status" role="status" aria-live="polite"></p>
+        </div>
+      </details>
 
-      <section class="optsec">
-        <h2>Categories</h2>
-        <p class="hint">Every site you've visited, with its category. Search, review, and override — your choices always win over the built-in rules.</p>
-        <div id="catSummary" class="catsummary"></div>
-        <div class="field" style="max-width:320px">
-          <input id="catSearch" type="search" placeholder="Search sites…" />
+      <details class="optsec">
+        <summary><h2>Daily goals</h2><span class="sumhint">Category limits &amp; alerts</span></summary>
+        <div class="secbody">
+          <p class="hint">Get a desktop notification when a category passes its daily limit. Leave 0 for no limit.</p>
+          <div id="goals"></div>
         </div>
-        <div id="assign" class="assignlist"></div>
-      </section>
+      </details>
 
-      <section class="optsec">
-        <h2>Breaks &amp; office mode</h2>
-        <p class="hint">20-20-20 eye breaks blur the page for 20 seconds after continuous screen time. Office mode adds water and stand-up reminders while you're at the desk.</p>
-        <div class="goalrow">
-          <label class="glabel" for="eyeOn"><input id="eyeOn" type="checkbox" style="width:auto" /> <span>👀 Eye breaks</span></label>
-          <input id="eyeInterval" type="number" min="5" max="120" />
-          <span class="unit">min screen time (snooze <input id="eyeSnooze" type="number" min="1" max="30" style="width:56px" /> min)</span>
+      <details class="optsec">
+        <summary><h2>Categories</h2><span class="sumhint">Review &amp; override sites</span></summary>
+        <div class="secbody">
+          <p class="hint">Every site you've visited, with its category. Search, review, and override — your choices always win over the built-in rules.</p>
+          <div id="catSummary" class="catsummary"></div>
+          <div class="field" style="max-width:320px">
+            <input id="catSearch" type="search" placeholder="Search sites…" aria-label="Search sites" />
+          </div>
+          <div id="assign" class="assignlist"></div>
         </div>
-        <div class="goalrow">
-          <label class="glabel" for="officeOn"><input id="officeOn" type="checkbox" style="width:auto" /> <span>🏢 Office mode</span></label>
-          <span class="unit">💧 every</span>
-          <input id="waterInterval" type="number" min="10" max="240" />
-          <span class="unit">min · 🚶 every</span>
-          <input id="standInterval" type="number" min="15" max="240" />
-          <span class="unit">min</span>
-        </div>
-        <div class="goalrow">
-          <label class="glabel" for="mediaOn"><input id="mediaOn" type="checkbox" style="width:auto" /> <span>🎬 Media detection</span></label>
-          <span class="unit">track video watch-time, Reels/Shorts and feed doomscrolling</span>
-        </div>
-        <div class="goalrow">
-          <label class="glabel" for="recapOn"><input id="recapOn" type="checkbox" style="width:auto" /> <span>🌅 Daily recap</span></label>
-          <span class="unit">a morning notification with yesterday's total, focus and top site</span>
-        </div>
-      </section>
+      </details>
 
-      <section class="optsec">
-        <h2>Digital sunset</h2>
-        <p class="hint">A gentle nudge if you're on social or entertainment sites late at night. One notification max every 2 hours.</p>
-        <div class="goalrow">
-          <label class="glabel" for="sunsetOn"><input id="sunsetOn" type="checkbox" style="width:auto" /> <span>Enable nudge</span></label>
-          <input id="sunsetHour" type="number" min="20" max="23" />
-          <span class="unit">start hour (20–23, ends 4 am)</span>
-        </div>
-      </section>
+      <details class="optsec">
+        <summary><h2>Breaks &amp; office mode</h2><span class="sumhint">Eye breaks, water &amp; stand</span></summary>
+        <div class="secbody">
+          <!-- Switch rows, not checkbox+label+sentence: the old 150px fixed
+               label wrapped "Media detection" and "Notification sound" onto two
+               lines while the box stayed centred. Label and hint stack on the
+               left, the switch sits on the right, nothing wraps. -->
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Eye breaks</span>
+              <span class="sethint">Look 20 feet away for 20 seconds</span>
+            </span>
+            <span class="setctl">
+              <input id="eyeInterval" type="number" min="1" max="120" aria-label="Eye break interval in minutes of screen time" />
+              <span class="unit">min</span>
+              <span class="switch"><input id="eyeOn" type="checkbox" /><i></i></span>
+            </span>
+          </div>
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Office mode</span>
+              <span class="sethint">Water and stand-up reminders while you are at the desk</span>
+            </span>
+            <span class="setctl">
+              <span class="unit">water</span>
+              <input id="waterInterval" type="number" min="10" max="240" aria-label="Water reminder interval in minutes" />
+              <span class="unit">stand</span>
+              <input id="standInterval" type="number" min="15" max="240" aria-label="Stand-up reminder interval in minutes" />
+              <span class="switch"><input id="officeOn" type="checkbox" /><i></i></span>
+            </span>
+          </div>
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Snooze length</span>
+              <span class="sethint">How long Snooze pushes a break back</span>
+            </span>
+            <span class="setctl">
+              <input id="eyeSnooze" type="number" min="1" max="30" aria-label="Snooze duration in minutes" />
+              <span class="unit">min</span>
+            </span>
+          </div>
 
-      <section class="optsec">
-        <h2>Ignore list</h2>
-        <div class="field">
-          <label for="ignore">Domains to never track (one per line)</label>
-          <textarea id="ignore" placeholder="mail.google.com&#10;localhost"></textarea>
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Media detection</span>
+              <span class="sethint">Video watch-time and Reels/Shorts playback</span>
+            </span>
+            <span class="setctl"><span class="switch"><input id="mediaOn" type="checkbox" /><i></i></span></span>
+          </div>
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Daily recap</span>
+              <span class="sethint">A morning notification with yesterday total and focus score</span>
+            </span>
+            <span class="setctl"><span class="switch"><input id="recapOn" type="checkbox" /><i></i></span></span>
+          </div>
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Notification sound</span>
+              <span class="sethint">Off keeps the reminder, silences the chime</span>
+            </span>
+            <span class="setctl"><span class="switch"><input id="notificationSound" type="checkbox" /><i></i></span></span>
+          </div>
+          <div class="setrow">
+            <span class="setcopy">
+              <span class="setname">Site names in notifications</span>
+              <span class="sethint">Off by default so lock-screen previews stay private</span>
+            </span>
+            <span class="setctl"><span class="switch"><input id="notificationDetails" type="checkbox" /><i></i></span></span>
+          </div>
         </div>
-        <div class="field" style="max-width:220px">
-          <label for="idle">Idle threshold (seconds)</label>
-          <input id="idle" type="number" min="15" max="600" />
-        </div>
-        <div class="field" style="max-width:220px">
-          <label for="retention">Keep history for (days)</label>
-          <input id="retention" type="number" min="7" max="3650" />
-        </div>
-      </section>
+      </details>
 
-      <div class="btnrow">
-        <button id="save" class="btn primary">Save</button>
-        <span id="saved" class="saved" style="display:none">Saved ✓</span>
-      </div>
-
-      <section class="optsec" style="margin-top:1.6rem;">
-        <h2>Your data</h2>
-        <p class="hint">Export a JSON backup, restore one, or wipe everything.</p>
-        <div class="btnrow">
-          <button id="export" class="btn">Export JSON</button>
-          <label class="btn" for="importFile" style="cursor:pointer">Import JSON</label>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
-          <button id="clear" class="btn danger">Clear all data</button>
+      <details class="optsec">
+        <summary><h2>Digital sunset</h2><span class="sumhint">Late-night nudge</span></summary>
+        <div class="secbody">
+          <p class="hint">A gentle nudge if you're on social or entertainment sites late at night. One notification max every 2 hours.</p>
+          <div class="goalrow">
+            <label class="glabel" for="sunsetOn"><input id="sunsetOn" type="checkbox" style="width:auto" /> <span>Enable nudge</span></label>
+            <input id="sunsetHour" type="number" min="20" max="23" aria-label="Digital sunset start hour, 20 to 23" />
+            <span class="unit">start hour (20–23, ends 4 am)</span>
+          </div>
         </div>
-      </section>
+      </details>
+
+      <details class="optsec">
+        <summary><h2>Tracking &amp; ignore list</h2><span class="sumhint">Never-track domains, idle, retention</span></summary>
+        <div class="secbody">
+          <p class="hint">A domain also excludes all of its subdomains. For example, google.com excludes mail.google.com but not evil-google.com.</p>
+          <div class="field">
+            <label for="ignore">Domains to never track (one per line)</label>
+            <textarea id="ignore" placeholder="mail.google.com&#10;localhost"></textarea>
+          </div>
+          <div class="field" style="max-width:220px">
+            <label for="idle">Idle threshold (seconds)</label>
+            <input id="idle" type="number" min="15" max="600" />
+          </div>
+          <div class="field" style="max-width:220px">
+            <label for="retention">Keep history for (days)</label>
+            <input id="retention" type="number" min="7" max="3650" />
+          </div>
+        </div>
+      </details>
+
+      <details class="optsec">
+        <summary><h2>Your data</h2><span class="sumhint">Export, restore, reset</span></summary>
+        <div class="secbody">
+          <p class="hint">Export all ten restorable sections as JSON, safely restore a backup, reset today, or wipe everything. A full backup includes Saved page URLs/titles and session-linked domains, so treat it as sensitive. Imports are validated and a safety backup is downloaded before anything changes. Finish an active session before restoring.</p>
+          <div class="btnrow">
+            <button id="export" class="btn">Export JSON</button>
+            <label class="btn" for="importFile" style="cursor:pointer">Import JSON</label>
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+            <button id="resetToday" class="btn">Reset today</button>
+            <button id="clear" class="btn danger">Clear all data</button>
+          </div>
+          <p class="trustline">MANIFEST V3 · NO FETCH, NO XHR, NO REMOTE CODE, NO ANALYTICS — VERIFIABLE IN SOURCE</p>
+        </div>
+      </details>
     </main>
     <script src="common.js"></script>
+    <script src="product.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

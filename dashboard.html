@@ -10,18 +10,19 @@
     <main class="dash">
       <div class="dashhead">
         <div>
-          <h1><span class="dot"></span> Tabyss</h1>
+          <h1><img class="brandmark page-brandmark" src="icon48.png" alt="" /> Tabyss</h1>
           <p class="sub">Your time on the web — tracked on this device only, never uploaded.</p>
         </div>
         <div class="actions">
-          <button id="export" class="link">Export data</button>
-          <button id="opts" class="link">Settings</button>
+          <button id="export" class="btn compact">Export data</button>
+          <button id="opts" class="btn compact">Settings</button>
+          <button id="wrappedBtn" class="btn primary compact">Wrapped ✦</button>
         </div>
       </div>
 
       <!-- Persona hero -->
       <section class="hero" id="hero">
-        <canvas class="hero-doodle" id="heroDoodle" width="144" height="144"></canvas>
+        <canvas class="hero-doodle" id="heroDoodle" width="144" height="144" aria-hidden="true"></canvas>
         <div class="hero-body">
           <div class="hero-kicker">Your browsing personality this week</div>
           <h2 class="hero-name" id="heroName"></h2>
@@ -29,69 +30,114 @@
           <p class="hero-tagline" id="heroTagline"></p>
           <div class="hero-chips" id="heroChips"></div>
         </div>
-        <button id="wrappedBtn" class="hero-cta">See your Wrapped ✨</button>
       </section>
 
-      <div class="tiles" id="tiles"></div>
-
       <div class="navrow">
-        <button id="prev" class="navbtn">‹ Prev</button>
-        <span class="day"><span id="dayLabel"></span> · <span id="dayTotal" class="daytotal mono"></span></span>
-        <button id="next" class="navbtn">Next ›</button>
+        <fieldset class="scope-switch">
+          <legend class="sr-only">Time range</legend>
+          <div class="seg">
+            <input type="radio" name="scope" id="scopeDay" value="day" aria-label="One day" checked />
+            <label for="scopeDay"><b>Day</b></label>
+            <input type="radio" name="scope" id="scopeWeek" value="week" aria-label="Seven days" />
+            <label for="scopeWeek"><b>Week</b></label>
+            <input type="radio" name="scope" id="scopeMonth" value="month" aria-label="Calendar month" />
+            <label for="scopeMonth"><b>Month</b></label>
+          </div>
+        </fieldset>
+        <div class="navstep">
+          <button id="prev" class="navbtn" aria-label="Previous">‹</button>
+          <span class="day"><span id="dayLabel"></span><span id="dayTotal" class="daytotal mono"></span></span>
+          <button id="next" class="navbtn" aria-label="Next">›</button>
+        </div>
       </div>
 
-      <div class="grid2">
-        <div class="panel">
-          <h2>By category</h2>
-          <div class="donutwrap">
-            <svg class="donut" id="donut" viewBox="0 0 42 42" role="img" aria-label="Category breakdown"></svg>
-            <div class="legend" id="donutLegend" style="flex-direction:column; align-items:stretch; gap:0.5rem;"></div>
+      <!-- Grouped into four frames of one kind each - how much, what, when,
+           and over time - instead of nine loose panels stacked in a column. -->
+      <section class="frame">
+        <div class="frame-head">
+          <h2 class="frame-title">How much</h2>
+          <fieldset class="trend-switch">
+            <legend class="sr-only">Comparison</legend>
+            <div class="seg">
+              <input type="radio" name="trendMode" id="trend7" value="7" aria-label="Last seven days" checked />
+              <label for="trend7"><b>7 days</b></label>
+              <input type="radio" name="trendMode" id="trend14" value="14" aria-label="This week against last week" />
+              <label for="trend14"><b>vs last week</b></label>
+            </div>
+          </fieldset>
+        </div>
+        <p class="frame-sub">Each bar is one day, split by category. Click a day to load it below.</p>
+        <div class="trend" id="trend"></div>
+        <div class="legend trend-legend" id="trendLegend"></div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+
+      <section class="frame">
+        <div class="frame-head"><h2 class="frame-title">What you were on</h2></div>
+        <div class="grid2">
+          <div class="panel">
+            <h2>By category</h2>
+            <div class="donutwrap">
+              <svg class="donut" id="donut" viewBox="0 0 42 42" role="img" aria-label="Category breakdown"></svg>
+              <div class="legend" id="donutLegend" style="flex-direction:column; align-items:stretch; gap:0.5rem;"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Sites</h2>
+            <div id="dlist" class="dlist"></div>
           </div>
         </div>
-        <div class="panel">
-          <h2>When you're active</h2>
-          <div class="heat" id="heat"></div>
-          <div class="hlabels" id="heatLabels"></div>
+      </section>
+
+      <section class="frame">
+        <div class="frame-head"><h2 class="frame-title">When and how</h2></div>
+        <div class="grid4">
+          <div class="panel">
+            <h2>When you are active</h2>
+            <div class="heat" id="heat"></div>
+            <div class="hlabels" id="heatLabels"></div>
+            <p id="peakNote" class="peaknote"></p>
+          </div>
+          <div class="panel">
+            <h2>Rabbit holes <span class="panelhint">25m+ unbroken on one site</span></h2>
+            <div id="holesList" class="holes"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-heading-row">
+              <h2>Intentional sessions</h2>
+              <div id="focusDaySummary" class="focus-day-summary"></div>
+            </div>
+            <p class="panel-sub">What you worked on and the sites visited, separate from passive browsing time.</p>
+            <div id="focusHistory" class="focus-history"></div>
+          </div>
+          <div class="panel">
+            <h2>Watch time &amp; wellness</h2>
+            <div class="mediagrid" id="mediaGrid"></div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="grid2">
-        <div class="panel">
-          <h2>vs last week</h2>
-          <div id="compare" class="compare"></div>
+      <section class="frame">
+        <div class="frame-head"><h2 class="frame-title">Over time</h2></div>
+        <div class="tiles" id="rollupTiles"></div>
+        <div class="grid2">
+          <div class="panel">
+            <h2>Every day tracked</h2>
+            <div class="calwrap"><div class="cal" id="calendar"></div></div>
+            <div class="callegend"><span>Less</span><span class="calkey" id="calKey"></span><span>More</span></div>
+          </div>
+          <div class="panel">
+            <h2>vs last week</h2>
+            <div id="compare" class="compare"></div>
+          </div>
         </div>
-        <div class="panel">
-          <h2>Rabbit holes 🕳️</h2>
-          <div id="holesList" class="holes"></div>
-        </div>
-      </div>
+        <details class="frame-more">
+          <summary><span>Badges</span><span class="summary-hint">Milestones you have hit</span></summary>
+          <div id="badges" class="badges"></div>
+        </details>
+      </section>
 
-      <div class="panel" style="margin-bottom:1.8rem;">
-        <h2>Watch time &amp; wellness</h2>
-        <div class="mediagrid" id="mediaGrid"></div>
-      </div>
-
-      <div class="panel" style="margin-bottom:1.8rem;">
-        <h2>Last 7 days</h2>
-        <div class="trend" id="trend"></div>
-      </div>
-
-      <div class="panel" style="margin-bottom:1.8rem;">
-        <h2>Weekly &amp; monthly</h2>
-        <div class="tiles" id="rollupTiles" style="margin-bottom:1.3rem;"></div>
-        <div class="calwrap"><div class="cal" id="calendar"></div></div>
-        <div class="callegend"><span>Less</span><span class="calkey" id="calKey"></span><span>More</span></div>
-      </div>
-
-      <div class="panel" style="margin-bottom:1.8rem;">
-        <h2>Badges</h2>
-        <div id="badges" class="badges"></div>
-      </div>
-
-      <div class="panel">
-        <h2>Sites</h2>
-        <div id="dlist" class="dlist"></div>
-      </div>
+      <p class="trustline">ZERO NETWORK REQUESTS · ALL DATA IN CHROME.STORAGE.LOCAL · TABYSS</p>
     </main>
     <script src="common.js"></script>
     <script src="dashboard.js"></script>

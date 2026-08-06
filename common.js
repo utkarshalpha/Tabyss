@@ -11,10 +11,12 @@ function fmt(seconds) {
   return `${sec}s`;
 }
 function fmtShort(seconds) {
-  const s = Math.round(seconds);
-  const h = Math.floor(s / 3600);
-  const m = Math.round((s % 3600) / 60);
-  if (h) return `${h}h ${m}m`;
+  // Round to whole minutes first so a value like 3590s becomes "1h 0m", never "60m".
+  const totalMinutes = Math.round(Math.round(seconds) / 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h && m) return `${h}h ${m}m`;
+  if (h) return `${h}h`;
   return `${m}m`;
 }
 function dateKey(ts) {
@@ -38,7 +40,7 @@ function weekdayShort(key) {
 }
 
 /* ---------- storage schema / retention ---------- */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 3;
 
 // Delete date-keyed entries older than the retention window. Keys are
 // YYYY-MM-DD, which sort chronologically as strings. Mutates `map`; returns count.
@@ -66,8 +68,90 @@ const CAT_COLOR = {
   Shopping: { l: "#eb6834", d: "#d95926" },
   Other: { l: "#898781", d: "#898781" },
 };
+
+/* ==================================================================
+ * Colour personalization: six palettes × three appearance modes.
+ * The CSS variable blocks in styles.css are generated from this exact
+ * configuration — keep both in sync. Semantic success/warning/danger
+ * colours are shared across palettes and never change meaning.
+ * ================================================================== */
+const TABYSS_PALETTES = {
+  cobalt: {
+    label: "Cobalt Focus",
+    description: "Focused, reliable and professional.",
+    light: { plane: "#F3F6FC", surface: "#F9FBFF", card: "#FFFFFF", ink: "#111827", ink2: "#374151", muted: "#667085", border: "rgba(17, 24, 39, 0.13)", track: "#E7EDF8", primary: "#2563EB", onPrimary: "#FFFFFF", primarySoft: "rgba(37, 99, 235, 0.10)", accent: "#4F46E5", warm: "#06B6D4" },
+    dark: { plane: "#0A1020", surface: "#10182A", card: "#162036", ink: "#F3F6FF", ink2: "#C6D0E3", muted: "#A5AFC2", border: "rgba(243, 246, 255, 0.12)", track: "#22304A", primary: "#60A5FA", onPrimary: "#0B1830", primarySoft: "rgba(96, 165, 250, 0.14)", accent: "#818CF8", warm: "#22D3EE" },
+  },
+  teal: {
+    label: "Teal Clarity",
+    description: "Calm, clear and wellbeing-oriented.",
+    light: { plane: "#F1F7F6", surface: "#F8FCFB", card: "#FFFFFF", ink: "#10201E", ink2: "#38514D", muted: "#657A76", border: "rgba(16, 32, 30, 0.13)", track: "#E2EFEC", primary: "#0F766E", onPrimary: "#FFFFFF", primarySoft: "rgba(15, 118, 110, 0.10)", accent: "#0891B2", warm: "#14B8A6" },
+    dark: { plane: "#071513", surface: "#0D201D", card: "#122923", ink: "#EEFBF8", ink2: "#BFD7D2", muted: "#9AB5AF", border: "rgba(238, 251, 248, 0.12)", track: "#1D3732", primary: "#5EEAD4", onPrimary: "#08201C", primarySoft: "rgba(94, 234, 212, 0.13)", accent: "#67E8F9", warm: "#2DD4BF" },
+  },
+  abyss: {
+    label: "Abyss Violet",
+    description: "Distinctive, intelligent and balanced.",
+    light: { plane: "#F5F3FA", surface: "#FCFBFE", card: "#FFFFFF", ink: "#17121F", ink2: "#4C4458", muted: "#716A7D", border: "rgba(23, 18, 31, 0.13)", track: "#ECE8F4", primary: "#7C3AED", onPrimary: "#FFFFFF", primarySoft: "rgba(124, 58, 237, 0.10)", accent: "#DB2777", warm: "#F97316" },
+    dark: { plane: "#0E0B15", surface: "#16121F", card: "#1B1626", ink: "#F4F1FA", ink2: "#C2BBD1", muted: "#A59EAF", border: "rgba(244, 241, 250, 0.11)", track: "#262031", primary: "#A78BFA", onPrimary: "#221533", primarySoft: "rgba(167, 139, 250, 0.13)", accent: "#F472B6", warm: "#FB923C" },
+  },
+  plum: {
+    label: "Plum Premium",
+    description: "Expressive, creative and premium.",
+    light: { plane: "#F8F3FA", surface: "#FDFAFF", card: "#FFFFFF", ink: "#211326", ink2: "#59435F", muted: "#796A7E", border: "rgba(33, 19, 38, 0.13)", track: "#F0E5F3", primary: "#7E22CE", onPrimary: "#FFFFFF", primarySoft: "rgba(126, 34, 206, 0.10)", accent: "#C026D3", warm: "#E11D48" },
+    dark: { plane: "#130A17", surface: "#1D1023", card: "#28152F", ink: "#FBF2FF", ink2: "#D9C2DF", muted: "#B59FBB", border: "rgba(251, 242, 255, 0.12)", track: "#39213F", primary: "#C084FC", onPrimary: "#24102F", primarySoft: "rgba(192, 132, 252, 0.14)", accent: "#E879F9", warm: "#FB7185" },
+  },
+  forest: {
+    label: "Forest Calm",
+    description: "Natural, restorative and habit-focused.",
+    light: { plane: "#F5F7EF", surface: "#FBFCF8", card: "#FFFFFF", ink: "#18210F", ink2: "#46533A", muted: "#6D7862", border: "rgba(24, 33, 15, 0.13)", track: "#E8EDDC", primary: "#3F6212", onPrimary: "#FFFFFF", primarySoft: "rgba(63, 98, 18, 0.10)", accent: "#65A30D", warm: "#84CC16" },
+    dark: { plane: "#0D1307", surface: "#151D0D", card: "#1D2813", ink: "#F5FAEE", ink2: "#CBD8BD", muted: "#A7B59A", border: "rgba(245, 250, 238, 0.12)", track: "#2B3A20", primary: "#A3E635", onPrimary: "#162106", primarySoft: "rgba(163, 230, 53, 0.13)", accent: "#84CC16", warm: "#BEF264" },
+  },
+  ember: {
+    label: "Ember Energy",
+    description: "Energetic, warm and action-oriented.",
+    light: { plane: "#FAF4EF", surface: "#FFFAF7", card: "#FFFFFF", ink: "#271710", ink2: "#604B42", muted: "#806F67", border: "rgba(39, 23, 16, 0.13)", track: "#F3E7DE", primary: "#C2410C", onPrimary: "#FFFFFF", primarySoft: "rgba(194, 65, 12, 0.10)", accent: "#DB2777", warm: "#F59E0B" },
+    dark: { plane: "#170C07", surface: "#22120D", card: "#2E1912", ink: "#FFF5EF", ink2: "#DEC9BF", muted: "#B9A399", border: "rgba(255, 245, 239, 0.12)", track: "#41271D", primary: "#FB923C", onPrimary: "#2A1007", primarySoft: "rgba(251, 146, 60, 0.14)", accent: "#F472B6", warm: "#FBBF24" },
+  },
+};
+const PALETTE_CHOICES = new Set(Object.keys(TABYSS_PALETTES));
+const APPEARANCE_CHOICES = new Set(["system", "light", "dark"]);
+
+function normalizePalette(value) {
+  return PALETTE_CHOICES.has(value) ? value : "cobalt";
+}
+function normalizeAppearance(value) {
+  return APPEARANCE_CHOICES.has(value) ? value : "system";
+}
+function currentThemeIsDark() {
+  if (typeof document !== "undefined") {
+    const explicit = document.documentElement?.dataset?.theme;
+    if (explicit === "dark") return true;
+    if (explicit === "light") return false;
+  }
+  return !!(typeof window !== "undefined" && window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+/* Stamp the palette + appearance onto the root element. CSS does the rest;
+ * the tabyss-theme-change event tells charts/canvases to redraw. */
+function applyAppearance(palette, appearance) {
+  const pal = normalizePalette(palette);
+  const mode = normalizeAppearance(appearance);
+  if (typeof document === "undefined") return { palette: pal, appearance: mode };
+  const root = document.documentElement;
+  const previous = `${root.dataset.palette || "cobalt"}/${root.dataset.theme || "system"}`;
+  root.dataset.palette = pal;
+  if (mode === "system") delete root.dataset.theme;
+  else root.dataset.theme = mode;
+  root.style.colorScheme = mode === "system" ? "light dark" : mode;
+  const next = `${pal}/${mode}`;
+  if (previous !== next && typeof document.dispatchEvent === "function" &&
+      typeof CustomEvent !== "undefined") {
+    document.dispatchEvent(new CustomEvent("tabyss-theme-change", { detail: { palette: pal, appearance: mode } }));
+  }
+  return { palette: pal, appearance: mode };
+}
 function catColor(cat) {
-  const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const dark = currentThemeIsDark();
   return (CAT_COLOR[cat] || CAT_COLOR.Other)[dark ? "d" : "l"];
 }
 
@@ -159,6 +243,34 @@ function domainMatchesRule(domain, needle) {
     domain.endsWith("." + needle) ||
     domain.includes("." + needle + ".")
   );
+}
+
+/* Canonical host input for settings/imports. Accept a hostname or URL, but
+ * persist only the hostname so paths, ports and credentials never become
+ * tracking rules. */
+function normalizeDomainInput(value) {
+  if (typeof value !== "string") return null;
+  const raw = value.trim();
+  if (!raw || raw.length > 2048) return null;
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (!url.hostname) return null;
+    const domain = url.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+    if (["__proto__", "constructor", "prototype"].includes(domain)) return null;
+    return domain && domain.length <= 253 ? domain : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Ignoring example.com also ignores its subdomains, but never evil-example.com.
+function isIgnoredDomain(domain, rules) {
+  const host = normalizeDomainInput(domain);
+  if (!host) return false;
+  return (Array.isArray(rules) ? rules : []).some((value) => {
+    const rule = normalizeDomainInput(value);
+    return rule && (host === rule || host.endsWith(`.${rule}`));
+  });
 }
 
 /* Bundled offline catalog — exact base-domain → category, compiled from public
@@ -286,6 +398,8 @@ const PRODUCTIVE_CATS = new Set(["Productive", "Education", "Career"]);
 
 /* ---------- settings defaults ---------- */
 const DEFAULT_SETTINGS = {
+  palette: "cobalt", // colour personality; allowlisted in TABYSS_PALETTES
+  appearance: "system", // follow the device unless the user selects light or dark
   overrides: {}, // domain -> category
   goals: {}, // category -> minutes (0/absent = no goal)
   ignore: [], // domains to never track
@@ -297,11 +411,84 @@ const DEFAULT_SETTINGS = {
   eyeEnabled: true, // 20-20-20 eye breaks
   eyeIntervalMin: 20,
   eyeSnoozeMin: 5,
+  notificationSound: true, // let the OS play its notification chime
+
   officeMode: false, // water + stand reminders
   waterIntervalMin: 50,
   standIntervalMin: 60,
   recapEnabled: true, // morning "yesterday on Tabyss" notification
+  notificationDetails: false, // domain names may appear on the OS lock screen
 };
+
+function isPlainObject(value) {
+  if (!value || Object.prototype.toString.call(value) !== "[object Object]") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+function boundedNumber(value, min, max, fallback, integer = true) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  const bounded = Math.max(min, Math.min(max, number));
+  return integer ? Math.round(bounded) : bounded;
+}
+
+/* Settings are read through an allowlist. This prevents stale, malformed or
+ * imported values from becoming executable object keys or unbounded timers. */
+function sanitizeSettings(input) {
+  const source = isPlainObject(input) ? input : {};
+  const overrides = {};
+  if (isPlainObject(source.overrides)) {
+    for (const [rawDomain, category] of Object.entries(source.overrides)) {
+      const domain = normalizeDomainInput(rawDomain);
+      if (domain && CATEGORIES.includes(category)) overrides[domain] = category;
+    }
+  }
+
+  const goals = {};
+  if (isPlainObject(source.goals)) {
+    for (const category of CATEGORIES) {
+      if (category === "Other" || !Object.prototype.hasOwnProperty.call(source.goals, category)) continue;
+      const minutes = boundedNumber(source.goals[category], 0, 1440, 0);
+      if (minutes > 0) goals[category] = minutes;
+    }
+  }
+
+  const ignore = [];
+  const seen = new Set();
+  if (Array.isArray(source.ignore)) {
+    for (const value of source.ignore.slice(0, 1000)) {
+      const domain = normalizeDomainInput(value);
+      if (domain && !seen.has(domain)) {
+        seen.add(domain);
+        ignore.push(domain);
+      }
+    }
+  }
+
+  const bool = (key, fallback) => typeof source[key] === "boolean" ? source[key] : fallback;
+  return {
+    palette: normalizePalette(source.palette),
+    appearance: normalizeAppearance(source.appearance),
+    overrides,
+    goals,
+    ignore,
+    idleSeconds: boundedNumber(source.idleSeconds, 15, 600, DEFAULT_SETTINGS.idleSeconds),
+    retentionDays: boundedNumber(source.retentionDays, 7, 3650, DEFAULT_SETTINGS.retentionDays),
+    sunsetEnabled: bool("sunsetEnabled", DEFAULT_SETTINGS.sunsetEnabled),
+    sunsetHour: boundedNumber(source.sunsetHour, 20, 23, DEFAULT_SETTINGS.sunsetHour),
+    mediaEnabled: bool("mediaEnabled", DEFAULT_SETTINGS.mediaEnabled),
+    eyeEnabled: bool("eyeEnabled", DEFAULT_SETTINGS.eyeEnabled),
+    eyeIntervalMin: boundedNumber(source.eyeIntervalMin, 1, 120, DEFAULT_SETTINGS.eyeIntervalMin),
+    eyeSnoozeMin: boundedNumber(source.eyeSnoozeMin, 1, 30, DEFAULT_SETTINGS.eyeSnoozeMin),
+    notificationSound: bool("notificationSound", DEFAULT_SETTINGS.notificationSound),
+    officeMode: bool("officeMode", DEFAULT_SETTINGS.officeMode),
+    waterIntervalMin: boundedNumber(source.waterIntervalMin, 10, 240, DEFAULT_SETTINGS.waterIntervalMin),
+    standIntervalMin: boundedNumber(source.standIntervalMin, 15, 240, DEFAULT_SETTINGS.standIntervalMin),
+    recapEnabled: bool("recapEnabled", DEFAULT_SETTINGS.recapEnabled),
+    notificationDetails: bool("notificationDetails", DEFAULT_SETTINGS.notificationDetails),
+  };
+}
 
 /* ==================================================================
  * Persona doodle — deterministic generative avatar art.
@@ -408,10 +595,24 @@ function drawDoodle(canvas, persona, stats) {
 
 /* Chrome's built-in favicon cache — an extension-local URL, zero network.
  * Requires the "favicon" permission; only works inside extension pages. */
-function faviconUrl(domain, size) {
+function faviconUrl(pageOrDomain, size) {
   try {
+    const raw = String(pageOrDomain || "").trim();
+    if (!raw) return null;
+    let pageUrl;
+    try {
+      const parsed = new URL(raw);
+      if (!/^https?:$/.test(parsed.protocol)) return null;
+      if (parsed.username || parsed.password) return null;
+      parsed.hash = "";
+      pageUrl = parsed.toString();
+    } catch (_) {
+      const domain = normalizeDomainInput(raw);
+      if (!domain) return null;
+      pageUrl = `https://${domain}/`;
+    }
     const u = new URL(chrome.runtime.getURL("/_favicon/"));
-    u.searchParams.set("pageUrl", "https://" + domain);
+    u.searchParams.set("pageUrl", pageUrl);
     u.searchParams.set("size", String(size || 32));
     return u.toString();
   } catch (_) {
@@ -419,9 +620,637 @@ function faviconUrl(domain, size) {
   }
 }
 
+/* ==================================================================
+ * Favicon sourcing (ADR-028): Chrome's LOCAL /_favicon/ cache only —
+ * never a remote favicon service, and never a tab's own fav-icon URL
+ * field as an image source (when that field is http(s) it would trigger
+ * a network request). Preference: exact open-tab page URL → canonical
+ * domain → letter fallback.
+ * ================================================================== */
+
+/* Accept an open tab's URL only when it is safe to use as a favicon key:
+ * regular window, http(s), no embedded credentials. Returns the hash-free
+ * page URL, or null. */
+function safeTabPageUrl(tab) {
+  if (!tab || tab.incognito === true || typeof tab.url !== "string") return null;
+  try {
+    const parsed = new URL(tab.url);
+    if (!/^https?:$/.test(parsed.protocol)) return null;
+    if (parsed.username || parsed.password) return null;
+    parsed.hash = "";
+    return parsed.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
+/* Pure map builder (unit-tested): normalized domain → one exact safe page
+ * URL. Matching is exact on the normalized (www-stripped) hostname, so
+ * subdomains keep their boundaries: docs.google.com never stands in for
+ * google.com, and evil-example.com never matches example.com. Active tabs
+ * win; otherwise the most recently seen valid tab does. Held in memory
+ * only — never persisted, never handed to content scripts. */
+function buildOpenTabFaviconMap(tabs) {
+  const map = new Map();
+  const activeKeys = new Set();
+  for (const tab of Array.isArray(tabs) ? tabs : []) {
+    const pageUrl = safeTabPageUrl(tab);
+    if (!pageUrl) continue;
+    const host = new URL(pageUrl).hostname.replace(/^www\./, "");
+    const domain = normalizeDomainInput(host);
+    if (!domain) continue;
+    if (tab.active === true) {
+      map.set(domain, pageUrl);
+      activeKeys.add(domain);
+    } else if (!activeKeys.has(domain)) {
+      map.set(domain, pageUrl);
+    }
+  }
+  return map;
+}
+
+/* One tabs.query per render pass, shared by every row on the page.
+ * Only callable from trusted extension pages / the worker (content
+ * scripts have no chrome.tabs). Failure degrades to an empty map. */
+async function openTabFaviconMap() {
+  try {
+    const tabs = await chrome.tabs.query({});
+    return buildOpenTabFaviconMap(tabs);
+  } catch (_) {
+    return new Map();
+  }
+}
+
+/* Candidate list in preference order; every entry is a local /_favicon/
+ * URL. Bad inputs simply drop out. */
+function faviconCandidates(domain, exactPageUrl, size) {
+  return [
+    exactPageUrl ? faviconUrl(exactPageUrl, size) : null,
+    faviconUrl(domain, size),
+  ].filter(Boolean);
+}
+
+/* Shared, race-safe favicon renderer. The letter fallback is painted
+ * first so a broken-image glyph can never appear; a candidate only
+ * replaces it after a successful decode, and only if the container has
+ * not been re-rendered for another domain in the meantime. */
+let faviconRenderSeq = 0;
+function renderFavicon(container, { domain, exactPageUrl, size = 24 } = {}) {
+  if (!container) return;
+  const token = String(++faviconRenderSeq);
+  container.dataset.favToken = token;
+  container.replaceChildren();
+  container.classList.remove("has-favicon");
+  container.classList.add("is-fallback");
+  container.textContent = (domain?.[0] || "?").toUpperCase();
+
+  const candidates = faviconCandidates(domain, exactPageUrl, size);
+  let index = 0;
+  const tryNext = () => {
+    if (index >= candidates.length) return;
+    if (container.dataset.favToken !== token) return; // row re-rendered
+    const image = document.createElement("img");
+    image.alt = ""; // decorative: the domain text is always adjacent
+    image.width = size;
+    image.height = size;
+    image.decoding = "async";
+    image.addEventListener("load", () => {
+      if (container.dataset.favToken !== token || !container.isConnected) return;
+      container.replaceChildren(image);
+      container.classList.add("has-favicon");
+      container.classList.remove("is-fallback");
+    }, { once: true });
+    image.addEventListener("error", () => {
+      image.remove();
+      tryNext();
+    }, { once: true });
+    image.src = candidates[index++];
+  };
+  tryNext();
+}
+
 async function getSettings() {
   const { settings } = await chrome.storage.local.get("settings");
-  return Object.assign({}, DEFAULT_SETTINGS, settings || {});
+  const sanitized = sanitizeSettings(settings);
+  if (typeof document !== "undefined") applyAppearance(sanitized.palette, sanitized.appearance);
+  return sanitized;
+}
+
+/* ---------- V2 intention / focus-session state machine ---------- */
+const FOCUS_ACTIVE_VERSION = 1;
+const FOCUS_MAX_TEXT = 160;
+const FOCUS_MAX_DETAIL = 240;
+const FOCUS_MAX_RUNNING_MS = 12 * 60 * 60 * 1000;
+const FOCUS_MAX_HISTORY = 2000;
+const FOCUS_MAX_VISITED_DOMAINS = 24;
+const FOCUS_ABANDON_REASONS = ["", "changed-priority", "interrupted", "too-long", "other"];
+
+function focusFailure(code) {
+  const error = new Error(code);
+  error.code = code;
+  throw error;
+}
+
+function normalizeFocusText(value, maxLength, required = false) {
+  if (value == null && !required) return "";
+  if (typeof value !== "string") focusFailure("FOCUS_INVALID_TEXT");
+  const text = value.trim().replace(/\s+/g, " ");
+  if ((required && !text) || text.length > maxLength) focusFailure("FOCUS_INVALID_TEXT");
+  return text;
+}
+
+function focusMinutes(value, min, max, code = "FOCUS_INVALID_DURATION") {
+  const minutes = Number(value);
+  if (!Number.isInteger(minutes) || minutes < min || minutes > max) focusFailure(code);
+  return minutes;
+}
+
+function normalizeFocusVisitedDomains(value) {
+  if (value == null) return [];
+  if (!Array.isArray(value) || value.length > FOCUS_MAX_VISITED_DOMAINS) {
+    focusFailure("FOCUS_INVALID_SITES");
+  }
+  const domains = [];
+  const seen = new Set();
+  for (const raw of value) {
+    if (typeof raw !== "string") focusFailure("FOCUS_INVALID_SITES");
+    const domain = normalizeDomainInput(raw);
+    if (!domain) focusFailure("FOCUS_INVALID_SITES");
+    if (!seen.has(domain)) {
+      seen.add(domain);
+      domains.push(domain);
+    }
+  }
+  return domains;
+}
+
+/* Lenient reader for visitedDomains already in storage: drops bad entries and
+ * truncates instead of throwing, so a corrupt record can never poison snapshots. */
+function storedFocusVisitedDomains(value) {
+  if (!Array.isArray(value)) return [];
+  const domains = [];
+  const seen = new Set();
+  for (const raw of value) {
+    if (typeof raw !== "string") continue;
+    const domain = normalizeDomainInput(raw);
+    if (!domain || seen.has(domain)) continue;
+    seen.add(domain);
+    domains.push(domain);
+    if (domains.length >= FOCUS_MAX_VISITED_DOMAINS) break;
+  }
+  return domains;
+}
+
+function focusWithVisitedDomain(active, rawDomain) {
+  if (!active || !rawDomain) return active;
+  const domain = normalizeDomainInput(rawDomain);
+  if (!domain) return active;
+  const visitedDomains = storedFocusVisitedDomains(active.visitedDomains);
+  if (visitedDomains.includes(domain) || visitedDomains.length >= FOCUS_MAX_VISITED_DOMAINS) return active;
+  return { ...active, visitedDomains: [...visitedDomains, domain] };
+}
+
+function createFocusActive(input, now, id) {
+  if (!isPlainObject(input) || !Number.isFinite(now) || typeof id !== "string" || !id) {
+    focusFailure("FOCUS_INVALID_REQUEST");
+  }
+  const intention = normalizeFocusText(input.intention, FOCUS_MAX_TEXT, true);
+  const successDefinition = normalizeFocusText(input.successDefinition, FOCUS_MAX_DETAIL);
+  const visitedDomains = normalizeFocusVisitedDomains(input.visitedDomains);
+  const mode = input.mode === "stopwatch" ? "stopwatch" : input.mode === "timer" ? "timer" : null;
+  if (!mode) focusFailure("FOCUS_INVALID_MODE");
+  const targetMinutes = mode === "timer" ? focusMinutes(input.targetMinutes, 5, 240) : null;
+  return {
+    version: FOCUS_ACTIVE_VERSION,
+    id,
+    intention,
+    successDefinition,
+    visitedDomains,
+    mode,
+    targetMinutes,
+    targetMs: targetMinutes == null ? null : targetMinutes * 60000,
+    startedAt: now,
+    status: "running",
+    accumulatedMs: 0,
+    segmentStartedAt: now,
+    updatedAt: now,
+  };
+}
+
+function focusElapsedMs(active, now) {
+  if (!active) return 0;
+  let elapsed = Math.max(0, Number(active.accumulatedMs) || 0);
+  if (active.status === "running" && Number.isFinite(active.segmentStartedAt)) {
+    elapsed += Math.max(0, now - active.segmentStartedAt);
+  }
+  elapsed = Math.min(FOCUS_MAX_RUNNING_MS, elapsed);
+  if (active.mode === "timer" && Number.isFinite(active.targetMs)) elapsed = Math.min(active.targetMs, elapsed);
+  return Math.round(elapsed);
+}
+
+function focusRemainingMs(active, now) {
+  if (!active || active.mode !== "timer") return null;
+  return Math.max(0, active.targetMs - focusElapsedMs(active, now));
+}
+
+function focusNeedsReview(active, now) {
+  if (!active || active.status !== "running") return false;
+  if (active.mode === "timer") return focusRemainingMs(active, now) <= 0;
+  return focusElapsedMs(active, now) >= FOCUS_MAX_RUNNING_MS;
+}
+
+function focusView(active, now) {
+  if (!active) return null;
+  return {
+    version: active.version,
+    id: active.id,
+    intention: active.intention,
+    successDefinition: active.successDefinition || "",
+    visitedDomains: storedFocusVisitedDomains(active.visitedDomains),
+    mode: active.mode,
+    targetMinutes: active.targetMinutes,
+    targetMs: active.targetMs,
+    startedAt: active.startedAt,
+    status: active.status,
+    reviewReason: active.reviewReason || null,
+    elapsedMs: focusElapsedMs(active, now),
+    remainingMs: focusRemainingMs(active, now),
+    snapshotAt: now,
+  };
+}
+
+function focusTransition(active, action, now, payload = {}) {
+  if (!active) focusFailure("FOCUS_NOT_ACTIVE");
+  if (!Number.isFinite(now) || !isPlainObject(payload)) focusFailure("FOCUS_INVALID_REQUEST");
+  // A backwards clock jump (manual change, NTP correction) must never trap the
+  // session: clamp instead of rejecting so complete/abandon always work.
+  if (now < active.startedAt) now = active.startedAt;
+  const elapsed = focusElapsedMs(active, now);
+  const next = { ...active, updatedAt: now };
+
+  if (action === "pause") {
+    if (active.status !== "running") focusFailure("FOCUS_INVALID_TRANSITION");
+    next.status = "paused";
+    next.accumulatedMs = elapsed;
+    next.segmentStartedAt = null;
+    return { active: next };
+  }
+  if (action === "resume") {
+    if (active.status !== "paused") focusFailure("FOCUS_INVALID_TRANSITION");
+    next.status = "running";
+    next.segmentStartedAt = now;
+    return { active: next };
+  }
+  if (action === "review") {
+    if (!focusNeedsReview(active, now)) focusFailure("FOCUS_NOT_DUE");
+    next.status = "review";
+    next.accumulatedMs = elapsed;
+    next.segmentStartedAt = null;
+    next.reviewReason = active.mode === "timer" ? "timer" : "safety";
+    return { active: next };
+  }
+  if (action === "extend") {
+    if (active.mode !== "timer" || !["running", "paused", "review"].includes(active.status)) {
+      focusFailure("FOCUS_INVALID_TRANSITION");
+    }
+    const minutes = focusMinutes(payload.minutes, 1, 120);
+    const targetMs = active.targetMs + minutes * 60000;
+    if (targetMs > FOCUS_MAX_RUNNING_MS) focusFailure("FOCUS_INVALID_DURATION");
+    next.targetMs = targetMs;
+    next.targetMinutes = Math.round(targetMs / 60000);
+    // Same semantics from "running" and "review": overshoot past the old target
+    // is discarded and the clock re-anchors at the moment of extension.
+    if (active.status === "running" || active.status === "review") {
+      next.status = "running";
+      next.accumulatedMs = elapsed;
+      next.segmentStartedAt = now;
+      delete next.reviewReason;
+    }
+    return { active: next };
+  }
+  if (action === "complete" || action === "abandon") {
+    const note = normalizeFocusText(payload.note, FOCUS_MAX_DETAIL);
+    if (action === "abandon" && payload.reason != null && !FOCUS_ABANDON_REASONS.includes(payload.reason)) {
+      focusFailure("FOCUS_INVALID_REASON");
+    }
+    const abandonedReason = action === "abandon" ? (payload.reason || "") : "";
+    return {
+      active: null,
+      record: {
+        version: 1,
+        id: active.id,
+        day: dateKey(active.startedAt),
+        intention: active.intention,
+        successDefinition: active.successDefinition || "",
+        visitedDomains: storedFocusVisitedDomains(active.visitedDomains),
+        mode: active.mode,
+        targetMinutes: active.targetMinutes,
+        startedAt: active.startedAt,
+        endedAt: now,
+        focusedMs: elapsed,
+        outcome: action === "complete" ? "completed" : "abandoned",
+        abandonedReason,
+        note,
+      },
+    };
+  }
+  focusFailure("FOCUS_INVALID_ACTION");
+}
+
+function sanitizeFocusSessions(value) {
+  if (!Array.isArray(value)) importError("focusSessions", "must be an array");
+  if (value.length > FOCUS_MAX_HISTORY) importError("focusSessions", `contains more than ${FOCUS_MAX_HISTORY.toLocaleString()} entries`);
+  const ids = new Set();
+  const records = value.map((record, index) => {
+    const at = `focusSessions.${index}`;
+    if (!isPlainObject(record)) importError(at, "must be an object");
+    if (typeof record.id !== "string" || !/^[A-Za-z0-9_-]{8,100}$/.test(record.id) || ids.has(record.id)) {
+      importError(`${at}.id`, "invalid or duplicate session id");
+    }
+    ids.add(record.id);
+    let intention, successDefinition, note, visitedDomains;
+    try {
+      intention = normalizeFocusText(record.intention, FOCUS_MAX_TEXT, true);
+      successDefinition = normalizeFocusText(record.successDefinition, FOCUS_MAX_DETAIL);
+      note = normalizeFocusText(record.note, FOCUS_MAX_DETAIL);
+      visitedDomains = normalizeFocusVisitedDomains(record.visitedDomains);
+    } catch (_) {
+      importError(at, "contains invalid text or site domains");
+    }
+    if (!["timer", "stopwatch"].includes(record.mode)) importError(`${at}.mode`, "invalid mode");
+    if (!["completed", "abandoned"].includes(record.outcome)) importError(`${at}.outcome`, "invalid outcome");
+    const targetMinutes = record.mode === "timer"
+      ? requireCount(record.targetMinutes, `${at}.targetMinutes`, 720)
+      : null;
+    if (record.mode === "timer" && targetMinutes < 1) importError(`${at}.targetMinutes`, "must be positive");
+    const startedAt = requireCount(record.startedAt, `${at}.startedAt`, 4102444800000);
+    const endedAt = requireCount(record.endedAt, `${at}.endedAt`, 4102444800000);
+    if (startedAt < 946684800000 || endedAt < startedAt) {
+      importError(at, "contains an invalid time range");
+    }
+    const focusedMs = requireCount(record.focusedMs, `${at}.focusedMs`, FOCUS_MAX_RUNNING_MS);
+    const day = dateKey(startedAt);
+    const abandonedReason = record.outcome === "abandoned" && FOCUS_ABANDON_REASONS.includes(record.abandonedReason)
+      ? record.abandonedReason : "";
+    return {
+      version: 1,
+      id: record.id,
+      day,
+      intention,
+      successDefinition,
+      visitedDomains,
+      mode: record.mode,
+      targetMinutes,
+      startedAt,
+      endedAt,
+      focusedMs,
+      outcome: record.outcome,
+      abandonedReason,
+      note,
+    };
+  });
+  return records.sort((a, b) => a.endedAt - b.endedAt);
+}
+
+/* ---------- portable backup schema ---------- */
+const EXPORT_SCHEMA_VERSION = 4;
+const EXPORT_DATA_KEYS = ["usage", "hours", "switches", "holes", "notified", "media", "wellness", "focusSessions", "settings", "product"];
+const IMPORT_MAX_FILE_BYTES = 5 * 1024 * 1024;
+const DANGEROUS_OBJECT_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+/* Export salvages what it can, record by record: one bad stored focus session
+ * must never make the whole backup fail. The strict all-or-nothing validators
+ * remain the rule for imports, where the input is untrusted. */
+function exportableFocusSessions(value) {
+  if (!Array.isArray(value)) return [];
+  const kept = [];
+  const ids = new Set();
+  for (const record of value.slice(-FOCUS_MAX_HISTORY)) {
+    try {
+      const clean = sanitizeFocusSessions([record])[0];
+      if (ids.has(clean.id)) continue;
+      ids.add(clean.id);
+      kept.push(clean);
+    } catch (_) { /* skip unusable record */ }
+  }
+  return kept.sort((a, b) => a.endedAt - b.endedAt);
+}
+
+function buildExportPayload(source) {
+  const data = isPlainObject(source) ? source : {};
+  const out = {
+    exportedFrom: "Tabyss",
+    formatVersion: EXPORT_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+  };
+  for (const key of EXPORT_DATA_KEYS) {
+    if (key === "settings") out.settings = sanitizeSettings(data.settings);
+    else if (key === "focusSessions") out.focusSessions = exportableFocusSessions(data.focusSessions);
+    else if (key === "product") {
+      try {
+        out.product = sanitizeProductData(data.product);
+      } catch (_) {
+        out.product = defaultProductData();
+      }
+    }
+    else out[key] = isPlainObject(data[key]) ? data[key] : {};
+  }
+  return out;
+}
+
+function importError(path, detail) {
+  throw new Error(`${path}: ${detail}`);
+}
+
+function assertSafeJsonTree(root) {
+  const stack = [{ value: root, depth: 0, path: "export" }];
+  let nodes = 0;
+  while (stack.length) {
+    const { value, depth, path } = stack.pop();
+    if (++nodes > 150000) importError(path, "too many values");
+    if (depth > 12) importError(path, "nested too deeply");
+    if (value == null || typeof value !== "object") continue;
+    if (!Array.isArray(value) && !isPlainObject(value)) importError(path, "must contain plain JSON values");
+    for (const key of Object.keys(value)) {
+      if (DANGEROUS_OBJECT_KEYS.has(key)) importError(path, `unsafe key \"${key}\"`);
+      stack.push({ value: value[key], depth: depth + 1, path: `${path}.${key}` });
+    }
+  }
+}
+
+function validDateKey(key) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return false;
+  const [year, month, day] = key.split("-").map(Number);
+  const value = new Date(year, month - 1, day);
+  return value.getFullYear() === year && value.getMonth() === month - 1 && value.getDate() === day;
+}
+
+function requirePlainMap(value, path, maxKeys) {
+  if (!isPlainObject(value)) importError(path, "must be an object");
+  const keys = Object.keys(value);
+  if (keys.length > maxKeys) importError(path, `contains more than ${maxKeys} entries`);
+  return keys;
+}
+
+function requireCount(value, path, max = 315576000) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > max) {
+    importError(path, `must be a number from 0 to ${max}`);
+  }
+  return Math.round(value);
+}
+
+function sanitizeDomainDayMap(value, path) {
+  const out = {};
+  for (const day of requirePlainMap(value, path, 4000)) {
+    if (!validDateKey(day)) importError(`${path}.${day}`, "invalid date key");
+    const domains = value[day];
+    const clean = {};
+    for (const rawDomain of requirePlainMap(domains, `${path}.${day}`, 5000)) {
+      const domain = normalizeDomainInput(rawDomain);
+      if (!domain) importError(`${path}.${day}.${rawDomain}`, "invalid domain");
+      const count = requireCount(domains[rawDomain], `${path}.${day}.${rawDomain}`);
+      clean[domain] = Math.min(315576000, (clean[domain] || 0) + count);
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeHours(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "hours", 4000)) {
+    if (!validDateKey(day)) importError(`hours.${day}`, "invalid date key");
+    const clean = {};
+    for (const hour of requirePlainMap(value[day], `hours.${day}`, 24)) {
+      const number = Number(hour);
+      if (!/^\d{1,2}$/.test(hour) || number < 0 || number > 23) importError(`hours.${day}.${hour}`, "invalid hour");
+      // "5" and "05" collapse to the same bucket: sum, matching sanitizeDomainDayMap.
+      clean[number] = Math.min(86400, (clean[number] || 0) + requireCount(value[day][hour], `hours.${day}.${hour}`, 86400));
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeSwitches(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "switches", 4000)) {
+    if (!validDateKey(day)) importError(`switches.${day}`, "invalid date key");
+    out[day] = requireCount(value[day], `switches.${day}`, 1000000);
+  }
+  return out;
+}
+
+function sanitizeHoles(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "holes", 4000)) {
+    if (!validDateKey(day)) importError(`holes.${day}`, "invalid date key");
+    if (!Array.isArray(value[day]) || value[day].length > 24) importError(`holes.${day}`, "must contain at most 24 entries");
+    out[day] = value[day].map((hole, index) => {
+      const at = `holes.${day}.${index}`;
+      if (!isPlainObject(hole)) importError(at, "must be an object");
+      const domain = normalizeDomainInput(hole.domain);
+      if (!domain) importError(`${at}.domain`, "invalid domain");
+      return {
+        domain,
+        secs: requireCount(hole.secs, `${at}.secs`, 86400),
+        hour: requireCount(hole.hour, `${at}.hour`, 23),
+      };
+    });
+  }
+  return out;
+}
+
+function sanitizeNotified(value) {
+  const out = {};
+  for (const day of requirePlainMap(value, "notified", 4000)) {
+    if (!validDateKey(day)) importError(`notified.${day}`, "invalid date key");
+    const clean = {};
+    for (const category of requirePlainMap(value[day], `notified.${day}`, CATEGORIES.length)) {
+      if (!CATEGORIES.includes(category) || typeof value[day][category] !== "boolean") {
+        importError(`notified.${day}.${category}`, "invalid category flag");
+      }
+      clean[category] = value[day][category];
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeMedia(value) {
+  const out = {};
+  const kinds = ["video", "shorts", "scroll"];
+  for (const day of requirePlainMap(value, "media", 4000)) {
+    if (!validDateKey(day)) importError(`media.${day}`, "invalid date key");
+    const clean = {};
+    for (const kind of requirePlainMap(value[day], `media.${day}`, kinds.length)) {
+      if (!kinds.includes(kind)) importError(`media.${day}.${kind}`, "invalid media type");
+      clean[kind] = sanitizeDomainDayMap({ [day]: value[day][kind] }, `media.${kind}`)[day];
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+function sanitizeWellness(value) {
+  const out = {};
+  const fields = new Set(["eyeSkipped", "eyeTaken", "waterDone", "standDone"]);
+  for (const day of requirePlainMap(value, "wellness", 4000)) {
+    if (!validDateKey(day)) importError(`wellness.${day}`, "invalid date key");
+    const clean = {};
+    for (const field of requirePlainMap(value[day], `wellness.${day}`, fields.size)) {
+      if (!fields.has(field)) importError(`wellness.${day}.${field}`, "unknown wellness counter");
+      clean[field] = requireCount(value[day][field], `wellness.${day}.${field}`, 1000000);
+    }
+    out[day] = clean;
+  }
+  return out;
+}
+
+/* Validate before every restore, including restores requested by extension
+ * pages. The worker calls this again so a compromised page cannot bypass it. */
+function validateImportData(value) {
+  if (!isPlainObject(value)) importError("export", "must be a JSON object");
+  assertSafeJsonTree(value);
+  if (value.exportedFrom !== "Tabyss") importError("exportedFrom", "not a Tabyss backup");
+  if (value.formatVersion != null) {
+    const version = value.formatVersion;
+    if (!Number.isInteger(version) || version < 1) importError("formatVersion", "invalid backup version");
+    if (version > EXPORT_SCHEMA_VERSION) importError("formatVersion", "backup was created by a newer Tabyss version");
+  }
+
+  const importedKeys = EXPORT_DATA_KEYS.filter((key) => Object.prototype.hasOwnProperty.call(value, key));
+  if (!importedKeys.length) importError("export", "contains no restorable Tabyss data");
+  const patch = {};
+  const warnings = [];
+  if (importedKeys.includes("usage")) patch.usage = sanitizeDomainDayMap(value.usage, "usage");
+  if (importedKeys.includes("hours")) patch.hours = sanitizeHours(value.hours);
+  if (importedKeys.includes("switches")) patch.switches = sanitizeSwitches(value.switches);
+  if (importedKeys.includes("holes")) patch.holes = sanitizeHoles(value.holes);
+  if (importedKeys.includes("notified")) patch.notified = sanitizeNotified(value.notified);
+  if (importedKeys.includes("media")) patch.media = sanitizeMedia(value.media);
+  if (importedKeys.includes("wellness")) patch.wellness = sanitizeWellness(value.wellness);
+  if (importedKeys.includes("focusSessions")) patch.focusSessions = sanitizeFocusSessions(value.focusSessions);
+  if (importedKeys.includes("settings")) {
+    if (!isPlainObject(value.settings)) importError("settings", "must be an object");
+    const allowedSettings = new Set(Object.keys(DEFAULT_SETTINGS));
+    const ignoredSettings = Object.keys(value.settings).filter((key) => !allowedSettings.has(key));
+    if (ignoredSettings.length) warnings.push(`Ignored unknown settings: ${ignoredSettings.join(", ")}.`);
+    patch.settings = sanitizeSettings(value.settings);
+  }
+  if (importedKeys.includes("product")) {
+    try {
+      patch.product = sanitizeProductData(value.product);
+    } catch (_) {
+      importError("product", "could not be validated");
+    }
+  }
+
+  const knownTopLevel = new Set([...EXPORT_DATA_KEYS, "exportedFrom", "formatVersion", "exportedAt"]);
+  const ignored = Object.keys(value).filter((key) => !knownTopLevel.has(key));
+  if (value.formatVersion == null) warnings.push("Legacy backup: it will be upgraded to the current format.");
+  if (ignored.length) warnings.push(`Ignored unknown fields: ${ignored.join(", ")}.`);
+  return { patch, importedKeys, warnings };
 }
 
 /* ==================================================================
@@ -462,13 +1291,11 @@ function focusScoreForDay(usageDay, switchCount, holesArr, overrides) {
 }
 
 function scoreColor(score) {
-  if (score == null) return "#898781";
-  // amber must darken on light surfaces (#fab219 is ~1.8:1 there)
-  const dark =
-    typeof window !== "undefined" &&
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return score >= 70 ? "#0ca30c" : score >= 40 ? (dark ? "#fab219" : "#b45309") : "#d03b3b";
+  // Semantic tokens: the palette system already darkens amber on light
+  // surfaces (--warn-ink) and swaps all three per scheme. DOM/SVG only —
+  // canvas code must not call this (CSS variables don't resolve there).
+  if (score == null) return "var(--muted)";
+  return score >= 70 ? "var(--success)" : score >= 40 ? "var(--warn-ink)" : "var(--danger)";
 }
 function scoreLabel(score) {
   if (score == null) return "no data";
@@ -750,6 +1577,115 @@ function personaFor(stats, prevStats) {
 
 /* ---------- badge & Wrapped copy ---------- */
 
+/* ---------- drawn badge medallions (from the owner design prototype) ----------
+ * Apple-Fitness-style coins, one per badge id, drawn on canvas — consistent on
+ * every OS where emoji are not. Locked badges render in neutral grey. */
+const BADGE_ART = {
+  first_steps: { c1: "#5EEAD4", c2: "#0F766E", glyph: "steps" }, streak_3: { c1: "#FB923C", c2: "#C2410C", glyph: "flame" },
+  streak_7: { c1: "#F472B6", c2: "#9D174D", glyph: "rays" }, streak_30: { c1: "#C4B5FD", c2: "#5B21B6", glyph: "diamond" },
+  marathon: { c1: "#FBBF24", c2: "#B45309", glyph: "bolt" }, zen_day: { c1: "#67E8F9", c2: "#0E7490", glyph: "lotus" },
+  night_shift: { c1: "#818CF8", c2: "#312E81", glyph: "moon" }, century: { c1: "#FCD34D", c2: "#92400E", glyph: "100" },
+  explorer: { c1: "#86EFAC", c2: "#166534", glyph: "compass" }, goal_keeper: { c1: "#7DD3FC", c2: "#075985", glyph: "shield" },
+  clean_week: { c1: "#F9A8D4", c2: "#86198F", glyph: "spark" }, early_riser: { c1: "#FDBA74", c2: "#C2410C", glyph: "sunrise" },
+};
+function hexMix(a, b, t) {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  const c = pa.map((v, i) => Math.round(v + (pb[i] - v) * t));
+  return "rgb(" + c.join(",") + ")";
+}
+function drawBadge(canvas, id, earned) {
+  const art = BADGE_ART[id] || { c1: "#C4B5FD", c2: "#5B21B6", glyph: "spark" };
+  const c1 = earned ? art.c1 : "#C2C2CB", c2 = earned ? art.c2 : "#585864";
+  const ctx = canvas.getContext("2d"), W = canvas.width, cx = W / 2, cy = W / 2, R = W / 2 - 2;
+  ctx.clearRect(0, 0, W, W);
+  const N = 48, step = (Math.PI * 2) / N;
+  for (let i = 0; i < N; i++) {
+    const a = i * step - Math.PI / 2;
+    ctx.beginPath(); ctx.arc(cx, cy, R, a, a + step); ctx.arc(cx, cy, R * 0.845, a + step, a, true); ctx.closePath();
+    ctx.fillStyle = i % 2 ? hexMix(c1, c2, 0.78) : hexMix(c1, c2, 0.3);
+    ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.995, 0, Math.PI * 2); ctx.strokeStyle = "rgba(0,0,0,.2)"; ctx.lineWidth = W * 0.008; ctx.stroke();
+  const g = ctx.createRadialGradient(cx - R * 0.28, cy - R * 0.34, R * 0.05, cx, cy, R * 0.95);
+  g.addColorStop(0, hexMix(c1, "#FFFFFF", 0.3)); g.addColorStop(0.45, c1); g.addColorStop(1, c2);
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.845, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.845, 0, Math.PI * 2); ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.lineWidth = W * 0.012; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.72, 0, Math.PI * 2); ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = W * 0.008; ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R * 0.845, 0, Math.PI * 2); ctx.clip();
+  ctx.beginPath(); ctx.ellipse(cx, cy - R * 0.62, R * 0.78, R * 0.4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fill(); ctx.restore();
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = W * 0.035; ctx.shadowOffsetY = W * 0.014;
+  ctx.fillStyle = earned ? "#FFFFFF" : "rgba(255,255,255,.8)";
+  ctx.strokeStyle = ctx.fillStyle; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  drawBadgeGlyph(ctx, art.glyph, cx, cy, W, c2);
+  ctx.restore();
+  if (earned) {
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    [[0.3, -0.5], [-0.52, 0.18]].forEach(([dx, dy]) => {
+      const sx = cx + dx * R, sy = cy + dy * R, r = W * 0.022;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - r * 2); ctx.quadraticCurveTo(sx, sy, sx + r * 2, sy); ctx.quadraticCurveTo(sx, sy, sx, sy + r * 2); ctx.quadraticCurveTo(sx, sy, sx - r * 2, sy); ctx.quadraticCurveTo(sx, sy, sx, sy - r * 2);
+      ctx.fill();
+    });
+  }
+}
+function drawBadgeGlyph(ctx, glyph, cx, cy, u, deep) {
+  const lw = u * 0.045;
+  if (glyph === "steps") {
+    [[-0.13, 0.11, 0.045], [0, -0.005, 0.055], [0.135, -0.125, 0.066]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(cx + dx * u, cy + dy * u, r * u, 0, Math.PI * 2); ctx.fill(); });
+  } else if (glyph === "flame") {
+    ctx.beginPath(); ctx.moveTo(cx, cy - 0.18 * u);
+    ctx.quadraticCurveTo(cx + 0.15 * u, cy - 0.02 * u, cx + 0.095 * u, cy + 0.1 * u);
+    ctx.quadraticCurveTo(cx + 0.05 * u, cy + 0.165 * u, cx, cy + 0.165 * u);
+    ctx.quadraticCurveTo(cx - 0.12 * u, cy + 0.15 * u, cx - 0.1 * u, cy + 0.02 * u);
+    ctx.quadraticCurveTo(cx - 0.075 * u, cy - 0.07 * u, cx, cy - 0.18 * u);
+    ctx.fill();
+    ctx.fillStyle = deep; ctx.beginPath(); ctx.arc(cx, cy + 0.09 * u, 0.038 * u, 0, Math.PI * 2); ctx.fill();
+  } else if (glyph === "rays") {
+    ctx.lineWidth = lw;
+    for (let i = 0; i < 7; i++) { const a = -Math.PI / 2 + (i / 7) * Math.PI * 2; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 0.08 * u, cy + Math.sin(a) * 0.08 * u); ctx.lineTo(cx + Math.cos(a) * 0.165 * u, cy + Math.sin(a) * 0.165 * u); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(cx, cy, 0.045 * u, 0, Math.PI * 2); ctx.fill();
+  } else if (glyph === "diamond") {
+    ctx.beginPath(); ctx.moveTo(cx, cy - 0.16 * u); ctx.lineTo(cx + 0.135 * u, cy); ctx.lineTo(cx, cy + 0.16 * u); ctx.lineTo(cx - 0.135 * u, cy); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = deep; ctx.lineWidth = u * 0.012;
+    ctx.beginPath(); ctx.moveTo(cx, cy - 0.16 * u); ctx.lineTo(cx, cy + 0.16 * u); ctx.moveTo(cx - 0.135 * u, cy); ctx.lineTo(cx + 0.135 * u, cy); ctx.stroke();
+  } else if (glyph === "bolt") {
+    ctx.beginPath(); ctx.moveTo(cx + 0.045 * u, cy - 0.18 * u); ctx.lineTo(cx - 0.1 * u, cy + 0.025 * u); ctx.lineTo(cx - 0.008 * u, cy + 0.025 * u); ctx.lineTo(cx - 0.05 * u, cy + 0.18 * u); ctx.lineTo(cx + 0.1 * u, cy - 0.04 * u); ctx.lineTo(cx + 0.008 * u, cy - 0.04 * u); ctx.closePath(); ctx.fill();
+  } else if (glyph === "lotus") {
+    [[-0.62, 0], [0, 0], [0.62, 0]].forEach(([rot]) => {
+      ctx.save(); ctx.translate(cx, cy + 0.02 * u); ctx.rotate(rot);
+      ctx.beginPath(); ctx.ellipse(0, -0.055 * u, 0.052 * u, 0.125 * u, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    });
+    ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(cx, cy + 0.1 * u, 0.13 * u, 0.35, Math.PI - 0.35); ctx.stroke();
+  } else if (glyph === "moon") {
+    ctx.beginPath(); ctx.arc(cx, cy, 0.15 * u, Math.PI * 0.28, Math.PI * 1.78);
+    ctx.arc(cx + 0.07 * u, cy - 0.015 * u, 0.115 * u, Math.PI * 1.72, Math.PI * 0.34, true);
+    ctx.closePath(); ctx.fill();
+  } else if (glyph === "100") {
+    ctx.font = "700 " + u * 0.21 + "px " + "system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("100", cx, cy + u * 0.012);
+  } else if (glyph === "compass") {
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(0.5);
+    ctx.beginPath(); ctx.moveTo(0, -0.17 * u); ctx.lineTo(0.045 * u, -0.045 * u); ctx.lineTo(0.17 * u, 0); ctx.lineTo(0.045 * u, 0.045 * u); ctx.lineTo(0, 0.17 * u); ctx.lineTo(-0.045 * u, 0.045 * u); ctx.lineTo(-0.17 * u, 0); ctx.lineTo(-0.045 * u, -0.045 * u); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = deep; ctx.beginPath(); ctx.arc(0, 0, 0.028 * u, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  } else if (glyph === "shield") {
+    ctx.beginPath(); ctx.moveTo(cx - 0.12 * u, cy - 0.12 * u); ctx.lineTo(cx + 0.12 * u, cy - 0.12 * u); ctx.lineTo(cx + 0.12 * u, cy + 0.01 * u);
+    ctx.quadraticCurveTo(cx + 0.12 * u, cy + 0.12 * u, cx, cy + 0.17 * u);
+    ctx.quadraticCurveTo(cx - 0.12 * u, cy + 0.12 * u, cx - 0.12 * u, cy + 0.01 * u); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = deep; ctx.lineWidth = u * 0.032;
+    ctx.beginPath(); ctx.moveTo(cx - 0.05 * u, cy); ctx.lineTo(cx - 0.008 * u, cy + 0.05 * u); ctx.lineTo(cx + 0.062 * u, cy - 0.055 * u); ctx.stroke();
+  } else if (glyph === "spark") {
+    ctx.beginPath(); ctx.moveTo(cx, cy - 0.17 * u); ctx.quadraticCurveTo(cx + 0.02 * u, cy - 0.02 * u, cx + 0.17 * u, cy); ctx.quadraticCurveTo(cx + 0.02 * u, cy + 0.02 * u, cx, cy + 0.17 * u); ctx.quadraticCurveTo(cx - 0.02 * u, cy + 0.02 * u, cx - 0.17 * u, cy); ctx.quadraticCurveTo(cx - 0.02 * u, cy - 0.02 * u, cx, cy - 0.17 * u); ctx.fill();
+  } else if (glyph === "sunrise") {
+    ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(cx - 0.16 * u, cy + 0.08 * u); ctx.lineTo(cx + 0.16 * u, cy + 0.08 * u); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy + 0.08 * u, 0.09 * u, Math.PI, 0); ctx.closePath(); ctx.fill();
+    for (let i = 0; i < 5; i++) { const a = Math.PI + (i + 0.5) * (Math.PI / 5); ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 0.125 * u, cy + 0.08 * u + Math.sin(a) * 0.125 * u); ctx.lineTo(cx + Math.cos(a) * 0.175 * u, cy + 0.08 * u + Math.sin(a) * 0.175 * u); ctx.stroke(); }
+  }
+}
+
 const BADGE_COPY = [
   { id: "first_steps", name: "First Steps", emoji: "🐣", description: "Log your first day of tracked browsing. Everyone starts somewhere." },
   { id: "streak_3", name: "Warming Up", emoji: "🔥", description: "Three days straight with 30+ productive minutes. Keep it rolling." },
@@ -776,3 +1712,27 @@ const WRAPPED_COPY = [
   { id: "persona", title: "The data has spoken...", subtitle: "Seven days of clicks, distilled into one true internet self. Own it." },
   { id: "share", title: "Post it or it didn't happen", subtitle: "Save your card and show the group chat. Tracked in private, flexed in public." },
 ];
+
+/* Apply the locally stored palette + appearance on every extension page.
+ * System is the no-attribute state, so CSS keeps reacting to OS changes; the
+ * matchMedia listener only re-notifies chart/canvas code to redraw. */
+if (typeof document !== "undefined") {
+  getSettings().catch(() => applyAppearance("cobalt", "system"));
+  if (typeof chrome !== "undefined" && chrome.storage?.onChanged?.addListener) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && changes.settings) {
+        const next = sanitizeSettings(changes.settings.newValue);
+        applyAppearance(next.palette, next.appearance);
+      }
+    });
+  }
+  const systemTheme = typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  systemTheme?.addEventListener?.("change", () => {
+    if (!document.documentElement.dataset.theme && typeof CustomEvent !== "undefined") {
+      document.dispatchEvent(new CustomEvent("tabyss-theme-change", {
+        detail: { palette: document.documentElement.dataset.palette || "cobalt", appearance: "system" },
+      }));
+    }
+  });
+}
