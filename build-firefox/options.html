@@ -8,19 +8,12 @@
   </head>
   <body>
     <main class="opt">
-      <!-- Sticky: Save used to sit two thirds down the page between sections,
-           so on a long settings page you could not tell whether your change
-           had been kept without scrolling to find it. -->
       <header class="opthead">
-        <div class="opthead-copy">
+        <div>
           <h1><img class="brandmark page-brandmark" src="icon48.png" alt="" /> Tabyss settings</h1>
           <p class="sub">Everything is stored on this device. Nothing is uploaded.</p>
         </div>
-        <div class="opthead-actions">
-          <span id="status" class="saved" role="status" aria-live="polite" hidden></span>
-          <button id="openDash" class="btn">Open dashboard ▸</button>
-          <button id="save" class="btn primary">Save</button>
-        </div>
+        <button id="openDash" class="btn">Open dashboard ▸</button>
       </header>
 
       <details class="optsec appearance-section" open>
@@ -72,84 +65,31 @@
       <details class="optsec">
         <summary><h2>Breaks &amp; office mode</h2><span class="sumhint">Eye breaks, water &amp; stand</span></summary>
         <div class="secbody">
-          <!-- Switch rows, not checkbox+label+sentence: the old 150px fixed
-               label wrapped "Media detection" and "Notification sound" onto two
-               lines while the box stayed centred. Label and hint stack on the
-               left, the switch sits on the right, nothing wraps. -->
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Eye breaks</span>
-              <span class="sethint">Look 20 feet away for 20 seconds</span>
-            </span>
-            <span class="setctl">
-              <input id="eyeInterval" type="number" min="1" max="120" aria-label="Eye break interval in minutes of screen time" />
-              <span class="unit">min</span>
-              <span class="switch"><input id="eyeOn" type="checkbox" /><i></i></span>
-            </span>
+          <p class="hint">20-20-20 eye breaks blur the page for 20 seconds after continuous screen time. Office mode adds water and stand-up reminders while you're at the desk.</p>
+          <div class="goalrow">
+            <label class="glabel" for="eyeOn"><input id="eyeOn" type="checkbox" style="width:auto" /> <span>👀 Eye breaks</span></label>
+            <input id="eyeInterval" type="number" min="5" max="120" aria-label="Eye break interval in minutes of screen time" />
+            <span class="unit">min screen time (snooze <input id="eyeSnooze" type="number" min="1" max="30" style="width:56px" aria-label="Eye break snooze duration in minutes" /> min)</span>
           </div>
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Office mode</span>
-              <span class="sethint">Water and stand-up reminders while you are at the desk</span>
-            </span>
-            <span class="setctl">
-              <span class="unit">water</span>
-              <input id="waterInterval" type="number" min="10" max="240" aria-label="Water reminder interval in minutes" />
-              <span class="unit">stand</span>
-              <input id="standInterval" type="number" min="15" max="240" aria-label="Stand-up reminder interval in minutes" />
-              <span class="switch"><input id="officeOn" type="checkbox" /><i></i></span>
-            </span>
+          <div class="goalrow">
+            <label class="glabel" for="officeOn"><input id="officeOn" type="checkbox" style="width:auto" /> <span>🏢 Office mode</span></label>
+            <span class="unit">💧 every</span>
+            <input id="waterInterval" type="number" min="10" max="240" aria-label="Water reminder interval in minutes" />
+            <span class="unit">min · 🚶 every</span>
+            <input id="standInterval" type="number" min="15" max="240" aria-label="Stand-up reminder interval in minutes" />
+            <span class="unit">min</span>
           </div>
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Snooze length</span>
-              <span class="sethint">How long Snooze pushes a break back</span>
-            </span>
-            <span class="setctl">
-              <input id="eyeSnooze" type="number" min="1" max="30" aria-label="Snooze duration in minutes" />
-              <span class="unit">min</span>
-            </span>
+          <div class="goalrow">
+            <label class="glabel" for="mediaOn"><input id="mediaOn" type="checkbox" style="width:auto" /> <span>🎬 Media detection</span></label>
+            <span class="unit">track video watch-time, Reels/Shorts and feed doomscrolling</span>
           </div>
-
-          <fieldset class="breakstyle">
-            <legend>How a break asks for you</legend>
-            <div class="seg">
-              <input type="radio" name="breakStyle" id="breakCover" value="cover" aria-label="Cover the page" checked />
-              <label for="breakCover"><b>Cover</b><span>blurs the page</span></label>
-              <input type="radio" name="breakStyle" id="breakSide" value="side" aria-label="Corner card" />
-              <label for="breakSide"><b>Corner</b><span>never blocks</span></label>
-              <input type="radio" name="breakStyle" id="breakNotify" value="notify" aria-label="Notification only" />
-              <label for="breakNotify"><b>Notification</b><span>off the page</span></label>
-            </div>
-          </fieldset>
-
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Media detection</span>
-              <span class="sethint">Video watch-time and Reels/Shorts playback</span>
-            </span>
-            <span class="setctl"><span class="switch"><input id="mediaOn" type="checkbox" /><i></i></span></span>
+          <div class="goalrow">
+            <label class="glabel" for="recapOn"><input id="recapOn" type="checkbox" style="width:auto" /> <span>🌅 Daily recap</span></label>
+            <span class="unit">a morning notification with yesterday's total and focus score</span>
           </div>
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Daily recap</span>
-              <span class="sethint">A morning notification with yesterday total and focus score</span>
-            </span>
-            <span class="setctl"><span class="switch"><input id="recapOn" type="checkbox" /><i></i></span></span>
-          </div>
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Notification sound</span>
-              <span class="sethint">Off keeps the reminder, silences the chime</span>
-            </span>
-            <span class="setctl"><span class="switch"><input id="notificationSound" type="checkbox" /><i></i></span></span>
-          </div>
-          <div class="setrow">
-            <span class="setcopy">
-              <span class="setname">Site names in notifications</span>
-              <span class="sethint">Off by default so lock-screen previews stay private</span>
-            </span>
-            <span class="setctl"><span class="switch"><input id="notificationDetails" type="checkbox" /><i></i></span></span>
+          <div class="goalrow">
+            <label class="glabel" for="notificationDetails"><input id="notificationDetails" type="checkbox" style="width:auto" /> <span>Show site names in notifications</span></label>
+            <span class="unit">off by default so lock-screen previews stay private</span>
           </div>
         </div>
       </details>
@@ -184,6 +124,11 @@
           </div>
         </div>
       </details>
+
+      <div class="btnrow savebar">
+        <button id="save" class="btn primary">Save</button>
+        <span id="status" class="saved" role="alert" style="display:none"></span>
+      </div>
 
       <details class="optsec">
         <summary><h2>Your data</h2><span class="sumhint">Export, restore, reset</span></summary>

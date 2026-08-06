@@ -4,7 +4,10 @@ Decisions are newest-on-top once accepted. Proposed records provide options and 
 
 | ID | Decision | Status |
 |---|---|---|
-| [ADR-026](ADR-026-abyss-ember-themes.md) | Adopt Abyss & Ember with user-selected themes | Accepted; supersedes ADR-020 visual tokens/geometry |
+| [ADR-029](ADR-029-prototype-design-parity.md) | Design-prototype parity, wave 1 | Accepted; wave-2 items Proposed |
+| [ADR-028](ADR-028-local-favicon-sourcing.md) | Exact-open-tab favicon sourcing from Chrome's local cache | Accepted |
+| [ADR-027](ADR-027-colour-personalization.md) | Colour personalization: six palettes × three appearance modes | Accepted; supersedes ADR-026 single-palette clause |
+| [ADR-026](ADR-026-abyss-ember-themes.md) | Adopt Abyss & Ember with user-selected themes | Accepted; single-palette clause superseded by ADR-027 |
 | [ADR-025](ADR-025-one-click-session-and-sites.md) | One-click session end and visited sites | Accepted; supersedes ADR-024 checkout scope |
 | [ADR-024](ADR-024-simple-optional-session.md) | Make Intentional Sessions simple and optional | Accepted; supersedes ADR-019/020 popup scope |
 | [ADR-023](ADR-023-saved-pages-simplification.md) | Simplify V2 around Focus, insights, and Saved pages | Accepted; supersedes ADR-021 product-surface scope |

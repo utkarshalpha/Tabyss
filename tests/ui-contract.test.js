@@ -42,28 +42,53 @@ test("Saved pages replaces the multi-section Command Center with accessible cont
   }
 });
 
-test("popup keeps the optional intentional session simple and secondary", () => {
+test("the intentional session stays secondary behind its header dial", () => {
   const html = fs.readFileSync(path.join(root, "popup.html"), "utf8");
   const js = fs.readFileSync(path.join(root, "popup.js"), "utf8");
-  assert.ok(html.indexOf('class="today-card"') < html.indexOf('class="focuscard"'), "Today should lead the popup");
-  assert.match(html, /<h2 id="focusHeading">Start a session<\/h2>/);
-  assert.match(html, /An optional timer for what you are doing now\./);
-  assert.match(html, /<option value="25" selected>25 min<\/option>/);
-  assert.match(html, />Start<\/button>/);
+  // Secondary is now expressed by the sheet being closed, not by DOM order:
+  // it drops from the dial, so it has to precede the cards it covers.
+  assert.match(html, /<section id="focusPanel" class="focus-sheet"[^>]*hidden>/);
+  assert.match(html, /id="focusToggle"[^>]*aria-expanded="false"[^>]*aria-controls="focusPanel"/s);
+  assert.match(html, /<h2 id="focusHeading">What matters now\?<\/h2>/);
+  assert.match(html, /id="focusIntention"[^>]*aria-labelledby="focusHeading"/s, "the heading labels the field");
+  // Duration is a segmented control, not a dropdown.
+  assert.doesNotMatch(html, /id="focusDuration"/);
+  for (const value of ["25", "50", "90", "stopwatch"]) {
+    assert.match(html, new RegExp(`type="radio" name="focusDuration"[^>]*value="${value}"`));
+  }
+  assert.match(html, /id="dur25"[^>]*checked/, "25 minutes is the default length");
+  for (const spoken of ["25 minutes", "50 minutes", "90 minutes", "Open-ended, no timer"]) {
+    assert.match(html, new RegExp(`aria-label="${spoken}"`), "each length needs a spoken name");
+  }
+  assert.match(js, /input\[name="focusDuration"\]:checked/);
+  assert.match(html, />Start session<\/button>/);
   assert.match(html, /aria-label="Session progress"/);
   assert.match(html, /aria-label="Sites visited in this session"/);
   assert.match(html, /id="focusComplete"[^>]*>Complete<\/button>/);
   assert.match(html, /id="focusAbandon"[^>]*aria-label="End without completing"[^>]*>End<\/button>/);
-  assert.match(js, /successDefinition: ""/);
-  assert.match(js, /reason: ""/);
-  assert.match(js, /note: ""/);
-  for (const removedId of ["focusSuccess", "focusSuccessView", "focusReason", "focusFinish", "focusCheckout", "focusNote", "focusCheckoutBack"]) {
-    assert.doesNotMatch(html, new RegExp(`id="${removedId}"`));
-    assert.doesNotMatch(js, new RegExp(`getElementById\\("${removedId}"\\)`));
+  // A live session must never be hidden behind a collapsed sheet.
+  assert.match(js, /setFocusPanel\(true\);/);
+  // Today's details open by default; the office-mode failure keeps its own
+  // message now that the session error lives in a sheet that may be closed.
+  assert.match(html, /<details class="popup-more" open>/);
+  assert.match(html, /id="officeError"/);
+});
+
+test("the dial is a drawn instrument, and labels are not set in monospace", () => {
+  const html = fs.readFileSync(path.join(root, "popup.html"), "utf8");
+  const js = fs.readFileSync(path.join(root, "popup.js"), "utf8");
+  const css = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  for (const part of ["dialArc", "dialHour", "dialMin", "dial-ticks", "dial-pin"]) {
+    assert.match(html, new RegExp(part), `the dial needs its ${part}`);
   }
-  for (const removedCopy of ["One thing at a time", "Make space for what matters", "Add a finish line", "End unfinished", "Finish session", "How did this session go?"]) {
-    assert.doesNotMatch(html, new RegExp(removedCopy));
-  }
+  assert.match(js, /function renderDial\(focus, elapsed\)/);
+  assert.match(css, /--display: "Bahnschrift"/);
+  assert.match(css, /--label: var\(--display\)/);
+  assert.match(css, /--figure: var\(--display\)/);
+  // Monospace survives only where the content really is technical text.
+  const monoUses = [...css.matchAll(/^(.*)font-family: var\(--mono\)/gm)].map((m) => m[1]);
+  assert.equal(monoUses.length, 2, `monospace should be reserved for domain lists, found: ${monoUses}`);
+  for (const use of monoUses) assert.match(use, /\.field textarea|\.assignrow \.ad/);
 });
 
 test("dashboard session history exposes the domain-only visited-site trail", () => {

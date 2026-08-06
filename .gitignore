@@ -3,3 +3,6 @@ Thumbs.db
 .DS_Store
 desktop.ini
 tmp/
+
+# Live unpacked install — a full copy of the runtime, not source.
+tabyss-v2-wave1-review/

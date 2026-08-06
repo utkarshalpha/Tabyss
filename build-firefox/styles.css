@@ -14,15 +14,7 @@
   --radius-tooltip: 18px;
   --radius-shell: 22px;
   --radius-hero: 24px;
-  /* Type system. A DIN-derived signage face carries display, labels and
-   * figures: it suits an instrument dial, it ships with Windows 10+ and has
-   * close equivalents on macOS, so there is no webfont payload and no network
-   * request to make. True monospace is reserved for editable technical text
-   * (domain lists) — using it for section labels is what made the UI read
-   * like a terminal. */
-  --display: "Bahnschrift", "DIN Alternate", "Avenir Next Condensed", "Segoe UI Variable Display", "SF Pro Display", system-ui, sans-serif;
-  --label: var(--display);
-  --figure: var(--display);
+  --display: ui-rounded, "Arial Rounded MT Bold", "Segoe UI", system-ui, sans-serif;
   --mono: "Cascadia Code", "SFMono-Regular", Consolas, ui-monospace, monospace;
   --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --success: #1F9D62;
@@ -518,8 +510,7 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
   * { transition: none !important; animation: none !important; }
 }
 
-/* ".mono" means "line the digits up", not "use a typewriter face". */
-.mono { font-family: var(--figure); font-variant-numeric: tabular-nums; letter-spacing: -0.005em; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--grad); display: inline-block; }
 .brandmark { display: block; width: 28px; height: 28px; border-radius: 8px; flex: none; }
 .page-brandmark { width: 30px; height: 30px; border-radius: 9px; }
@@ -563,155 +554,44 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .popup-head-actions { display: flex; align-items: center; gap: 0.1rem; }
 .popup-main { display: grid; gap: 0.75rem; padding: 0.75rem; }
 
-/* ---------- the session dial ----------
- * Idle it is a drawn wall clock at 10:10; running it is an instrument. Same
- * geometry, different register — popup.js moves the hands and the ring. */
-.dialbtn { position: relative; }
-.dial { width: 20px; height: 20px; overflow: visible; }
-/* The case follows the icon colour rather than --track: on the dark surfaces
- * --track sits a few points off the background and the dial lost its circle,
- * leaving two bare hands that read as a stray mark. */
-.dial-track { fill: none; stroke: currentColor; stroke-width: 1.9; opacity: 0.38; }
-.dial-arc {
-  fill: none; stroke: var(--brand); stroke-width: 2; stroke-linecap: round;
-  transform: rotate(-90deg); transform-origin: 12px 12px;
-  transition: stroke-dasharray 0.4s linear;
-}
-.dial-ticks { stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; opacity: 0.45; }
-.dial-hand { stroke: currentColor; stroke-width: 1.95; stroke-linecap: round; }
-.dial-hour { opacity: 0.72; transition: opacity 0.3s ease; }
-.dial-pin { fill: currentColor; }
-.dialbtn[data-state="idle"] .dial-arc { opacity: 0; }
-/* Live: the dial takes the brand colour and drops its hour hand, so it reads
- * as a timer rather than a clock at a glance. */
-.dialbtn:not([data-state="idle"]) { color: var(--brand); background: var(--brand-soft); }
-.dialbtn:not([data-state="idle"]) .dial-hour { opacity: 0; }
-.dialbtn:not([data-state="idle"]) .dial-min { stroke-width: 2; }
-.dialbtn[data-state="paused"] { color: var(--muted); background: transparent; }
-.dialbtn[data-state="paused"] .dial-arc { stroke: var(--muted); }
-.dialbtn[data-state="review"] .dial-arc { stroke: var(--warn); }
-.dialbtn[data-state="review"] { color: var(--warn-ink); }
-.dialbtn[aria-expanded="true"] { background: var(--brand-soft); border-color: var(--border); color: var(--brand); }
-
-/* ---------- the session sheet ----------
- * Drops from the dial: the notch lines up with the button so the control and
- * the surface read as one object. */
-.focus-sheet {
-  position: relative; padding: 0.85rem 0.9rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border));
+/* compact, optional intentional session */
+.focuscard {
+  padding: 0.85rem 0.9rem; overflow: hidden; position: relative;
+  border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  background:
-    radial-gradient(120% 90% at 78% -30%, var(--brand-soft), transparent 62%),
-    var(--card);
-  box-shadow: var(--shadow-card);
-  animation: sheet-drop 0.18s ease-out;
+  background: var(--surface);
 }
-.focus-sheet[hidden] { display: none; }
-.focus-sheet::before {
-  /* Notch, centred on the dial: the sheet's right edge sits 95.6px right of
-   * the dial's centre (header padding + the two buttons beyond it + half a
-   * button, less the main padding), so half the notch has to clear that. */
-  content: ""; position: absolute; top: -6px; right: 90px;
-  width: 11px; height: 11px; transform: rotate(45deg);
-  background: color-mix(in srgb, var(--brand-soft) 60%, var(--card));
-  border-top: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border));
-  border-left: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border));
-  border-top-left-radius: 3px;
-}
-@keyframes sheet-drop { from { opacity: 0; transform: translateY(-6px); } }
-.focus-sheet-head { display: flex; align-items: center; gap: 0.5rem; }
-.focus-close {
-  margin-left: auto; flex: none; display: grid; place-items: center;
-  width: 24px; height: 24px; border-radius: 7px;
-  border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer;
-}
-.focus-close:hover { background: var(--track); color: var(--ink); }
-/* Doubles as the intention line once a session is live, so it has to survive
- * a 160-character answer without breaking the sheet. */
-.focus-sheet h2 {
-  font-size: 1.02rem; line-height: 1.25; margin: 0.3rem 0 0.6rem;
-  letter-spacing: -0.012em; overflow-wrap: anywhere;
-}
+.focuscard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.7rem; }
 .focus-kicker, .eyebrow {
-  font-family: var(--label); font-stretch: 87.5%; font-size: 0.63rem; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.66rem; font-weight: 750;
+  letter-spacing: 0.09em; text-transform: uppercase;
 }
 .focus-kicker { color: var(--muted); }
 .eyebrow { color: var(--brand); }
+.focuscard h2 { font-size: 0.92rem; line-height: 1.25; margin: 0.14rem 0 0; letter-spacing: -0.012em; }
+.focus-intro { color: var(--ink2); font-size: 0.8rem; line-height: 1.35; margin: 0.2rem 0 0; }
 .focus-status {
-  flex: none; padding: 0.24rem 0.5rem; border-radius: 99px;
+  flex: none; padding: 0.28rem 0.54rem; border-radius: 99px;
   color: var(--brand); background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent);
-  font-family: var(--label); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em;
+  font-size: 0.66rem; font-weight: 720;
 }
-.focus-create { display: flex; flex-direction: column; gap: 0.55rem; }
+.focus-create { display: flex; flex-direction: column; gap: 0.42rem; margin-top: 0.65rem; }
 .focus-create[hidden] { display: none; }
-.focus-intention, .focus-sheet textarea, .focus-sheet select {
+.focus-intention, .focuscard textarea, .focuscard select {
   width: 100%; min-height: 40px; font: inherit; color: var(--ink); background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius-control);
 }
 .focus-label { color: var(--ink2); font-size: 0.8rem; font-weight: 650; }
-/* The heading asks the question, so the field carries no second label — it
- * just needs to look like the place the answer goes. */
-.focus-intention {
-  padding: 0.66rem 0.72rem; font-size: 0.88rem; font-weight: 560;
-  border-color: color-mix(in srgb, var(--brand) 22%, var(--border));
-}
-.focus-intention:focus { border-color: var(--brand); }
-.focus-intention::placeholder, .focus-sheet textarea::placeholder { color: var(--muted); opacity: 1; }
-.focus-sheet textarea { padding: 0.58rem 0.65rem; resize: vertical; line-height: 1.35; }
-.focus-sheet select { padding: 0.52rem 0.56rem; }
-
-/* Duration: a bezel of four marks, not a dropdown. */
-.focus-dur { margin: 0; padding: 0; border: 0; min-width: 0; }
-.seg {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px;
-  padding: 3px; border-radius: 12px; background: var(--track);
-  border: 1px solid var(--border);
-}
-.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.seg label {
-  display: grid; place-items: center; gap: 0.05rem; padding: 0.36rem 0.2rem;
-  border-radius: 9px; cursor: pointer; color: var(--ink2);
-  transition: background 0.14s ease, color 0.14s ease;
-}
-.seg label b {
-  font-family: var(--figure); font-variant-numeric: tabular-nums;
-  font-size: 0.88rem; font-weight: 700; line-height: 1; letter-spacing: -0.01em;
-}
-.seg label span { font-size: 0.56rem; color: var(--muted); letter-spacing: 0.02em; }
-.seg label:hover { background: color-mix(in srgb, var(--card) 70%, transparent); }
-.seg input:checked + label { background: var(--brand-action); color: var(--on-brand); box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-action) 30%, transparent); }
-.seg input:checked + label span { color: var(--on-brand); opacity: 0.78; }
-/* Offset past the track so the ring lands on the sheet, not on the brand fill
- * of the segment it is ringing — same colour on same colour reads as nothing. */
-.seg input:focus-visible + label { outline: 2px solid var(--focus-ring); outline-offset: 4px; }
-
-/* Define done: a ghost chip that stays out of the way until it is wanted. */
-.focus-definedone { margin: -0.1rem 0 0; }
-.focus-definedone > summary {
-  list-style: none; display: inline-flex; align-items: center; gap: 0.38rem;
-  padding: 0.26rem 0.58rem 0.26rem 0.42rem; border-radius: 99px;
-  border: 1px dashed color-mix(in srgb, var(--muted) 45%, transparent);
-  color: var(--ink2); font-size: 0.74rem; font-weight: 600; cursor: pointer;
-}
-.focus-definedone > summary::-webkit-details-marker { display: none; }
-.focus-definedone > summary:hover { border-style: solid; border-color: var(--brand); color: var(--brand); }
-.dd-mark { position: relative; width: 11px; height: 11px; flex: none; }
-.dd-mark::before, .dd-mark::after {
-  content: ""; position: absolute; inset: 50% 0 auto; height: 1.5px; border-radius: 2px;
-  background: currentColor; transform: translateY(-50%);
-}
-.dd-mark::after { transform: translateY(-50%) rotate(90deg); transition: transform 0.16s ease; }
-.focus-definedone[open] > summary { border-style: solid; border-color: var(--brand); color: var(--brand); }
-.focus-definedone[open] .dd-mark::after { transform: translateY(-50%) rotate(0deg); }
-.dd-opt { color: var(--muted); font-weight: 500; font-size: 0.66rem; }
-.focus-definedone[open] .dd-opt { color: inherit; opacity: 0.7; }
-.focus-definedone textarea { margin-top: 0.45rem; }
-
-.focus-primary { width: 100%; }
-.focus-active { margin-top: 0.2rem; }
+.focus-intention { padding: 0.6rem 0.68rem; font-weight: 560; }
+.focus-intention::placeholder, .focuscard textarea::placeholder { color: var(--muted); opacity: 1; }
+.focuscard textarea { padding: 0.58rem 0.65rem; resize: vertical; line-height: 1.35; }
+.focuscard select { padding: 0.52rem 0.56rem; }
+.focus-setup-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; }
+.focus-primary { min-width: 84px; }
+.focus-active { margin-top: 0.65rem; }
+.focus-title { margin: 0 0 0.25rem; font-size: 0.94rem; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere; }
 .focus-clock-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; margin-top: 0.55rem; }
-.focus-clock { font-family: var(--figure); font-size: 1.75rem; font-weight: 700; letter-spacing: -0.015em; line-height: 1; }
+.focus-clock { font-family: var(--display); font-size: 1.5rem; font-weight: 740; letter-spacing: -0.04em; }
 .focus-clock-hint { color: var(--muted); font-size: 0.7rem; }
 .focus-progress { height: 6px; overflow: hidden; border-radius: 99px; background: var(--track); margin: 0.35rem 0 0.8rem; }
 .focus-progress span { display: block; height: 100%; width: 0; background: var(--grad); border-radius: inherit; transition: width 0.25s linear; }
@@ -735,7 +615,8 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .focus-feedback[hidden] { display: none; }
 
 @media (max-width: 340px) {
-  .seg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .focus-setup-row { grid-template-columns: 1fr; }
+  .focus-primary { width: 100%; }
   .card-heading-row { flex-direction: column; gap: 0.25rem; }
 }
 
@@ -763,24 +644,11 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .ringwrap svg { width: 100%; height: 100%; }
 .ringlbl { font-size: 0.66rem; color: var(--muted); }
 
-/* Today media chips: the scroll/watch figures, inline under the glance. */
-.today-media { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0 0 0.7rem; }
-.today-media[hidden] { display: none; }
-.tmchip {
-  display: inline-flex; align-items: center; gap: 0.32rem; cursor: help;
-  padding: 0.24rem 0.5rem; border-radius: 99px;
-  background: var(--track); border: 1px solid var(--border); font-size: 0.7rem;
-}
-.tmicon { font-size: 0.72rem; }
-.tmname { color: var(--ink2); }
-.tmval { color: var(--ink); font-weight: 700; }
 .next-cue { border-top: 1px solid var(--border); padding-top: 0.65rem; }
 .section { padding: 0.75rem 0.9rem; border-top: 1px solid var(--border); }
 .section.compact-control { padding-top: 0.65rem; padding-bottom: 0.65rem; }
-/* Sentence case, not uppercase: these label calm sections, they don't announce
- * them. The face does the differentiating. */
 .slabel {
-  font-family: var(--label); font-size: 0.74rem; font-weight: 620; letter-spacing: 0.015em;
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 680; letter-spacing: 0.04em;
   color: var(--muted); margin-bottom: 0.5rem;
 }
 
@@ -802,16 +670,9 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
   color: var(--ink); font-weight: 680; font-size: 0.8rem;
 }
 .popup-more > summary::-webkit-details-marker { display: none; }
-/* A drawn chevron, not a "+"/"−" glyph pair: the two characters sit on
- * different baselines and made the row jump on toggle. */
-.popup-more > summary::after {
-  content: ""; margin-left: auto; flex: none; width: 8px; height: 8px;
-  border-right: 2px solid var(--brand); border-bottom: 2px solid var(--brand);
-  border-radius: 0 0 2px 0; transform: translateY(-2px) rotate(45deg);
-  transition: transform 0.18s ease;
-}
+.popup-more > summary::after { content: "+"; color: var(--brand); font-size: 1.15rem; font-weight: 500; margin-left: auto; }
 .popup-more[open] > summary { border-bottom: 1px solid var(--border); }
-.popup-more[open] > summary::after { transform: translateY(2px) rotate(225deg); }
+.popup-more[open] > summary::after { content: "−"; }
 .summary-hint { color: var(--muted); font-size: 0.67rem; font-weight: 500; }
 .popup-more-body { background: color-mix(in srgb, var(--plane) 44%, var(--card)); }
 
@@ -853,7 +714,7 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .lrow { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
 .lchip { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .lrow .lt { color: var(--ink2); }
-.lrow .lv { color: var(--muted); font-family: var(--figure); font-size: 0.72rem; }
+.lrow .lv { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; }
 
 /* site bars */
 .bars { display: flex; flex-direction: column; gap: 0.6rem; }
@@ -861,7 +722,7 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .bmeta { display: flex; align-items: center; gap: 0.5rem; }
 .chip { width: 20px; height: 20px; border-radius: 5px; flex: none; display: grid; place-items: center; color: #fff; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
 .dom { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
-.secs { font-family: var(--figure); font-variant-numeric: tabular-nums; font-size: 0.78rem; color: var(--ink2); }
+.secs { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 0.78rem; color: var(--ink2); }
 .track { height: 7px; background: var(--track); border-radius: 100px; overflow: hidden; }
 .fill { height: 100%; border-radius: 100px; background: var(--brand); }
 
@@ -880,71 +741,24 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 }
 
 /* ---------- dashboard ---------- */
-/* The dashboard is a full page, not a phone column. 860px on a 1440px monitor
- * left two thirds of the screen empty and made every panel a narrow strip. */
-.dash { max-width: 1440px; margin: 0 auto; padding: 2rem clamp(1rem, 3vw, 2.5rem) 4rem; }
+.dash { max-width: 860px; margin: 0 auto; padding: 2rem 1.4rem 4rem; }
 .dashhead { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .dash h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.015em; display: flex; align-items: center; gap: 0.5rem; }
 .dash .sub { color: var(--ink2); margin: 0.2rem 0 1.6rem; }
-/* One action group in the header — Wrapped used to float inside the persona
- * hero, Export and Settings sat as bare links; three controls in three places. */
-.dashhead .actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.dashhead .actions { display: flex; gap: 0.8rem; }
 
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.8rem; margin-bottom: 1.8rem; }
-.tile { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 0.95rem 1.05rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin-bottom: 1.8rem; }
+.tile { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 0.9rem 1rem; }
 .tlabel { font-size: 0.72rem; font-weight: 620; letter-spacing: 0.01em; color: var(--muted); }
 .tval { font-family: var(--display); font-size: 1.5rem; font-weight: 680; margin-top: 0.3rem; letter-spacing: -0.02em; }
 .tsub { font-size: 0.76rem; color: var(--ink2); margin-top: 0.15rem; }
 .tsub .up::before { content: "▲ "; }
 .tsub .down::before { content: "▼ "; }
 
-/* Explicit column counts, not auto-fit. auto-fit packs in as many columns as
- * will fit, so a four-panel frame landed as three plus one orphan on the next
- * row. These divide evenly at every step: 2→1, and 4→2→1. */
-/* align-items:start so a short panel keeps its own height. Stretching them
- * equal left a void under the donut whenever the Sites list ran long. */
-.grid2, .grid4 { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
-@media (min-width: 720px) { .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 900px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1180px) { .grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-
-/* A frame gathers panels of one kind — how much, what, when, over time — so the
- * page reads as four questions rather than nine stacked boxes. */
-.frame {
-  border: 1px solid var(--border); border-radius: var(--radius-hero);
-  background: color-mix(in srgb, var(--card) 45%, var(--plane));
-  padding: 1.15rem 1.2rem 1.3rem; margin-bottom: 1.4rem;
-}
-.frame-head {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; flex-wrap: wrap; margin-bottom: 0.3rem;
-}
-.frame-title {
-  margin: 0; font-family: var(--label); font-stretch: 87.5%; font-size: 0.7rem;
-  font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--brand);
-}
-.frame-sub { margin: 0 0 1rem; color: var(--muted); font-size: 0.78rem; }
-.frame .trend { margin-bottom: 0.2rem; }
-.frame .tiles { margin: 0.9rem 0 0; }
-.frame > .tiles { margin: 0 0 1rem; }
-.frame-more { margin-top: 1rem; border-top: 1px solid var(--border); }
-.frame-more > summary {
-  list-style: none; display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.8rem 0 0; cursor: pointer; color: var(--ink2); font-weight: 640; font-size: 0.84rem;
-}
-.frame-more > summary::-webkit-details-marker { display: none; }
-.frame-more > summary::after {
-  content: ""; margin-left: auto; width: 8px; height: 8px; flex: none;
-  border-right: 2px solid var(--brand); border-bottom: 2px solid var(--brand);
-  border-radius: 0 0 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform 0.18s ease;
-}
-.frame-more[open] > summary::after { transform: translateY(2px) rotate(225deg); }
-.frame-more[open] .badges { margin-top: 1rem; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.8rem; }
 @media (max-width: 680px) { .grid2 { grid-template-columns: 1fr; } }
 .panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 1.1rem 1.2rem; }
-/* Same voice as the popup's section labels: the signage face, sentence case,
- * quiet. Panels are containers, not announcements. */
-.panel h2 { font-family: var(--label); font-size: 0.86rem; letter-spacing: 0.01em; color: var(--ink2); margin: 0 0 0.9rem; font-weight: 640; }
+.panel h2 { font-size: 0.82rem; letter-spacing: 0.01em; color: var(--muted); margin: 0 0 0.9rem; font-weight: 640; }
 .focus-history-panel { margin-bottom: 1.8rem; }
 .panel-heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .panel-heading-row h2 { margin-bottom: 0.18rem; }
@@ -982,73 +796,14 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .heat { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
 .hcell { aspect-ratio: 1; border-radius: 2px; background: var(--track); }
 .hlabels { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; margin-top: 0.35rem; }
-.hlabels span { font-family: var(--figure); font-size: 0.58rem; color: var(--muted); }
+.hlabels span { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); }
 
-/* Day-by-day chart. Each column is a fixed-height plot so every bar shares one
- * baseline and one ceiling; the bar inside is a flex column of category
- * segments, which is what makes two days comparable by shape and not just by
- * height. */
-.trend { display: flex; align-items: stretch; gap: 0.55rem; height: 178px; }
-.tcol {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center;
-  gap: 0.35rem; cursor: pointer; border-radius: 10px; padding: 0.3rem 0.15rem 0.25rem;
-  transition: background 0.15s;
-}
-/* Pillars, not slabs: full-width bars across a 1400px page read as blocks. The
- * column keeps its full hit area, only the bar narrows. */
-.tplot > .tbar {
-  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: min(100%, 74px);
-}
-.tcol:hover { background: color-mix(in srgb, var(--brand-soft) 45%, transparent); }
-/* The selected day is marked on the bar and the label, not by tinting the
- * whole column — a full-height block over a half-height bar reads as a tall
- * empty box rather than as emphasis. */
-.tcol.active .tbar { outline: 2px solid var(--brand); outline-offset: 2px; }
-.tcol.future { opacity: 0.32; cursor: default; }
-/* The bar is absolutely positioned rather than a flex item: as a flex child its
- * cross-axis size was resolved by the layout and the `height` set in JS was
- * ignored, so an empty day rendered a 42px grey block instead of a stub. */
-.tplot { position: relative; width: 100%; flex: 1; }
-.tbar {
-  position: relative; z-index: 1; width: 100%; display: flex; flex-direction: column-reverse;
-  border-radius: 6px 6px 2px 2px; overflow: hidden; min-height: 3px;
-}
-/* Nothing tracked: a hairline on the baseline, so the day still reads as a
- * column that exists rather than as a bar of some small size. */
-.tstub {
-  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: min(100%, 74px); height: 2px; border-radius: 2px; background: var(--track);
-}
-.tseg { width: 100%; min-height: 2px; }
-/* Same weekday, previous week: a cap line over the bar, so "taller than the
- * line" means "more than last week" without any second bar to read. */
-.tghost {
-  position: absolute; z-index: 3; left: 50%; transform: translateX(-50%);
-  width: min(100%, 84px); height: 0; pointer-events: none;
-  border-top: 2px dashed color-mix(in srgb, var(--ink) 62%, transparent);
-}
-.ghostchip {
-  align-self: center; height: 0; width: 12px; border-radius: 0;
-  border-top: 2px dashed color-mix(in srgb, var(--ink) 62%, transparent);
-}
-/* Solid, so it never reads as another dashed last-week cap line. */
-.tguide {
-  position: absolute; left: 0; right: 0; z-index: 2; height: 0; pointer-events: none;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
-}
-.tguide-label {
-  position: absolute; right: 0; bottom: 3px; white-space: nowrap;
-  font-family: var(--figure); font-size: 0.6rem; font-weight: 640; color: var(--muted);
-}
-.tcol .tl { font-family: var(--label); font-size: 0.66rem; font-weight: 640; color: var(--ink2); }
-.tcol .tv { font-size: 0.62rem; color: var(--muted); }
-.tcol.active .tl { color: var(--brand); }
-.trend-legend { margin-top: 0.75rem; }
-.trend-switch, .scope-switch { margin: 0; padding: 0; border: 0; min-width: 0; }
-.trend-switch .seg, .scope-switch .seg { grid-auto-flow: column; grid-template-columns: none; }
-.trend-switch .seg label, .scope-switch .seg label { padding-inline: 0.75rem; }
-.trend-switch .seg label b, .scope-switch .seg label b { font-size: 0.76rem; font-weight: 640; }
+/* trend */
+.trend { display: flex; align-items: flex-end; gap: 0.5rem; height: 120px; }
+.tcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; height: 100%; justify-content: flex-end; cursor: pointer; }
+.tbar { width: 100%; background: var(--brand); border-radius: 5px 5px 0 0; min-height: 3px; opacity: 0.55; transition: opacity 0.15s; }
+.tcol:hover .tbar, .tcol.active .tbar { opacity: 1; }
+.tcol .tl { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); }
 
 /* weekly/monthly + calendar heatmap */
 .calwrap { overflow-x: auto; padding-bottom: 0.3rem; }
@@ -1057,37 +812,16 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .calcell:hover { transform: scale(1.25); }
 .calcell.future { opacity: 0.25; cursor: default; }
 .calcell.sel { outline: 2px solid var(--brand); outline-offset: 1px; }
-.callegend { display: flex; align-items: center; gap: 0.4rem; justify-content: flex-end; margin-top: 0.7rem; font-family: var(--figure); font-size: 0.62rem; color: var(--muted); }
+.callegend { display: flex; align-items: center; gap: 0.4rem; justify-content: flex-end; margin-top: 0.7rem; font-family: var(--mono); font-size: 0.62rem; color: var(--muted); }
 .calkey { display: inline-flex; gap: 3px; }
 .calkey i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 
-/* Range control. The scope switch leads and the stepper follows it, because
- * you choose what you are looking at before you choose which one. */
-.navrow {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 1rem; flex-wrap: wrap; margin: 1.6rem 0 1rem;
-  padding: 0.55rem 0.7rem; border: 1px solid var(--border);
-  border-radius: var(--radius-card); background: var(--card);
-}
-.navstep { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
-.navrow .day {
-  display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;
-  font-family: var(--label); font-weight: 640; font-size: 0.88rem;
-}
-.navrow .daytotal { font-family: var(--figure); font-weight: 700; color: var(--brand); }
-.navbtn {
-  font: inherit; font-size: 1.1rem; line-height: 1; display: grid; place-items: center;
-  width: 34px; height: 34px; flex: none; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 10px; cursor: pointer; color: var(--ink2);
-}
-.navbtn:hover { border-color: var(--brand); color: var(--brand); }
-@media (max-width: 560px) {
-  .navrow { justify-content: center; }
-  .navstep { width: 100%; justify-content: space-between; }
-}
-/* Capped and scrolled: an unbounded list of every domain you touched pushed
- * the whole page down and left the panel beside it standing in empty space. */
-.dlist { display: flex; flex-direction: column; gap: 0.6rem; max-height: 390px; overflow-y: auto; padding-right: 0.3rem; }
+.navrow { display: flex; align-items: center; justify-content: space-between; margin: 1.6rem 0 1rem; }
+.navrow .day { font-weight: 640; }
+.navrow .daytotal { font-family: var(--display); color: var(--brand); }
+.navbtn { font: inherit; min-height: 36px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-button); cursor: pointer; padding: 0.4rem 0.75rem; color: var(--ink); }
+.navbtn:hover { border-color: var(--brand); }
+.dlist { display: flex; flex-direction: column; gap: 0.6rem; }
 
 /* ---------- persona hero ---------- */
 .hero {
@@ -1120,46 +854,20 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
-/* Popup persona row. The doodle is generated art at 80px; dropping it loose
- * into a 30px circle turned it into a grey smudge, so it now sits in a framed
- * tile at a size it can actually be read at, with the row labelled above the
- * name instead of relying on a tooltip nobody hovers. */
+/* popup persona row */
 .personarow {
-  display: flex; align-items: center; gap: 0.7rem; width: 100%;
+  display: flex; align-items: center; gap: 0.65rem; width: 100%;
   font: inherit; text-align: left; cursor: pointer;
-  padding: 0.7rem 0.9rem; border: none;
+  padding: 0.68rem 0.9rem; border: none;
   background: transparent; color: var(--ink);
 }
-.personarow:hover { background: color-mix(in srgb, var(--brand-soft) 55%, transparent); }
-/* The doodle art is a circle drawn to the edge of its canvas, so a rounded
- * square mask sliced the ring off at four points. Circular frame, and the
- * canvas is inset a little so the outer ring clears the border entirely. */
-.pmask {
-  display: grid; place-items: center; flex: none; width: 40px; height: 40px;
-  border-radius: 50%; overflow: hidden;
-  background: var(--track); border: 1px solid var(--border);
-}
-.personarow canvas { width: 36px; height: 36px; display: block; }
-.pcopy { display: grid; gap: 0.1rem; flex: 1; min-width: 0; }
-.pkicker {
-  font-family: var(--label); font-stretch: 87.5%; font-size: 0.58rem; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
-}
-.pname {
-  font-family: var(--display); font-weight: 700; font-size: 0.95rem; letter-spacing: -0.01em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.pchev {
-  flex: none; width: 8px; height: 8px; margin-right: 0.15rem;
-  border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
-  border-radius: 0 0 2px 0; transform: translateY(-2px) rotate(45deg);
-  transition: transform 0.18s ease, border-color 0.18s ease;
-}
-.personarow[aria-expanded="true"] .pchev { transform: translateY(2px) rotate(225deg); border-color: var(--brand); }
+.personarow:hover { background: var(--brand-soft); }
+.personarow canvas { width: 30px; height: 30px; border-radius: 50%; flex: none; }
+.pname { flex: 1; font-weight: 640; font-size: 0.88rem; }
+.pchev { color: var(--muted); font-size: 0.75rem; }
 .pdetail {
-  margin: 0 0.9rem 0.75rem; padding: 0.7rem 0.8rem;
-  background: color-mix(in srgb, var(--brand-soft) 55%, transparent);
-  border: 1px solid color-mix(in srgb, var(--brand) 20%, var(--border));
+  margin: 0.15rem 0.9rem 0.6rem; padding: 0.7rem 0.8rem;
+  background: color-mix(in srgb, var(--brand-soft) 60%, transparent);
   border-radius: var(--radius-control);
 }
 .pepithet {
@@ -1170,12 +878,12 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .ptag { margin: 0.45rem 0 0; font-size: 0.78rem; color: var(--ink2); line-height: 1.5; }
 .hero-body { flex: 1 1 260px; min-width: 0; }
 .hero-kicker {
-  font-family: var(--label); font-stretch: 87.5%; font-weight: 700; font-size: 0.64rem; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.14em;
   text-transform: uppercase; opacity: 0.85; margin-bottom: 0.3rem;
 }
 .hero-name { margin: 0 0 0.3rem; font-size: clamp(1.4rem, 3.5vw, 2rem); letter-spacing: -0.02em; line-height: 1.1; text-shadow: 0 2px 8px rgba(0,0,0,0.25); }
 .hero-epithet {
-  display: inline-block; font-family: var(--label); font-size: 0.68rem;
+  display: inline-block; font-family: var(--mono); font-size: 0.68rem;
   padding: 0.18rem 0.6rem; border-radius: 100px;
   background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
   margin-bottom: 0.5rem;
@@ -1236,7 +944,7 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
   font-size: 0.76rem; padding: 0.28rem 0.65rem; border-radius: 100px;
   background: var(--track); color: var(--ink2); border: 1px solid var(--border);
 }
-.wellchip b { color: var(--ink); font-family: var(--figure); font-weight: 600; }
+.wellchip b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
 .officetoggle {
   display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
   font-size: 0.82rem; color: var(--ink2); user-select: none;
@@ -1266,15 +974,20 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 
 /* ---------- design-prototype parity (ADR-029) ---------- */
 .trustline {
-  margin: 1.6rem 0 0; text-align: center; font-family: var(--label);
+  margin: 1.6rem 0 0; text-align: center; font-family: var(--mono);
   font-size: 0.62rem; letter-spacing: 0.14em; color: var(--muted);
 }
-.panelhint { margin-left: 0.5rem; font-family: var(--label); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+.panelhint { margin-left: 0.5rem; font-family: var(--mono); font-size: 0.6rem; font-weight: 500; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
 .peaknote { margin: 0.55rem 0 0; font-size: 0.74rem; color: var(--ink2); }
 .peaknote:empty { display: none; }
 .bmedal { width: 58px; height: 58px; display: block; margin: 0 auto 0.4rem; }
 
-/* The chip styling for this summary lives with the session sheet above. */
+.focus-definedone { margin: 0.45rem 0 0; }
+.focus-definedone summary {
+  cursor: pointer; list-style: none; color: var(--brand); font-size: 0.74rem; font-weight: 640;
+  user-select: none;
+}
+.focus-definedone summary::-webkit-details-marker { display: none; }
 .focus-definedone textarea,
 .focus-checkout textarea {
   width: 100%; margin-top: 0.35rem; padding: 0.5rem 0.6rem; resize: vertical;
@@ -1282,10 +995,6 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
   background: var(--surface); color: var(--ink); font: inherit; font-size: 0.8rem;
 }
 .focus-checkout { display: grid; gap: 0.4rem; margin-top: 0.6rem; }
-/* An author `display` beats the `hidden` attribute, so every block that sets
- * one has to opt back out — without these the check-out panel sat open under
- * the controls for the whole session. */
-.focus-checkout[hidden], .focus-reason-row[hidden] { display: none; }
 .focus-checkout select {
   width: 100%; min-height: 38px; padding: 0.4rem 0.55rem;
   border: 1px solid var(--border); border-radius: var(--radius-control);
@@ -1315,66 +1024,13 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
 .bstat { font-size: 0.72rem; margin-left: auto; }
 
 /* ---------- options (full-page settings) ---------- */
-.opt { max-width: 1180px; margin: 0 auto; padding: 0 clamp(1rem, 3vw, 2.5rem) 4rem; }
-
-/* Settings rows: name + hint on the left, control on the right, one line each.
- * Replaces label-with-inline-checkbox plus a trailing sentence, which wrapped
- * at any label longer than 150px and left the page looking ragged. */
-.setrow {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  padding: 0.62rem 0; border-top: 1px solid var(--border);
-}
-.setrow:first-of-type { border-top: 0; }
-.setcopy { display: grid; gap: 0.1rem; min-width: 0; }
-.setname { font-size: 0.88rem; font-weight: 620; color: var(--ink); }
-.sethint { font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
-.setctl { display: flex; align-items: center; gap: 0.5rem; flex: none; }
-.setctl input[type="number"] { width: 74px; }
-.setctl .unit { color: var(--muted); font-size: 0.75rem; }
-@media (max-width: 560px) {
-  .setrow { flex-direction: column; align-items: stretch; gap: 0.5rem; }
-  .setctl { justify-content: flex-end; }
-}
-/* Sticky so Save is reachable from anywhere on a long settings page. */
+.opt { max-width: 860px; margin: 0 auto; padding: 2.2rem 1.6rem 4rem; }
 .opthead {
-  position: sticky; top: 0; z-index: 10;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: flex-start; justify-content: space-between;
   gap: 1rem; flex-wrap: wrap; margin-bottom: 1.6rem;
-  padding: 1.1rem 0 0.9rem;
-  background: color-mix(in srgb, var(--plane) 97%, transparent);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
-  /* The bar is as wide as the settings column; the bleed keeps the page
-   * background from showing as a stripe either side of it while stuck. */
-  box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--plane) 97%, transparent);
-  clip-path: inset(0 -100vmax);
 }
-.opthead-copy { min-width: 0; }
-.opthead-actions { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
-.opthead-actions .btn { min-height: 38px; padding: 0.42rem 0.95rem; }
 .opt h1 { font-size: 1.5rem; margin: 0 0 0.2rem; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.015em; }
-.opt .sub { color: var(--ink2); margin: 0.2rem 0 0; font-size: 0.86rem; }
-@media (max-width: 620px) {
-  /* Stacked, the sticky bar would eat half the viewport — let it scroll. */
-  .opthead { position: static; }
-  .opthead-actions { width: 100%; }
-  .opthead-actions .btn { flex: 1; }
-}
-/* Break style picker — same segmented control as the session lengths. */
-.breakstyle { margin: 0.9rem 0; padding: 0; border: 0; min-width: 0; }
-.breakstyle legend {
-  padding: 0; margin-bottom: 0.45rem; font-family: var(--label);
-  font-size: 0.8rem; font-weight: 640; color: var(--ink2);
-}
-.breakstyle .seg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.breakstyle .seg label { padding: 0.5rem 0.3rem; }
-.breakstyle .seg label b { font-size: 0.82rem; font-weight: 660; }
-.breakstyle .seg label span { font-size: 0.6rem; text-align: center; line-height: 1.25; white-space: nowrap; }
-/* Capped: stretched across a 1180px page the three options read as three huge
- * slabs rather than one control. */
-.breakstyle .seg { max-width: 460px; }
-@media (max-width: 520px) { .breakstyle .seg { grid-template-columns: 1fr; } }
-
+.opt .sub { color: var(--ink2); margin: 0.2rem 0 0; }
 .catsummary { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.9rem; }
 .catchip {
   display: inline-flex; align-items: center; gap: 0.4rem;
@@ -1440,7 +1096,7 @@ details.optsec > .secbody { padding: 0.2rem 1.3rem 1.2rem; }
 }
 .goalrow { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.6rem; }
 .goalrow .glabel { display: flex; align-items: center; gap: 0.45rem; width: 150px; }
-.goalrow input, .setctl input, .field input, .field textarea, .assignrow select {
+.goalrow input, .field input, .field textarea, .assignrow select {
   font: inherit; min-height: 38px; padding: 0.45rem 0.6rem; border-radius: var(--radius-control); border: 1px solid var(--border);
   background: var(--surface); color: var(--ink);
 }
@@ -1457,13 +1113,8 @@ details.optsec > .secbody { padding: 0.2rem 1.3rem 1.2rem; }
 .btn:hover { filter: brightness(1.04); }
 .btn:disabled { cursor: not-allowed; opacity: 0.55; box-shadow: none; }
 .btnrow { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-.saved {
-  color: var(--success); font-size: 0.76rem; font-weight: 640;
-  padding: 0.3rem 0.6rem; border-radius: 99px;
-  background: var(--success-soft); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
-}
-.saved[hidden] { display: none; }
-.saved.error { color: var(--danger); background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+.saved { color: var(--success); font-size: 0.82rem; margin-left: 0.6rem; }
+.saved.error { color: var(--danger); }
 .tcol:focus-visible, .calcell:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 @media (max-width: 620px) {
@@ -1647,19 +1298,6 @@ details.optsec > .secbody { padding: 0.2rem 1.3rem 1.2rem; }
 .saved-hero h1 { margin: 0 0 0.2rem; font-size: 1.05rem; line-height: 1.2; letter-spacing: -0.02em; }
 .saved-hero > p { margin: 0; color: var(--ink2); font-size: 0.74rem; line-height: 1.4; }
 .saved-page-form { display: grid; gap: 0.45rem; }
-/* The note is opt-in: most saves do not want one, and the field cost a whole
- * row plus a privacy sentence above the fold. */
-.saved-note-toggle > summary {
-  list-style: none; display: inline-flex; align-items: center; gap: 0.35rem;
-  padding: 0.25rem 0.6rem; border-radius: 99px; cursor: pointer;
-  border: 1px dashed color-mix(in srgb, var(--muted) 45%, transparent);
-  color: var(--ink2); font-size: 0.72rem; font-weight: 600;
-}
-.saved-note-toggle > summary::-webkit-details-marker { display: none; }
-.saved-note-toggle > summary::before { content: "+"; font-weight: 700; }
-.saved-note-toggle[open] > summary { border-style: solid; border-color: var(--brand); color: var(--brand); }
-.saved-note-toggle[open] > summary::before { content: "−"; }
-.saved-note-toggle input { margin-top: 0.45rem; }
 .saved-page-form .savebig { width: 100%; min-height: 46px; font-size: 0.88rem; }
 .saved-page-form label { color: var(--ink2); font-size: 0.72rem; font-weight: 700; }
 .saved-page-form label span { color: var(--muted); font-size: 0.66rem; font-weight: 500; }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Tabyss — Intentional Browsing",
-  "version": "2.0.0",
+  "name": "Tabyss — Know Your Scroll",
+  "version": "2.5.0",
   "description": "Understand your browsing, use an optional timer, and save pages for later — private and on-device.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "storage", "idle", "alarms", "notifications", "favicon", "sidePanel"],

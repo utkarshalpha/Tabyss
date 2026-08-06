@@ -138,3 +138,15 @@ runtime requirement because ADR-024/025 supersede it.
   primary actions.
 - Copy and controls remain truthful in empty, loading, paused, review, error,
   disabled, denied, and recovery states.
+
+## Colour personalization (ADR-027)
+
+Six user-selectable palettes (Cobalt Focus default, Teal Clarity, Abyss Violet,
+Plum Premium, Forest Calm, Ember Energy), each defining 13 colours per scheme,
+combined independently with System / Light / Dark. `TABYSS_PALETTES` in
+common.js is the source of truth; styles.css variable blocks are generated from
+it and an automated test keeps them in sync. Semantic success/warning/danger
+colours are shared per scheme and palette-invariant. Components consume only
+the semantic variables (--plane, --surface, --card, --ink, --ink2, --muted,
+--border, --track, --brand*, --on-brand, --brand-soft, --success*, --warning*,
+--danger*); no component hardcodes palette colours.

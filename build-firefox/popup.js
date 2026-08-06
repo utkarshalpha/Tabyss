@@ -28,69 +28,10 @@ let focusSnapshot = null;
 let focusTimer = null;
 let focusReviewRequested = false;
 
-/* The header dial. Two registers, one object: with no session it is a drawn
- * clock; with a session it becomes an instrument — the hour hand fades out,
- * the minute hand runs backwards like a kitchen timer, and the ring drains
- * with the time left.
- *
- * Idle sits at 12:20, not the 10:10 of watch photography: at 20px two hands
- * of similar length splayed upward read as a checkmark, not as a clock. An
- * upright minute hand against a short hand at four o'clock stays legible. */
-const DIAL_CIRCUMFERENCE = 2 * Math.PI * 9.1;
-const DIAL_IDLE = { hour: 120, minute: 0 };
-
-function setDialArc(fraction) {
-  const arc = document.getElementById("dialArc");
-  const shown = Math.max(0, Math.min(1, fraction)) * DIAL_CIRCUMFERENCE;
-  arc.setAttribute("stroke-dasharray", `${shown} ${DIAL_CIRCUMFERENCE - shown}`);
-}
-
-function renderDial(focus, elapsed) {
-  const button = document.getElementById("focusToggle");
-  const hour = document.getElementById("dialHour");
-  const minute = document.getElementById("dialMin");
-
-  if (!focus) {
-    button.dataset.state = "idle";
-    button.title = "Intentional session";
-    hour.setAttribute("transform", `rotate(${DIAL_IDLE.hour} 12 12)`);
-    minute.setAttribute("transform", `rotate(${DIAL_IDLE.minute} 12 12)`);
-    setDialArc(0);
-    return;
-  }
-
-  button.dataset.state = focus.status;
-  button.title = `Intentional session — ${focus.intention}`;
-  if (focus.mode === "timer") {
-    const left = Math.max(0, 1 - elapsed / focus.targetMs);
-    setDialArc(left);
-    minute.setAttribute("transform", `rotate(${left * 360} 12 12)`);
-  } else {
-    // Open-ended: no target to drain, so the hand simply sweeps the seconds.
-    setDialArc(Math.min(1, elapsed / FOCUS_MAX_RUNNING_MS));
-    minute.setAttribute("transform", `rotate(${((elapsed / 1000) % 60) * 6} 12 12)`);
-  }
-}
-
-function focusPanelOpen() {
-  return !document.getElementById("focusPanel").hidden;
-}
-
-function setFocusPanel(open, { focusField = false } = {}) {
-  const panel = document.getElementById("focusPanel");
-  const toggle = document.getElementById("focusToggle");
-  panel.hidden = !open;
-  toggle.setAttribute("aria-expanded", String(open));
-  if (!open || !focusField) return;
-  const field = document.getElementById("focusIntention");
-  if (!field.closest("[hidden]")) field.focus();
-}
-
 function showFocusError(message) {
   const box = document.getElementById("focusError");
   box.textContent = message || "The session could not be updated.";
   box.hidden = false;
-  setFocusPanel(true); // an error inside a collapsed sheet is an error nobody reads
 }
 
 function clearFocusError() {
@@ -148,7 +89,6 @@ function renderFocusClock() {
     progress.setAttribute("aria-valuenow", String(Math.round(elapsed)));
   }
   fill.style.width = `${Math.min(100, (elapsed / limit) * 100)}%`;
-  renderDial(focus, elapsed);
 
   if (focus.status === "running" && elapsed >= limit && !focusReviewRequested) {
     focusReviewRequested = true;
@@ -204,19 +144,14 @@ function renderFocus(data) {
   closeCheckout(); // any state change collapses an open check-out panel
 
   if (!focusSnapshot) {
-    heading.textContent = "What matters now?";
+    heading.textContent = "Start a session";
     create.hidden = false;
     activeBox.hidden = true;
     status.hidden = true;
-    renderDial(null, 0);
     return;
   }
 
-  // A running timer is never hidden behind a closed panel.
-  setFocusPanel(true);
-  // The intention becomes the heading rather than sitting under a "Current
-  // session" line that says nothing the status pill has not already said.
-  heading.textContent = focusSnapshot.intention;
+  heading.textContent = "Current session";
   create.hidden = true;
   activeBox.hidden = false;
   status.hidden = false;
@@ -225,6 +160,7 @@ function renderFocus(data) {
     paused: "Paused",
     review: "Ready to review",
   }[focusSnapshot.status] || "Session";
+  document.getElementById("focusTitle").textContent = focusSnapshot.intention;
   renderFocusSites(focusSnapshot.visitedDomains);
 
   const pause = document.getElementById("focusPause");
@@ -248,7 +184,7 @@ function announceFocus(message) {
 
 document.getElementById("focusCreate").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const duration = document.querySelector('input[name="focusDuration"]:checked')?.value || "25";
+  const duration = document.getElementById("focusDuration").value;
   const button = event.submitter || event.currentTarget.querySelector("button[type=submit]");
   button.disabled = true;
   try {
@@ -407,10 +343,10 @@ function renderPersona(data) {
   document.getElementById("pTagline").textContent = p.tagline;
   const row = document.getElementById("personaRow");
   const detail = document.getElementById("pDetail");
-  row.setAttribute("aria-label", `Your week: ${p.name}. ${p.epithet.label}`);
+  const chev = document.getElementById("pChev");
   row.onclick = () => {
     detail.hidden = !detail.hidden;
-    row.setAttribute("aria-expanded", String(!detail.hidden));
+    chev.textContent = detail.hidden ? "▾" : "▴";
   };
 }
 
@@ -446,33 +382,11 @@ function renderUpNext(settings, ws, streak, switchCount, tabCount) {
   if (!box.children.length) row("✓", "All quiet", "—");
 }
 
-/* Scroll and watch time belong in Today, not only behind the details toggle —
- * they are the numbers people open the popup to check. Each chip carries the
- * rule in its tooltip so "how is this counted?" has an answer in place. */
-function renderTodayMedia(mediaDay) {
-  const box = document.getElementById("todayMedia");
-  box.innerHTML = "";
-  const kinds = [
-    ["shorts", "⚡", "Shorts", "Shorts/Reels surfaces, counted only with a clip actually playing or active flicking."],
-    ["video", "▶", "Video", "Unmuted playback over 90 seconds long, or anything fullscreen. Muted autoplay teasers do not count."],
-  ];
-  let shown = 0;
-  for (const [kind, icon, name, how] of kinds) {
-    const total = Object.values((mediaDay || {})[kind] || {}).reduce((s, v) => s + v, 0);
-    if (!total) continue;
-    const chip = el("span", "tmchip");
-    chip.title = how;
-    chip.append(el("span", "tmicon", icon), el("span", "tmname", name), el("span", "tmval mono", fmtShort(total)));
-    box.append(chip);
-    shown++;
-  }
-  box.hidden = shown === 0;
-}
-
 function renderMediaStrip(mediaDay) {
   const kinds = [
     ["video", "Video"],
     ["shorts", "Shorts"],
+    ["scroll", "Doomscroll"],
   ];
   const cells = [];
   for (const [kind, name] of kinds) {
@@ -606,7 +520,6 @@ async function load() {
   renderRing(focusScoreForDay(day, switches[today], holes[today], settings.overrides), total);
   renderPersona({ usage, hours, switches, holes, settings });
   renderUpNext(settings, wellnessState, computeStreak(usage, settings.overrides), switches[today], tabCount);
-  renderTodayMedia(media[today]);
   renderMediaStrip(media[today]);
   const list = document.getElementById("list");
   list.innerHTML = "";
@@ -635,9 +548,7 @@ async function load() {
       if (!response || response.ok !== true) throw new Error(response?.error || "Save failed");
     } catch (error) {
       toggle.checked = !toggle.checked; // revert the visual state on failure
-      const box = document.getElementById("officeError");
-      box.textContent = "Office mode could not be saved. Try again.";
-      box.hidden = false;
+      showFocusError("Office mode could not be saved. Try again.");
       return;
     }
     load().catch(() => {});
@@ -650,13 +561,6 @@ document.getElementById("dash").addEventListener("click", () =>
 document.getElementById("wrapped").addEventListener("click", () =>
   chrome.tabs.create({ url: chrome.runtime.getURL("wrapped.html") })
 );
-document.getElementById("focusToggle").addEventListener("click", () => {
-  setFocusPanel(!focusPanelOpen(), { focusField: true });
-});
-document.getElementById("focusClose").addEventListener("click", () => {
-  setFocusPanel(false);
-  document.getElementById("focusToggle").focus();
-});
 document.getElementById("opts").addEventListener("click", () => chrome.runtime.openOptionsPage());
 document.getElementById("savedPages").addEventListener("click", async () => {
   try {

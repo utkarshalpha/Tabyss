@@ -1,6 +1,18 @@
-# Tabyss — Chrome Web Store Listing Kit
+# Tabyss — Store Listing Kit
 
-Everything you need to paste into the Web Store Developer Dashboard.
+Everything you need to paste into a store Developer Dashboard.
+
+## Live listings
+
+| Store | Status | Link |
+| --- | --- | --- |
+| Microsoft Edge Add-ons | Published | https://microsoftedge.microsoft.com/addons/detail/bcnealjpndcccogjpceoaokeahmfdkha |
+| Firefox Add-ons (AMO) | Published | https://addons.mozilla.org/en-US/firefox/addon/tabyss-know-your-scroll/ |
+| Chrome Web Store | Not submitted | — |
+
+The Firefox build ships from `build-firefox/` and is currently at 2.4.0; the
+Edge/Chrome build in the repository root is at 2.5.0. Bump and repackage the
+Firefox tree separately when you are ready to push 2.5.0 to AMO.
 
 ## Title
 `Tabyss — Intentional Browsing`

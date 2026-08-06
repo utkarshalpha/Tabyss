@@ -354,3 +354,40 @@ syntax, unit/contract/security/docs/package checks and deterministic double-buil
 Keep manual unpacked-extension persistence, 200% zoom, assistive technology, and
 policy checks explicitly gated until performed in the real extension runtime.
 ```
+
+## Implemented decision - Colour personalization (ADR-027)
+
+Owner-directed 2026-08-02. Six palettes (cobalt default, teal, abyss, plum,
+forest, ember) x System/Light/Dark, exact owner-supplied colour configuration
+in `TABYSS_PALETTES` (common.js), generated CSS variable blocks in styles.css,
+allowlisted `palette`/`appearance` settings with safe fallback, immediate
+preview, Save persistence, live cross-page restyle, chart redraw events.
+Constraints honoured: no logo change, no functional/navigation change, no new
+permissions or network behavior. Verification: node --check on all JS, 80-check
+unit harness (palette allowlists, fallbacks, legacy `theme` retirement,
+CSS<->JS sync), manual light/dark review pending in the unpacked runtime.
+
+## Implemented decision - Local favicon sourcing (ADR-028)
+
+Owner-directed 2026-08-02. Wellbeing/media rows prefer the exact open-tab page
+URL through Chrome's local /_favicon/ cache, then canonical domain, then a
+palette-tinted letter fallback. Pure `buildOpenTabFaviconMap` (active tab wins,
+exact www-stripped domain matching, incognito/credential/non-HTTP rejection) +
+race-safe shared `renderFavicon`. No remote favicon service, no network client,
+no new permission, nothing persisted. Verified by the 111-check unit harness
+(favicon candidate order, boundary matching, permission set, banned-host source
+scan) and node --check on all files; manual visual QA gated on the unpacked
+runtime.
+
+## Implemented decision - Design-prototype parity wave 1 (ADR-029)
+
+Owner-directed 2026-08-02 ("any good thing you find, implement"). Audited the
+owner design prototype against v2.3.0 (20 findings); adopted the eight
+high-value/low-risk items: focus check-out UI (backend was already complete),
+amber toolbar session dot, drawn badge medallions, Wrapped narrative
+gradients, wellbeing microcopy pass, trust proof-lines, peak-hour callout,
+semantic-token hygiene + slim scrollbar. Identity-level bets (crest avatars,
+bundled brand fonts, onboarding flow, adaptive persona accent, corner-toast
+reminders, tile upgrades) recorded as Proposed in ADR-029 pending owner
+approval. 111-check harness green; node --check clean; no permission, asset,
+or network change.

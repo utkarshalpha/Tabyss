@@ -16,9 +16,6 @@ const HOLE_MIN_S = 25 * 60; // continuous same-site run that counts as a rabbit 
 const HOLE_CATS = ["Entertainment", "Social"];
 const SUNSET_COOLDOWN_MS = 2 * 3600 * 1000;
 const EYE_SECONDS = 20; // the "20 seconds" of 20-20-20
-// A gap this long means the machine really slept; anything shorter is ordinary
-// MV3 worker suspension and must not restart the Office mode cycles.
-const SLEEP_GAP_MS = 10 * 60 * 1000;
 
 async function restrictStorageAccess() {
   try {
@@ -377,26 +374,13 @@ async function doFlush() {
   let focusSitesChanged = false;
   const day = dateKey(now);
 
-  // A gap breaks the *browsing* streak, so the eye-break clock restarts.
+  // A wall-clock gap since the previous flush means sleep/shutdown regardless
+  // of whether the last session was counting — restart the wellness cycles.
   if (ws.lastFlush && now - ws.lastFlush > MAX_DELTA_S * 1000) {
     ws.activeSecs = 0;
-  }
-  // Office cycles are wall-clock and must survive ordinary worker suspension.
-  // They used to restart on the same 90s gap, but MV3 suspends this worker
-  // constantly and delays alarms well past 90s precisely when the browser is
-  // in the background — which is when Office mode is supposed to be counting.
-  // The 50-minute water timer was therefore reset to zero before it could ever
-  // elapse. Only a real sleep/shutdown gap restarts these; presence is already
-  // handled by the idle check below.
-  if (ws.lastFlush && now - ws.lastFlush > SLEEP_GAP_MS) {
     ws.lastWater = now;
     ws.lastStand = now;
   }
-  // A stored state written by an older build may predate these fields; without
-  // a value `now - undefined` is NaN and the reminder never fires at all.
-  if (!Number.isFinite(ws.lastWater)) ws.lastWater = now;
-  if (!Number.isFinite(ws.lastStand)) ws.lastStand = now;
-  const prevFlush = ws.lastFlush;
   ws.lastFlush = now;
 
   // Daily recap: first flush of a new day looks back at yesterday.
@@ -426,7 +410,9 @@ async function doFlush() {
         finalizeRun(run, holes, settings); // a genuine pre-gap 25m+ run still counts
         run = null;
       }
-      ws.activeSecs = 0; // browsing streak broken; office cycles are wall-clock
+      ws.activeSecs = 0;
+      ws.lastWater = now;
+      ws.lastStand = now;
     }
     if (delta > 0 && delta <= MAX_DELTA_S * 100) {
       // clamp: guards clock changes / long sleeps from inflating a bucket
@@ -497,27 +483,13 @@ async function doFlush() {
     }
   }
 
-  // Desk presence: OS-level input, so time spent in another application still
-  // counts. Queried once and shared by the eye clock and the office cycles.
-  const present = (await queryIdleState(clampIdle(settings.idleSeconds))) === "active";
-
-  // Screen time is screen time. The eye clock used to advance only while Chrome
-  // held focus, so switching to another app froze it and the reminder never
-  // arrived — which is exactly when a notification is the only way to reach
-  // you. Away from the browser but still at the desk, it keeps counting; the
-  // break then has no focused tab to draw on and falls through to the OS
-  // notification with its Done and Snooze buttons.
-  if (!state.counting && present && Number.isFinite(prevFlush)) {
-    ws.activeSecs += Math.min(MAX_DELTA_S, Math.max(0, Math.round((now - prevFlush) / 1000)));
-  }
-
   // At most ONE break per flush — a second trigger in the same pass would
   // clobber the first overlay while its cycle was already consumed. A deferred
   // break's condition is preserved and fires on the next tick instead.
   let breakFired = false;
 
   // Heads-up pill ~1 minute before the eye break so the blur never surprises.
-  const eyeThresh = clampMin(settings.eyeIntervalMin, 1, 120, 20) * 60;
+  const eyeThresh = clampMin(settings.eyeIntervalMin, 5, 120, 20) * 60;
   if (ws.activeSecs < eyeThresh - 60) ws.preWarned = false;
   if (
     settings.eyeEnabled !== false &&
@@ -538,8 +510,8 @@ async function doFlush() {
   if (
     !breakFired &&
     settings.eyeEnabled !== false &&
-    (state.counting || present) &&
-    ws.activeSecs >= clampMin(settings.eyeIntervalMin, 1, 120, 20) * 60 &&
+    state.counting &&
+    ws.activeSecs >= clampMin(settings.eyeIntervalMin, 5, 120, 20) * 60 &&
     now >= (ws.eyeSnoozeUntil || 0)
   ) {
     breakFired = true;
@@ -552,8 +524,6 @@ async function doFlush() {
       body: "Look at something 20 feet away for 20 seconds. Blink slowly — the tabs will wait.",
       seconds: EYE_SECONDS,
       snoozeMin: clampMin(settings.eyeSnoozeMin, 1, 30, 5),
-      style: breakStyleOf(settings),
-      silent: settings.notificationSound === false,
     }, "well-eye");
   }
 
@@ -562,6 +532,8 @@ async function doFlush() {
   // gated on system presence so a machine left awake overnight doesn't remind
   // an empty room every 50 minutes.
   if (settings.officeMode) {
+    const present =
+      (await queryIdleState(clampIdle(settings.idleSeconds))) === "active";
     if (!present) {
       ws.lastWater = now;
       ws.lastStand = now;
@@ -574,8 +546,6 @@ async function doFlush() {
           emoji: "💧",
           title: "Water o'clock",
           body: "Small sip, big saves.",
-          style: breakStyleOf(settings),
-          silent: settings.notificationSound === false,
         }, "well-water");
       }
       if (!breakFired && now - ws.lastStand >= clampMin(settings.standIntervalMin, 15, 240, 60) * 60000) {
@@ -586,8 +556,6 @@ async function doFlush() {
           emoji: "🚶",
           title: "Unfold yourself",
           body: "Ninety seconds on your feet resets the hips and the mind.",
-          style: breakStyleOf(settings),
-          silent: settings.notificationSound === false,
         }, "well-stand");
       }
     }
@@ -612,12 +580,9 @@ function clampMin(n, lo, hi, dflt) {
   return Number.isFinite(n) && n > 0 ? Math.max(lo, Math.min(hi, Math.round(n))) : dflt;
 }
 
-function notifySafe(id, title, message, buttons, silent) {
+function notifySafe(id, title, message, buttons) {
   try {
     const opts = { type: "basic", iconUrl: "icon128.png", title, message, priority: 1 };
-    // Chrome chimes by default; `silent` suppresses it without hiding the
-    // notification, so the reminder still arrives when sound is turned off.
-    if (silent) opts.silent = true;
     // Buttons only where the platform can deliver their clicks (not Firefox).
     if (buttons && chrome.notifications?.onButtonClicked) opts.buttons = buttons;
     chrome.notifications.create(id, opts);
@@ -639,16 +604,8 @@ function sunsetNotificationMessage(domain, settings) {
 
 /* Show a break on the active page (blur overlay); fall back to a notification
  * with Done/Snooze buttons when no content script can be reached. */
-/* Settings may carry a stale or imported value; the page must never be asked
- * to render a style it does not know. */
-function breakStyleOf(settings) {
-  return BREAK_STYLES.includes(settings?.breakStyle) ? settings.breakStyle : "cover";
-}
-
 async function triggerBreak(state, cfg, idPrefix) {
-  // "notify" skips the page entirely; the OS notification below carries the
-  // same Done/Snooze buttons, so no action is lost by turning the page UI off.
-  if (cfg.style !== "notify" && state && state.tabId != null) {
+  if (state && state.tabId != null) {
     try {
       await chrome.tabs.sendMessage(state.tabId, { type: "SHOW_BREAK", cfg });
       return;
@@ -660,7 +617,7 @@ async function triggerBreak(state, cfg, idPrefix) {
   notifySafe(idPrefix, `${cfg.emoji} ${cfg.title}`, cfg.body, [
     { title: cfg.kind === "eye" ? "Done" : "Done ✓" },
     { title: "Snooze" },
-  ], cfg.silent);
+  ]);
 }
 
 /* ---------- wellness transactions (all through the mutex) ---------- */
@@ -673,7 +630,7 @@ function breakSnooze(kind, mins) {
     const m = clampMin(mins, 1, 60, clampMin(settings.eyeSnoozeMin, 1, 30, 5));
     ws.eyeSnoozeUntil = Date.now() + m * 60000;
     // keep the clock at the threshold so the break re-fires right after snooze
-    ws.activeSecs = clampMin(settings.eyeIntervalMin, 1, 120, 20) * 60;
+    ws.activeSecs = clampMin(settings.eyeIntervalMin, 5, 120, 20) * 60;
     await chrome.storage.local.set({ wellnessState: ws });
   });
 }
@@ -741,7 +698,7 @@ function mediaBeat(msg, sender) {
   if (!tab || !tab.active || !tab.url || tab.incognito) return; // only a regular focused tab counts
   const domain = domainOf(tab.url);
   if (!domain) return;
-  const kind = ["video", "shorts"].includes(msg.kind) ? msg.kind : null;
+  const kind = ["video", "shorts", "scroll"].includes(msg.kind) ? msg.kind : null;
   if (!kind) return;
   const secs = Math.min(60, Math.max(1, Number(msg.secs) || 0));
   return withStore(async () => {

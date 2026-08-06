@@ -160,3 +160,27 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 ## Packaging
 - [ ] `package.ps1` produces `tabyss-v<version>.zip` with only runtime files.
 - [ ] Zip loads cleanly as an unpacked/dragged extension with no missing-file errors.
+
+## Appearance (v2.2)
+- [ ] Six palette cards render with name, description, and three swatches; selection is visibly indicated.
+- [ ] Palette or appearance change previews immediately without saving; Save persists across restart.
+- [ ] System follows the OS scheme live; explicit Light overrides a dark OS and Dark overrides a light OS.
+- [ ] All twelve palette x scheme combinations keep body text readable and primary buttons legible (on-brand text).
+- [ ] Charts, progress bars, focus rings, and doodles redraw on palette/appearance change; forms, sessions, filters, and scroll state survive.
+- [ ] Invalid/legacy imported values fall back to Cobalt + System; other settings untouched.
+- [ ] Keyboard: palette and appearance radios reachable and announced; visible focus ring; forced-colours and reduced-motion unaffected.
+
+## Favicons (v2.3)
+- [ ] A wellbeing site currently open in a tab shows its real favicon; closing the tab still resolves via the canonical domain.
+- [ ] A site with no cached icon keeps a clean palette-tinted letter — never a broken-image glyph.
+- [ ] Icons load without layout shift; rows re-render correctly on day navigation and theme change.
+- [ ] DevTools network panel on the dashboard shows only chrome-extension:// favicon requests — zero remote requests.
+- [ ] Incognito windows contribute no favicon candidates.
+
+## Design parity wave 1 (v2.4)
+- [ ] Start form shows "Define done · optional"; saved definition appears as "Done meant: ..." in dashboard history.
+- [ ] Complete/End open the check-out; End shows the reason select; Back returns without ending; note and reason land in history.
+- [ ] Toolbar shows the amber dot while a session runs (also after closing the popup) and clears on complete/end/reset/import/clear.
+- [ ] Badges render as drawn medallions (earned colourful, locked grey) in every palette and scheme.
+- [ ] Wrapped deck colours run violet → magenta → red → ember across slides.
+- [ ] Notifications show the new titles; goal alert includes the on-device reassurance line.

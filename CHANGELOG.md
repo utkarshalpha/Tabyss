@@ -2,6 +2,87 @@
 
 All notable changes to Tabyss. Format based on Keep a Changelog; versioning is SemVer.
 
+## [2.4.0] — 2026-08-02 · "Design parity, wave 1"
+
+### Firefox
+- Android-compatible: `gecko_android` declared; tracking falls back to the
+  active tab where the windows/idle APIs don't exist (Android reads the
+  foreground tab as attention), notifications and badges degrade silently,
+  and the popup renders as a full-width sheet on Android.
+- First Firefox package (`build-firefox/`, AMO zip): MV3 event-page background
+  (manifest script order replaces importScripts), `sidebar_action` replaces the
+  Chrome side panel, notification buttons feature-detected (Firefox shows
+  body-click notifications), gecko id + data_collection_permissions "none".
+  Favicons gracefully fall back to letter tiles (no `_favicon` endpoint in
+  Firefox). Shared source is now cross-browser; the Chrome build is unchanged
+  in behavior. web-ext lint: 0 errors.
+
+### Added
+- Focus check-out: optional "Define done" on start; Complete/End now offer an
+  optional result note, plus an end reason when unfinished — the dashboard has
+  displayed these all along (ADR-029).
+- Amber toolbar dot while a session is live; cleared on every ending path.
+- Drawn badge medallions replace emoji badges; locked badges render grey.
+- Peak-hour callout under the hour heatmap; rabbit-hole definition surfaced.
+- Trust proof-lines on the dashboard and in Settings → Your data.
+
+### Changed
+- Wrapped slides follow a fixed abyss→ember gradient story.
+- Wellbeing microcopy pass ("Water o'clock", "Unfold yourself", "The feed will
+  keep", "Eyes need a horizon", honest skip label, kinder empty states);
+  goal notifications state that checks are on-device with no site name.
+- Score/budget/compare colours use semantic palette tokens; slim scrollbar.
+- Consistent "Wrapped ✦" naming across popup and dashboard.
+
+## [2.3.0] — 2026-08-02 · "Local favicon fidelity"
+
+### Changed
+- Watch time & wellbeing site rows now show real favicons whenever Chrome
+  already has one locally: the exact URL of an open regular tab on the same
+  domain is preferred, then the canonical domain, then a palette-tinted letter
+  fallback (ADR-028). Sourcing is exclusively Chrome's local /_favicon/
+  endpoint — no remote favicon service, no network requests, no new
+  permissions, nothing persisted; Incognito tabs are never consulted.
+- Race-safe shared favicon renderer: a broken-image glyph can never appear and
+  icon success/failure causes no layout shift.
+
+## [2.2.0] — 2026-08-02 · "Colour personalization"
+
+### Appearance
+- Six selectable colour palettes (Cobalt Focus default, Teal Clarity, Abyss
+  Violet, Plum Premium, Forest Calm, Ember Energy), each with full light and
+  dark sets, combined independently with System / Light / Dark appearance.
+  Accessible radio-cards with names, descriptions and swatches; immediate
+  preview; persisted via the existing Save action; invalid or legacy values
+  (including the retired `theme` key) fall back safely to Cobalt + System
+  (ADR-027).
+- All surfaces consume shared semantic CSS variables; success/warning/danger
+  keep their meaning in every palette. Open pages restyle live on storage
+  changes and System follows the OS with no flash.
+
+### Fixed
+- Popup no longer draws an inner border/rounded frame over the popup window,
+  and the footer sits in normal flow instead of overlapping scrolled content.
+- Persona details panel restyled for readable text.
+
+### Changed
+- Settings sections are now tap-to-collapse; Appearance opens by default.
+- "Reset today" moved from the popup footer to Settings → Your data
+  (two-step confirm).
+- Saved Pages side panel simplified: duplicate in-page header removed, one
+  clean full-width Save action with an optional note field; behavior unchanged.
+- Buttons across the extension are larger and consistent (42px minimum).
+
+## [2.1.0] — 2026-08-02 · "Production hardening"
+
+- Name restored to "Tabyss — Know Your Scroll"; audit fixes across export
+  (per-record salvage), focus state machine (clock-rollback clamp, unified
+  extend), hour/midnight time attribution, storage-mutex settings saves
+  (`SAVE_SETTINGS`), unhandled-rejection cleanup, dead Plans/Spaces worker
+  code removal, Wrapped intentional-sessions slide and escape-at-fill
+  hardening, side panel duplicate-tab hint, popup fixed 380px width
+  (vw collapse), dashboard keyboard access, options inline status.
+
 ## [2.0.0] — 2026-08-02 · "Intentional Browsing"
 
 ### Brand continuity

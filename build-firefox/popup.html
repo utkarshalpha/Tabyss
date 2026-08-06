@@ -13,25 +13,6 @@
         <span class="brand-copy"><strong>Tabyss</strong><small>Private on this device</small></span>
       </span>
       <span class="popup-head-actions">
-        <!-- The session control is a working dial, not a glyph: idle it rests
-             at 10:10 like a watch in a photograph; running, the hour hand
-             fades and the minute hand sweeps back like a kitchen timer while
-             the ring drains. popup.js drives both. -->
-        <button id="focusToggle" class="iconbtn dialbtn" type="button" data-state="idle"
-          aria-expanded="false" aria-controls="focusPanel"
-          title="Intentional session" aria-label="Intentional session">
-          <svg class="dial" viewBox="0 0 24 24" aria-hidden="true">
-            <circle class="dial-track" cx="12" cy="12" r="9.1"></circle>
-            <circle id="dialArc" class="dial-arc" cx="12" cy="12" r="9.1"
-              stroke-dasharray="0 57.18" stroke-dashoffset="0"></circle>
-            <path class="dial-ticks" d="M12 4.4v1.4M19.6 12h-1.4M12 19.6v-1.4M4.4 12h1.4"></path>
-            <line id="dialHour" class="dial-hand dial-hour" x1="12" y1="12" x2="12" y2="8.4"
-              transform="rotate(120 12 12)"></line>
-            <line id="dialMin" class="dial-hand dial-min" x1="12" y1="12" x2="12" y2="6.4"
-              transform="rotate(0 12 12)"></line>
-            <circle class="dial-pin" cx="12" cy="12" r="1.15"></circle>
-          </svg>
-        </button>
         <button id="savedPages" class="iconbtn" title="Saved pages" aria-label="Open Saved pages">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.5A2.5 2.5 0 0 1 8.5 2h7A2.5 2.5 0 0 1 18 4.5V22l-6-3.8L6 22V4.5Z"></path></svg>
         </button>
@@ -42,52 +23,65 @@
     </header>
 
     <main class="popup-main">
-      <!-- Drops from the dial. Hidden until you ask for it, so Today still
-           leads the popup; a live session forces it open (popup.js). -->
-      <section id="focusPanel" class="focus-sheet" aria-labelledby="focusHeading" hidden>
-        <div class="focus-sheet-head">
-          <span class="focus-kicker">Intentional session</span>
-          <span id="focusStatus" class="focus-status" hidden></span>
-          <button id="focusClose" class="focus-close" type="button" aria-label="Close intentional session">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
-          </button>
+      <section class="today-card" aria-labelledby="todayHeading">
+        <div class="card-heading-row">
+          <div>
+            <div class="eyebrow">Today</div>
+            <h1 id="todayHeading">A clear view, not a grade</h1>
+          </div>
+          <button id="dash" class="quiet-action" type="button">Open dashboard <span aria-hidden="true">→</span></button>
         </div>
-        <h2 id="focusHeading">What matters now?</h2>
+        <div class="today-glance">
+          <div class="ht">
+            <div class="htotal mono" id="total">0m</div>
+            <div class="hsub" id="prod">tracking starts as you browse</div>
+          </div>
+          <div class="ringcol">
+            <div class="ringwrap"><svg id="ring" viewBox="0 0 42 42" role="img" aria-label="Focus score"></svg></div>
+            <div class="ringlbl" id="scoreLabel"></div>
+          </div>
+        </div>
+        <div class="next-cue" id="upnextSection">
+          <div class="slabel">Next cue</div>
+          <div id="upnext" class="upnext"></div>
+        </div>
+      </section>
+
+      <section class="focuscard" aria-labelledby="focusHeading">
+        <div class="focuscard-head">
+          <div>
+            <div class="focus-kicker">Intentional session</div>
+            <h2 id="focusHeading">Start a session</h2>
+            <p class="focus-intro">An optional timer for what you are doing now.</p>
+          </div>
+          <span id="focusStatus" class="focus-status" hidden></span>
+        </div>
 
         <form id="focusCreate" class="focus-create">
+          <label class="focus-label" for="focusIntention">What matters now?</label>
           <input id="focusIntention" class="focus-intention" type="text" maxlength="160"
-            list="recentIntentions" autocomplete="off" aria-labelledby="focusHeading"
-            placeholder="e.g. Finish the launch brief" required />
+            list="recentIntentions" autocomplete="off" placeholder="e.g. Finish the launch brief" required />
           <datalist id="recentIntentions"></datalist>
-
-          <fieldset class="focus-dur">
-            <legend class="sr-only">Session length</legend>
-            <div class="seg">
-              <!-- The visible label stacks a figure over a unit, which a screen
-                   reader would read as "25min" / "Openno timer", so each input
-                   carries its own spoken name. -->
-              <input type="radio" name="focusDuration" id="dur25" value="25" aria-label="25 minutes" checked />
-              <label for="dur25"><b>25</b><span>min</span></label>
-              <input type="radio" name="focusDuration" id="dur50" value="50" aria-label="50 minutes" />
-              <label for="dur50"><b>50</b><span>min</span></label>
-              <input type="radio" name="focusDuration" id="dur90" value="90" aria-label="90 minutes" />
-              <label for="dur90"><b>90</b><span>min</span></label>
-              <input type="radio" name="focusDuration" id="durOpen" value="stopwatch" aria-label="Open-ended, no timer" />
-              <label for="durOpen"><b>Open</b><span>no timer</span></label>
-            </div>
-          </fieldset>
-
           <details class="focus-definedone">
-            <summary><span class="dd-mark" aria-hidden="true"></span>Define done<span class="dd-opt">optional</span></summary>
+            <summary>Define done · optional</summary>
             <textarea id="focusSuccess" maxlength="240" rows="2"
               placeholder="e.g. A reviewed draft with the final metrics added"
               aria-label="What does done look like? Optional"></textarea>
           </details>
-
-          <button class="btn primary focus-primary" type="submit">Start session</button>
+          <div class="focus-setup-row">
+            <label class="sr-only" for="focusDuration">Session duration</label>
+            <select id="focusDuration" aria-label="Session duration">
+              <option value="25" selected>25 min</option>
+              <option value="50">50 min</option>
+              <option value="90">90 min</option>
+              <option value="stopwatch">Open-ended</option>
+            </select>
+            <button class="btn primary focus-primary" type="submit">Start</button>
+          </div>
         </form>
 
         <div id="focusActive" class="focus-active" hidden>
+          <p id="focusTitle" class="focus-title"></p>
           <div class="focus-clock-row">
             <span id="focusClock" class="focus-clock mono">00:00</span>
             <span id="focusClockHint" class="focus-clock-hint"></span>
@@ -100,10 +94,10 @@
             <div id="focusSiteList" class="focus-site-list" role="list" aria-label="Sites visited in this session"></div>
           </div>
           <div id="focusControls" class="focus-actions">
-            <button id="focusComplete" class="btn primary" type="button">Complete</button>
             <button id="focusPause" class="btn" type="button">Pause</button>
             <button id="focusExtend" class="btn" type="button">+10 min</button>
-            <button id="focusAbandon" class="btn quiet-danger" type="button" aria-label="End without completing">End</button>
+            <button id="focusComplete" class="btn primary" type="button">Complete</button>
+            <button id="focusAbandon" class="btn" type="button" aria-label="End without completing">End</button>
           </div>
           <div id="focusCheckout" class="focus-checkout" hidden>
             <label class="focus-label" for="focusNote">How did it go?</label>
@@ -129,42 +123,13 @@
         <p id="focusAnnouncement" class="focus-feedback" aria-live="polite" hidden></p>
       </section>
 
-      <section class="today-card" aria-labelledby="todayHeading">
-        <div class="card-heading-row">
-          <div>
-            <div class="eyebrow">Today</div>
-            <h1 id="todayHeading">A clear view, not a grade</h1>
-          </div>
-          <button id="dash" class="quiet-action" type="button">Open dashboard <span aria-hidden="true">→</span></button>
-        </div>
-        <div class="today-glance">
-          <div class="ht">
-            <div class="htotal mono" id="total">0m</div>
-            <div class="hsub" id="prod">tracking starts as you browse</div>
-          </div>
-          <div class="ringcol">
-            <div class="ringwrap"><svg id="ring" viewBox="0 0 42 42" role="img" aria-label="Focus score"></svg></div>
-            <div class="ringlbl" id="scoreLabel"></div>
-          </div>
-        </div>
-        <div class="today-media" id="todayMedia" hidden></div>
-        <div class="next-cue" id="upnextSection">
-          <div class="slabel">Next cue</div>
-          <div id="upnext" class="upnext"></div>
-        </div>
-      </section>
-
-      <details class="popup-more" open>
-        <summary><span>Today’s details</span><span class="summary-hint">Sites, goals &amp; wellbeing</span></summary>
+      <details class="popup-more">
+        <summary><span>See today’s details</span><span class="summary-hint">Sites, goals &amp; wellbeing</span></summary>
         <div class="popup-more-body">
-          <button class="personarow" id="personaRow" type="button"
-            aria-expanded="false" aria-controls="pDetail">
-            <span class="pmask"><canvas id="pDoodle" width="80" height="80" aria-hidden="true"></canvas></span>
-            <span class="pcopy">
-              <span class="pkicker">Your week</span>
-              <span class="pname" id="pName">…</span>
-            </span>
-            <span class="pchev" id="pChev" aria-hidden="true"></span>
+          <button class="personarow" id="personaRow" title="Your browsing personality this week">
+            <canvas id="pDoodle" width="80" height="80" aria-hidden="true"></canvas>
+            <span class="pname" id="pName">…</span>
+            <span class="pchev" id="pChev">▾</span>
           </button>
           <div class="pdetail" id="pDetail" hidden>
             <span class="pepithet" id="pEpithet"></span>
@@ -176,7 +141,6 @@
               <span class="swlabel">Office mode <span class="swhint">Water &amp; stand reminders</span></span>
               <span class="switch"><input type="checkbox" id="officeToggle" /><i></i></span>
             </label>
-            <p id="officeError" class="focus-error" role="alert" hidden></p>
           </div>
 
           <div class="section" id="mediaSection" style="display:none">

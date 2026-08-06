@@ -95,3 +95,13 @@ Questions about this policy: utkarsh7854@gmail.com.
 
 ## Changes
 Any future change to this policy will be published with the extension and dated above.
+
+## Favicons (v2.3)
+
+Site icons shown in Tabyss come exclusively from Chrome's local favicon cache
+via the extension-internal `/_favicon/` endpoint. When a site is open in a
+regular (never Incognito) tab, Tabyss may use that tab's exact page URL as the
+cache key for a sharper icon; the lookup happens in memory inside trusted
+extension pages, is never stored, exported, or shared with content scripts,
+and never triggers a network request. If no icon is cached, a neutral letter
+placeholder is shown instead.

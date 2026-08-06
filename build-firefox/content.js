@@ -3,8 +3,10 @@
  * Two jobs, both fully on-device:
  *  1. MEDIA DETECTION — classify what's actually happening on the page:
  *     "shorts" (Reels / YT Shorts / TikTok), "video" (real long-form playback),
- *     both requiring live evidence from a real <video> element. Feed scrolling
- *     is deliberately not classified — see classify().
+ *     or "scroll" (sustained feed-scrolling on known feed surfaces). Strict by
+ *     design: normal webpage scrolling never counts — classification requires a
+ *     known surface AND live evidence (a playing video or a sustained gesture
+ *     cadence).
  *  2. BREAK OVERLAY — on command from the worker, blur the page with a
  *     full-screen break card (20-20-20 eye break, water, stand) with
  *     snooze / skip / done actions.
@@ -26,6 +28,18 @@
     { host: /(^|\.)tiktok\.com$/, path: /^\// },
     { host: /(^|\.)facebook\.com$/, path: /^\/(reel|reels|watch)(\/|$)/ },
   ];
+  // Feed surfaces: scrolling HERE with sustained cadence = doomscroll. A thread,
+  // an article, a profile page — none of these match, so reading never counts.
+  const FEED_SURFACES = [
+    { host: /(^|\.)(x|twitter)\.com$/, path: /^\/(home\/?)?$/ },
+    { host: /(^|\.)instagram\.com$/, path: /^\/$/ },
+    { host: /(^|\.)facebook\.com$/, path: /^\/$/ },
+    { host: /(^|\.)linkedin\.com$/, path: /^\/feed(\/|$)/ },
+    { host: /(^|\.)reddit\.com$/, path: /^\/(r\/(popular|all)\/?)?$/ },
+  ];
+
+  const SCROLL_RATE_MIN = 8; // gestures per rolling minute — strict threshold
+
   /* ---------- gesture tracking (rolling 60s window) ----------
    * Raw wheel/touchmove events arrive ~16ms apart through a momentum curve, so
    * one flick would look like dozens of "gestures". Coalesce: a new gesture is
@@ -71,7 +85,7 @@
     return list.some((s) => s.host.test(host) && s.path.test(location.pathname));
   }
 
-  /* Strict classification. Order matters: shorts > video. */
+  /* Strict classification. Order matters: shorts > video > scroll. */
   function classify() {
     if (document.visibilityState !== "visible" || !document.hasFocus()) return null;
     if (matchSurface(SHORT_SURFACES)) {
@@ -85,11 +99,7 @@
     // or fullscreen. Autoplaying muted teaser loops don't qualify.
     if (v && !v.muted && (v.duration > 90 || !!document.fullscreenElement)) return "video";
     if (v && document.fullscreenElement) return "video";
-    // Feed scrolling is deliberately no longer classified. It only ever matched
-    // five exact feed URLs, so someone scrolling a subreddit, Threads or a news
-    // feed saw 0m and concluded they had not scrolled. An incomplete number
-    // presented as fact is worse than no number. Playback-based kinds stay:
-    // they are evidenced by a real <video> element, not inferred from gestures.
+    if (matchSurface(FEED_SURFACES) && gestureRate() >= SCROLL_RATE_MIN) return "scroll";
     return null;
   }
 
@@ -201,54 +211,39 @@
   function showOverlay(cfg) {
     removeOverlay();
     removePill(); // the heads-up pill hands over to the full overlay
-    // "side" parks the same card in the corner: it stays until you act, but it
-    // never blurs the page or swallows clicks, so you can keep working.
-    const side = cfg.style === "side";
     const host = document.createElement("div");
-    host.style.cssText = side
-      ? "position:fixed;right:18px;bottom:18px;z-index:2147483647;max-width:340px;" +
-        "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;"
-      : "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;" +
-        "background:rgba(8,10,16,0.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);" +
-        "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;";
+    host.style.cssText =
+      "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;" +
+      "background:rgba(8,10,16,0.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);" +
+      "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;";
     const card = document.createElement("div");
-    card.style.cssText = side
-      ? "width:100%;text-align:left;padding:1rem 1.1rem;" +
-        "background:rgba(22,18,31,0.97);border:1px solid rgba(255,255,255,0.16);" +
-        "border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,0.45);"
-      : "max-width:420px;width:calc(100% - 3rem);text-align:center;padding:2rem 1.8rem;" +
-        "background:rgba(22,18,31,0.94);border:1px solid rgba(255,255,255,0.14);" +
-        "border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,0.5);";
+    card.style.cssText =
+      "max-width:420px;width:calc(100% - 3rem);text-align:center;padding:2rem 1.8rem;" +
+      "background:rgba(22,18,31,0.94);border:1px solid rgba(255,255,255,0.14);" +
+      "border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,0.5);";
 
     const emoji = document.createElement("div");
-    emoji.style.cssText = side
-      ? "font-size:1.5rem;line-height:1;margin-bottom:0.3rem;"
-      : "font-size:3rem;line-height:1;margin-bottom:0.6rem;";
+    emoji.style.cssText = "font-size:3rem;line-height:1;margin-bottom:0.6rem;";
     emoji.textContent = cfg.emoji;
     const title = document.createElement("div");
-    title.style.cssText = side
-      ? "font-size:0.95rem;font-weight:700;margin-bottom:0.25rem;"
-      : "font-size:1.35rem;font-weight:700;margin-bottom:0.4rem;";
+    title.style.cssText = "font-size:1.35rem;font-weight:700;margin-bottom:0.4rem;";
     title.textContent = cfg.title;
     const body = document.createElement("div");
-    body.style.cssText = side
-      ? "font-size:0.8rem;opacity:0.85;line-height:1.45;margin-bottom:0.8rem;"
-      : "font-size:0.95rem;opacity:0.85;line-height:1.5;margin-bottom:1.1rem;";
+    body.style.cssText = "font-size:0.95rem;opacity:0.85;line-height:1.5;margin-bottom:1.1rem;";
     body.textContent = cfg.body;
     card.append(emoji, title, body);
 
     let count = null;
     if (cfg.seconds) {
       count = document.createElement("div");
-      count.style.cssText = side
-        ? "font-size:1.4rem;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:0.7rem;"
-        : "font-size:2.4rem;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:1.1rem;";
+      count.style.cssText =
+        "font-size:2.4rem;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:1.1rem;";
       count.textContent = String(cfg.seconds);
       card.append(count);
     }
 
     const row = document.createElement("div");
-    row.style.cssText = `display:flex;gap:0.5rem;justify-content:${side ? "flex-start" : "center"};flex-wrap:wrap;`;
+    row.style.cssText = "display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;";
     const mkBtn = (label, primary, onClick) => {
       const b = document.createElement("button");
       b.textContent = label;
@@ -314,9 +309,6 @@
           body: typeof cfg.body === "string" ? cfg.body : "",
           seconds: Number.isFinite(cfg.seconds) && cfg.seconds > 0 ? Math.min(600, Math.round(cfg.seconds)) : null,
           snoozeMin: Number.isFinite(cfg.snoozeMin) && cfg.snoozeMin > 0 ? Math.round(cfg.snoozeMin) : 5,
-          // Anything unrecognised falls back to the blocking cover rather than
-          // silently rendering nothing and losing the reminder.
-          style: cfg.style === "side" ? "side" : "cover",
         });
       }
       sendResponse({ ok: true });

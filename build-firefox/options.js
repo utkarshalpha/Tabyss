@@ -144,15 +144,13 @@ function collect() {
     appearance: document.querySelector('input[name="appearance"]:checked')?.value || "system",
     overrides, goals, ignore, idleSeconds, retentionDays, sunsetEnabled, sunsetHour,
     eyeEnabled: document.getElementById("eyeOn").checked,
-    eyeIntervalMin: num("eyeInterval", 1, 120, 20),
+    eyeIntervalMin: num("eyeInterval", 5, 120, 20),
     eyeSnoozeMin: num("eyeSnooze", 1, 30, 5),
-    breakStyle: document.querySelector('input[name="breakStyle"]:checked')?.value || "cover",
     officeMode: document.getElementById("officeOn").checked,
     waterIntervalMin: num("waterInterval", 10, 240, 50),
     standIntervalMin: num("standInterval", 15, 240, 60),
     mediaEnabled: document.getElementById("mediaOn").checked,
     recapEnabled: document.getElementById("recapOn").checked,
-    notificationSound: document.getElementById("notificationSound").checked,
     notificationDetails: document.getElementById("notificationDetails").checked,
   };
 }
@@ -165,9 +163,9 @@ function showStatus(message, isError = false) {
   if (!box) return;
   box.textContent = message;
   box.classList.toggle("error", isError);
-  box.hidden = false;
+  box.style.display = "";
   clearTimeout(statusTimer);
-  statusTimer = setTimeout(() => (box.hidden = true), isError ? 8000 : 2500);
+  statusTimer = setTimeout(() => (box.style.display = "none"), isError ? 8000 : 2500);
 }
 
 async function save() {
@@ -176,21 +174,6 @@ async function save() {
   const merged = Object.assign({}, await getSettings(), collect());
   const response = await sendWorkerRequest({ type: "SAVE_SETTINGS", settings: merged });
   settings = sanitizeSettings(response.settings);
-  // Every numeric field is clamped on the way in. Writing the stored value back
-  // means a clamp is visible: typing 2 into a field with a 1-minute floor used
-  // to report "Saved ✓" and keep showing 2 while storage held something else.
-  for (const [id, value] of [
-    ["eyeInterval", settings.eyeIntervalMin],
-    ["eyeSnooze", settings.eyeSnoozeMin],
-    ["waterInterval", settings.waterIntervalMin],
-    ["standInterval", settings.standIntervalMin],
-    ["idle", settings.idleSeconds],
-    ["retention", settings.retentionDays],
-    ["sunsetHour", settings.sunsetHour],
-  ]) {
-    const field = document.getElementById(id);
-    if (field && String(field.value) !== String(value)) field.value = value;
-  }
   renderAssign();
 }
 
@@ -397,16 +380,12 @@ async function init() {
   document.getElementById("eyeOn").checked = settings.eyeEnabled !== false;
   document.getElementById("eyeInterval").value = settings.eyeIntervalMin || 20;
   document.getElementById("eyeSnooze").value = settings.eyeSnoozeMin || 5;
-  const style = BREAK_STYLES.includes(settings.breakStyle) ? settings.breakStyle : "cover";
-  const styleInput = document.querySelector(`input[name="breakStyle"][value="${style}"]`);
-  if (styleInput) styleInput.checked = true;
   document.getElementById("officeOn").checked = !!settings.officeMode;
   document.getElementById("waterInterval").value = settings.waterIntervalMin || 50;
   document.getElementById("standInterval").value = settings.standIntervalMin || 60;
   document.getElementById("mediaOn").checked = settings.mediaEnabled !== false;
   document.getElementById("recapOn").checked = settings.recapEnabled !== false;
   document.getElementById("notificationDetails").checked = !!settings.notificationDetails;
-  document.getElementById("notificationSound").checked = settings.notificationSound !== false;
   renderGoals();
   await renderAssign();
 }
