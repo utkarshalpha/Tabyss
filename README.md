@@ -31,7 +31,7 @@ wellbeing breaks, and a weekly Wrapped-style recap are computed
 | ✅ **Optional intentional sessions** | Enter what you are doing, see the local domains visited, then pause, extend, Complete, or End directly in one click |
 | 🎭 **Browsing Personality** | 50+ personas from 6 archetypes × 4 rhythms × 4 intensities, computed weekly from real patterns, each with deterministic generative avatar art |
 | ✨ **Weekly Wrapped** | A 9-slide full-screen recap with a locally rendered 1080×1080 share card (categories only by default — sites are opt-in) |
-| 🎯 **Focus Score** | Daily 0–100 from productive share + tab discipline − rabbit holes; honest "warming up" state under 30 minutes |
+| 🎯 **Focus Score** | Daily 0–100 from productive share + site-switch discipline + participation − rabbit holes; no score until 30 minutes of activity |
 | 🎬 **Media detection** | Video watch-time and Shorts/Reels measured separately by a content script, both requiring real playback — normal reading never counts |
 | 👀 **20-20-20 eye breaks** | A desktop notification after continuous screen time, with Done and Snooze, so it reaches you even when the browser is not in front |
 | 🏢 **Office Mode** | Hydration and stand-up reminders on wall-clock cycles, presence-gated so an empty desk is never nagged |
@@ -42,6 +42,31 @@ wellbeing breaks, and a weekly Wrapped-style recap are computed
 Appearance is also under your control: Settings offers **System, Light, and Dark**
 using the Abyss & Ember design language. System follows the device, and the choice
 never leaves local extension storage.
+
+## How Focus Score works
+
+Focus Score combines four signals into one daily number:
+
+```text
+Focus Score = productive-time points + switch points + 5 participation points
+              - rabbit-hole penalty
+```
+
+- **Productive time (0–65 points):** the share of tracked time categorized as
+  Productive, Education, or Career. Your category overrides are respected.
+- **Site-switch discipline (0–30 points):** 6 or fewer focused site switches per
+  active hour earns full credit; 30 or more earns zero. Between those values, the
+  score decreases gradually. A scoreable day with less than one tracked hour, or
+  without switch history, receives a neutral 18 points.
+- **Participation (+5 points):** awarded once the day has enough activity to score.
+- **Rabbit holes (−6 each, capped at −15/day):** recorded only after 25 continuous
+  minutes on one site categorized as Social or Entertainment. A 15-minute visit
+  has no rabbit-hole penalty.
+
+Days with less than 30 minutes of tracked activity show **not enough activity**
+instead of a misleading zero. The final result is rounded and constrained to
+0–100. Intentional-session outcomes are shown separately and do not currently
+change this passive score.
 
 ## Engineering highlights
 
