@@ -73,3 +73,33 @@ sessions, focus-timer/Pomodoro, optional local export to CSV.
 true 100; sparse days show "—" not 0; audible tabs count as active (video); category
 matching is domain-boundary-safe; the share card never includes site names without
 explicit opt-in; epithet copy is playful, never shaming.
+
+## 9. V2 implementation addendum — Intentional browsing
+
+Status: implemented for the final local V2 build; store release still requires the
+manual unpacked-extension and policy gates in `QA_CHECKLIST.md`.
+
+| ID | Requirement | Acceptance |
+|----|-------------|-----------|
+| V2-FR-1 | Simple optional session | Today's insight leads; a secondary session card needs one labelled action ≤160 characters, one duration, and Start; recent intentions are reusable |
+| V2-FR-2 | Timer and open-ended focus | 5–240 minute initial timer or stopwatch; elapsed/remaining time derives from persisted timestamps |
+| V2-FR-3 | Session controls | Running sessions can pause, resume, extend by an allowlisted duration, Complete, or End directly |
+| V2-FR-4 | One-click outcome | Timer expiry enters Review; Complete and End commit immediately from the active card without a checkout form, note, or reason question |
+| V2-FR-5 | Recovery | Popup closure, worker suspension, browser restart, delayed alarms, reset, retention, clear, export, and restore have explicit behavior |
+| V2-FR-6 | Reflection | Dashboard shows active and historical intentional sessions per day without folding them into passive Focus Score |
+| V2-FR-7 | Local privacy | Intentions/outcomes remain in trusted local extension storage; only `sidePanel` is added, with no network request, account, or telemetry |
+| V2-FR-8 | Saved pages | Explicitly save the active safe HTTP(S) URL/title and optional note; open, complete, save again, filter, and delete |
+| V2-FR-9 | Simple side panel | One Saved pages job with no Profile, Plan, Space, metric, checkpoint, or Recovery navigation |
+| V2-FR-10 | Accessible state | Native controls, visible label, pressed filter state, live feedback/count, busy state, favicon fallback, and narrow-layout support |
+| V2-FR-11 | Compatibility preservation | Retired Plan/Space/checkpoint records remain validated, local, and portable without active schedules, guards, or destructive migration |
+| V2-FR-12 | Portable V2 data | Product schema 1 participates in validated format-4 export/import, clear, and local-only storage |
+| V2-FR-13 | Session sites | Show at most 24 unique normalized domains visited during the session in popup and dashboard history; exclude Incognito/ignored/non-counting activity and never attach full URLs or per-site duration |
+| V2-FR-14 | User-selected appearance | Settings offers System (default), Light, and Dark; explicit choices override the OS across extension pages, use Abyss & Ember tokens, preserve the V1.5 logo, and remain local/offline |
+
+V2 deliberately does not claim cloud sync, remote AI, accounts, public or household
+comparison, employee/parental monitoring, or hard blocking. Those are not hidden
+future toggles: they are absent because a trustworthy implementation requires a real
+identity/service/security/abuse/operations boundary that this local product does not
+have. V2 chooses an optional timer/open-ended session plus Saved pages rather than
+an unescapable Pomodoro, DNR enforcement, or a general tab-workspace manager. See
+ADR-023 for the final product-surface decision.

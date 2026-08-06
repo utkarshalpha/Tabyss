@@ -2,8 +2,12 @@
  * rabbit holes, trend, rollups, calendar, badges, sites. */
 
 let usage = {}, hours = {}, switches = {}, holes = {}, notified = {}, media = {}, wellness = {};
+let openTabFavicons = new Map(); // in-memory only; see ADR-028
+let focusSessions = [], focusActive = null, focusHistoryAvailable = false;
 let settings = DEFAULT_SETTINGS;
 let selected = dateKey(Date.now());
+let scope = "day";        // day | week | month
+let trendSpan = 7;        // 7 = last seven days, 14 = this week against last
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const svgNS = "http://www.w3.org/2000/svg";
@@ -21,16 +25,164 @@ function svg(tag, attrs) {
 function hueOf(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
 function hourLabel(h) { const a = h < 12 ? "AM" : "PM"; let x = h % 12; if (!x) x = 12; return `${x} ${a}`; }
 
+/* Make a clickable div a real control: keyboard-reachable and announced. */
+function pressable(element, label, onActivate) {
+  element.setAttribute("role", "button");
+  element.setAttribute("tabindex", "0");
+  element.setAttribute("aria-label", label);
+  element.addEventListener("click", onActivate);
+  element.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onActivate();
+    }
+  });
+}
+
 function dayTotal(key) { return Object.values(usage[key] || {}).reduce((s, v) => s + v, 0); }
-function catTotalsFor(key) {
+
+/* ---------- scope ----------
+ * Every panel below reads the day keys in scope rather than a single date, so
+ * "Week" and "Month" are the same views over a longer range instead of a
+ * separate screen. Day stays the default: it is the one you land on. */
+function scopeKeys() {
+  if (scope === "day") return [selected];
+  if (scope === "week") { const s = startOfWeek(selected); return rangeKeys(s, shiftDay(s, 6)); }
+  const [y, m] = selected.split("-").map(Number);
+  return rangeKeys(monthStart(selected), dateKey(new Date(y, m, 0).getTime()));
+}
+/* Never count days that have not happened yet — an average over a partial
+ * week must divide by the days elapsed, not by seven. */
+function scopeKeysToDate() {
+  const today = dateKey(Date.now());
+  return scopeKeys().filter((k) => k <= today);
+}
+function scopeTotal() { return scopeKeysToDate().reduce((s, k) => s + dayTotal(k), 0); }
+function scopeLabel() {
+  const keys = scopeKeys();
+  if (scope === "day") return prettyDate(selected);
+  if (scope === "month") return monthName(selected);
+  return `${prettyDate(keys[0])} – ${prettyDate(keys[keys.length - 1])}`;
+}
+
+/* Merge several days of domain totals into one map. */
+function usageForKeys(keys) {
+  const merged = {};
+  for (const key of keys) {
+    for (const [domain, secs] of Object.entries(usage[key] || {})) {
+      merged[domain] = (merged[domain] || 0) + secs;
+    }
+  }
+  return merged;
+}
+function catTotalsOf(usageMap) {
   const t = {};
-  for (const [d, s] of Object.entries(usage[key] || {})) {
+  for (const [d, s] of Object.entries(usageMap)) {
     const c = categorize(d, settings.overrides);
     t[c] = (t[c] || 0) + s;
   }
   return t;
 }
+function catTotalsFor(key) { return catTotalsOf(usage[key] || {}); }
+function scopeCatTotals() { return catTotalsOf(usageForKeys(scopeKeysToDate())); }
 function dataBundle() { return { usage, hours, switches, holes, notified, settings }; }
+
+function focusOutcomeLabel(record) {
+  if (record.outcome === "completed") return "Completed";
+  const labels = {
+    "changed-priority": "Priority changed",
+    interrupted: "Interrupted",
+    "too-long": "Scope was too large",
+    other: "Other reason",
+  };
+  return labels[record.abandonedReason] || "Ended";
+}
+
+function focusVisitedSites(domains) {
+  if (!Array.isArray(domains) || !domains.length) return null;
+  const list = el("div", "focus-history-sites");
+  list.setAttribute("role", "list");
+  list.setAttribute("aria-label", "Sites visited in this session");
+  for (const domain of domains.slice(0, 8)) {
+    const item = el("span", "focus-history-site");
+    item.setAttribute("role", "listitem");
+    item.title = domain;
+    const chip = el("span", "chip");
+    const fav = faviconUrl(domain, 24);
+    const fallback = () => {
+      chip.innerHTML = "";
+      chip.classList.remove("fav");
+      chip.style.background = `hsl(${hueOf(domain)} 50% 45%)`;
+      chip.textContent = (domain[0] || "?").toUpperCase();
+    };
+    if (fav) {
+      chip.classList.add("fav");
+      const img = document.createElement("img");
+      img.src = fav;
+      img.alt = "";
+      img.addEventListener("error", fallback);
+      chip.append(img);
+    } else fallback();
+    item.append(chip, el("span", "focus-history-site-domain", domain));
+    list.append(item);
+  }
+  if (domains.length > 8) list.append(el("span", "focus-sites-more", `+${domains.length - 8} more`));
+  return list;
+}
+
+function renderFocusSessions() {
+  const wrap = document.getElementById("focusHistory");
+  const summary = document.getElementById("focusDaySummary");
+  wrap.innerHTML = "";
+  summary.innerHTML = "";
+  if (!focusHistoryAvailable) {
+    wrap.append(el("div", "empty", "Focus history could not be validated. Restore a known-good backup or clear local data before recording another session."));
+    return;
+  }
+  const sessions = focusSessions.filter((record) => record.day === selected).sort((a, b) => b.endedAt - a.endedAt);
+  const activeToday = focusActive && dateKey(focusActive.startedAt) === selected ? focusActive : null;
+  const totalMs = sessions.reduce((sum, record) => sum + record.focusedMs, 0) + (activeToday?.elapsedMs || 0);
+  const completed = sessions.filter((record) => record.outcome === "completed").length;
+
+  if (sessions.length || activeToday) {
+    summary.append(
+      el("span", "focus-summary-chip mono", fmtShort(totalMs / 1000)),
+      el("span", "focus-summary-chip", `${completed}/${sessions.length} completed`)
+    );
+  }
+
+  if (activeToday) {
+    const row = el("article", "focus-history-row active");
+    const body = el("div", "focus-history-body");
+    body.append(el("div", "focus-history-title", activeToday.intention));
+    const meta = activeToday.mode === "timer"
+      ? `${fmtShort(activeToday.elapsedMs / 1000)} focused · ${activeToday.status}`
+      : `${fmtShort(activeToday.elapsedMs / 1000)} elapsed · ${activeToday.status}`;
+    body.append(el("div", "focus-history-meta", meta));
+    const activeSites = focusVisitedSites(activeToday.visitedDomains);
+    if (activeSites) body.append(activeSites);
+    row.append(el("span", "focus-outcome running", activeToday.status === "review" ? "Review" : "Active"), body);
+    wrap.append(row);
+  }
+
+  for (const record of sessions) {
+    const row = el("article", "focus-history-row");
+    const body = el("div", "focus-history-body");
+    body.append(el("div", "focus-history-title", record.intention));
+    const target = record.mode === "timer" && record.targetMinutes ? ` · ${record.targetMinutes}m target` : " · open-ended";
+    body.append(el("div", "focus-history-meta", `${fmtShort(record.focusedMs / 1000)} focused${target}`));
+    if (record.successDefinition) body.append(el("div", "focus-history-detail", `Done meant: ${record.successDefinition}`));
+    if (record.note) body.append(el("div", "focus-history-detail", record.note));
+    const visitedSites = focusVisitedSites(record.visitedDomains);
+    if (visitedSites) body.append(visitedSites);
+    row.append(el("span", `focus-outcome ${record.outcome}`, focusOutcomeLabel(record)), body);
+    wrap.append(row);
+  }
+
+  if (!wrap.children.length) {
+    wrap.append(el("div", "empty", "No sessions yet — start one from the popup. Intention first, timer second."));
+  }
+}
 
 /* Count-up animation for plain-number tile values. */
 function countUp(elm, target) {
@@ -91,7 +243,11 @@ function renderTiles() {
   let prodSecs = 0;
   for (const c of PRODUCTIVE_CATS) prodSecs += cats[c] || 0;
   const prod = total ? Math.round((prodSecs / total) * 100) : 0;
-  const hrs = hours[selected] || {};
+  // Averaged across the days in scope, so a week reads as a typical day
+  // rather than as seven days piled on top of each other.
+  const inScope = scopeKeysToDate();
+  const hrs = {};
+  for (const key of inScope) for (const [h, v] of Object.entries(hours[key] || {})) hrs[h] = (hrs[h] || 0) + v / Math.max(1, inScope.length);
   let peak = null, peakV = 0;
   for (const [h, v] of Object.entries(hrs)) if (v > peakV) { peakV = v; peak = Number(h); }
   const sites = Object.keys(usage[selected] || {}).length;
@@ -99,12 +255,14 @@ function renderTiles() {
   const sw = switches[selected];
 
   const delta = total - prevTotal;
-  const deltaTxt = prevTotal
-    ? `<span class="${delta >= 0 ? "up" : "down"}">${fmtShort(Math.abs(delta))}</span> vs prev day`
-    : "no prior day";
+  // Built as DOM nodes, never as an HTML string — keeps the sink out entirely.
+  const deltaNodes = () => {
+    if (!prevTotal) return [document.createTextNode("no prior day")];
+    return [el("span", delta >= 0 ? "up" : "down", fmtShort(Math.abs(delta))), document.createTextNode(" vs prev day")];
+  };
 
   const tiles = [
-    ["Total", total ? fmt(total) : "0m", deltaTxt, null],
+    ["Total", total ? fmt(total) : "0m", deltaNodes(), null],
     ["Focus score", score != null ? String(score) : "—", score != null ? scoreLabel(score) : "needs 30m+ tracked", score],
     ["Productive", total ? prod + "%" : "—", "of tracked time", null],
     ["Site switches", sw != null ? String(sw) : "—", sw != null ? "jumps between sites" : "tracked from v1.2", sw],
@@ -121,7 +279,8 @@ function renderTiles() {
     else v.textContent = val;
     t.append(v);
     const s = el("div", "tsub");
-    s.innerHTML = sub;
+    if (Array.isArray(sub)) s.append(...sub);
+    else s.textContent = sub;
     t.append(s);
     wrap.append(t);
   });
@@ -133,7 +292,7 @@ function renderDonut() {
   const legend = document.getElementById("donutLegend");
   box.innerHTML = "";
   legend.innerHTML = "";
-  const cats = catTotalsFor(selected);
+  const cats = scopeCatTotals();
   const total = Object.values(cats).reduce((a, b) => a + b, 0);
 
   const track = svg("circle", { cx: 21, cy: 21, r: 15.9155, fill: "none", "stroke-width": 6 });
@@ -141,7 +300,7 @@ function renderDonut() {
   box.append(track);
 
   if (!total) {
-    legend.append(el("div", "empty", "No activity this day."));
+    legend.append(el("div", "empty", scope === "day" ? "No activity this day." : "No activity in this range."));
     return;
   }
 
@@ -198,8 +357,18 @@ function renderHeat() {
   const labels = document.getElementById("heatLabels");
   heat.innerHTML = "";
   labels.innerHTML = "";
-  const hrs = hours[selected] || {};
+  // Averaged across the days in scope, so a week reads as a typical day
+  // rather than as seven days piled on top of each other.
+  const inScope = scopeKeysToDate();
+  const hrs = {};
+  for (const key of inScope) for (const [h, v] of Object.entries(hours[key] || {})) hrs[h] = (hrs[h] || 0) + v / Math.max(1, inScope.length);
   const max = Math.max(1, ...Object.values(hrs));
+  const peakNote = document.getElementById("peakNote");
+  if (peakNote) {
+    let peak = null, peakV = 0;
+    for (const [h, v] of Object.entries(hrs)) if (v > peakV) { peakV = v; peak = Number(h); }
+    peakNote.textContent = peak != null ? `Peak hour ${hourLabel(peak)} — protect it.` : "";
+  }
   for (let h = 0; h < 24; h++) {
     const v = hrs[h] || 0;
     const cell = el("div", "hcell");
@@ -222,7 +391,7 @@ function renderCompare() {
   const cur = weekStats(dataBundle(), today, 7);
   const prev = weekStats(dataBundle(), shiftDay(today, -7), 7);
   if (!cur.total && !prev.total) {
-    box.append(el("div", "empty", "Not enough data yet — check back next week."));
+    box.append(el("div", "empty", "Comparisons unlock after your first full week."));
     return;
   }
   for (const cat of CATEGORIES) {
@@ -243,7 +412,7 @@ function renderCompare() {
       const goodDown = cat !== "Productive"; // less scroll = good, more productive = good
       const isGood = pct === 0 ? null : (pct < 0) === goodDown;
       deltaEl.textContent = `${pct > 0 ? "▲" : pct < 0 ? "▼" : "="} ${Math.abs(pct)}%`;
-      deltaEl.style.color = isGood == null ? "var(--muted)" : isGood ? "#0ca30c" : "#d03b3b";
+      deltaEl.style.color = isGood == null ? "var(--muted)" : isGood ? "var(--success)" : "var(--danger)";
     }
     row.append(chip, name, vals, deltaEl);
     box.append(row);
@@ -256,7 +425,7 @@ function renderHoles() {
   box.innerHTML = "";
   const list = (holes[selected] || []).slice().sort((a, b) => b.secs - a.secs);
   if (!list.length) {
-    box.append(el("div", "empty", "No rabbit holes on this day. Clean scrolling 🧠"));
+    box.append(el("div", "empty", "Zero rabbit holes. Genuinely elite discipline."));
     return;
   }
   for (const h of list) {
@@ -264,7 +433,7 @@ function renderHoles() {
     row.append(
       el("span", "holedot", "🕳️"),
       el("span", "dom", h.domain),
-      el("span", "secs mono", `${fmtShort(h.secs)} · ended ~${hourLabel(h.hour)}`)
+      el("span", "secs mono", `${fmtShort(h.secs)} · ~${hourLabel(h.hour)}`)
     );
     box.append(row);
   }
@@ -279,7 +448,6 @@ function renderMedia() {
   const kinds = [
     ["video", "🎬", "Video watched"],
     ["shorts", "📱", "Reels / Shorts"],
-    ["scroll", "🌀", "Feed doomscroll"],
   ];
   let any = false;
   for (const [kind, emoji, label] of kinds) {
@@ -290,7 +458,21 @@ function renderMedia() {
     const cell = el("div", "mediacell");
     cell.append(el("div", "mk", `${emoji} ${label}`));
     cell.append(el("div", "mv", fmtShort(total)));
-    if (perDomain[0]) cell.append(el("div", "md", `mostly ${perDomain[0][0]} (${fmtShort(perDomain[0][1])})`));
+    if (perDomain[0]) {
+      const topDomain = perDomain[0][0];
+      const line = el("div", "md mdsite");
+      const chip = el("span", "favchip");
+      // Prefer the exact URL of an open tab on this domain — Chrome's local
+      // cache almost always has that page's icon even when the bare domain
+      // misses. Falls back to canonical domain, then the letter.
+      renderFavicon(chip, {
+        domain: topDomain,
+        exactPageUrl: openTabFavicons.get(topDomain) || null,
+        size: 24,
+      });
+      line.append(chip, el("span", "mdtext", `mostly ${topDomain} (${fmtShort(perDomain[0][1])})`));
+      cell.append(line);
+    }
     grid.append(cell);
   }
   const wellBits = [
@@ -309,35 +491,121 @@ function renderMedia() {
   }
   if (!any) {
     grid.append(el("div", "empty",
-      "No media or wellness activity on this day. Watch-time, Reels/Shorts, doomscroll and break stats land here."));
+      "No media or wellness activity on this day. Watch-time, Reels/Shorts and break stats land here."));
   }
 }
 
 /* ---------- 7-day trend ---------- */
+/* Day-by-day comparison. A flat bar per day only answers "how long"; stacking
+ * each bar by category answers "how long, doing what" in the same glance, and
+ * makes two days comparable by shape as well as by height. In "vs last week"
+ * the same seven weekdays from the previous week sit behind each bar as a
+ * ghost, so Tuesday is compared with Tuesday rather than with the week. */
 function renderTrend() {
   const trend = document.getElementById("trend");
+  const legendBox = document.getElementById("trendLegend");
   trend.innerHTML = "";
+  legendBox.innerHTML = "";
+  const compare = trendSpan === 14;
+
+  const today = dateKey(Date.now());
+  const anchor = scope === "day" ? today : scopeKeys()[scopeKeys().length - 1];
   const days = [];
-  for (let i = 6; i >= 0; i--) days.push(shiftDay(dateKey(Date.now()), -i));
-  const max = Math.max(1, ...days.map(dayTotal));
+  for (let i = 6; i >= 0; i--) days.push(shiftDay(anchor, -i));
+
+  const priorOf = (key) => shiftDay(key, -7);
+  const max = Math.max(1, ...days.map((k) => Math.max(dayTotal(k), compare ? dayTotal(priorOf(k)) : 0)));
+  const present = new Set();
+
+  // A daily average line: without a reference, seven bars only say which day
+  // was biggest, not whether any of them was unusual.
+  const elapsed = days.filter((k) => k <= today);
+  const average = elapsed.length ? elapsed.reduce((s, k) => s + dayTotal(k), 0) / elapsed.length : 0;
+
   for (const key of days) {
     const total = dayTotal(key);
-    const col = el("div", "tcol" + (key === selected ? " active" : ""));
-    col.title = `${prettyDate(key)} — ${fmt(total)}`;
-    const bar = el("div", "tbar");
-    const h = (total / max) * 100;
-    if (reduceMotion) bar.style.height = h + "%";
-    else {
-      bar.style.height = "0%";
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        bar.style.transition = "height 0.5s ease";
-        bar.style.height = h + "%";
-      }));
+    const col = el("div", "tcol" + (key === selected ? " active" : "") + (key > today ? " future" : ""));
+    const plot = el("div", "tplot");
+
+    // Last week is drawn as a cap line across the bar, not as a second bar
+    // behind it: a shorter ghost is completely hidden by the bar in front,
+    // which is exactly the case you most want to see.
+    const priorTotal = compare ? dayTotal(priorOf(key)) : 0;
+    if (compare && priorTotal > 0) {
+      const cap = el("div", "tghost");
+      cap.style.bottom = `${Math.min(100, (priorTotal / max) * 100)}%`;
+      cap.title = `${prettyDate(priorOf(key))} — ${fmt(priorTotal)}`;
+      plot.append(cap);
     }
-    col.append(bar, el("div", "tl", weekdayShort(key)));
-    col.addEventListener("click", () => { selected = key; renderAll(); });
+
+    // A day with nothing tracked gets a flat baseline rule, not a bar. Sizing
+    // an empty .tbar to zero fought its own flex/min-height/overflow rules and
+    // kept rendering a grey block; there is nothing to draw, so draw nothing.
+    const cats = catTotalsFor(key);
+    const ordered = CATEGORIES.filter((c) => cats[c] > 0);
+    let bar = null;
+    if (!total || !ordered.length) {
+      plot.append(el("div", "tstub"));
+    } else {
+      // One stack, tallest category at the bottom so the baseline stays stable.
+      bar = el("div", "tbar");
+      for (const cat of ordered) {
+        present.add(cat);
+        const seg = el("div", "tseg");
+        seg.style.background = catColor(cat);
+        seg.style.flex = String(cats[cat]);
+        seg.title = `${cat} — ${fmt(cats[cat])}`;
+        bar.append(seg);
+      }
+      const h = (total / max) * 100;
+      if (reduceMotion) bar.style.height = h + "%";
+      else {
+        bar.style.height = "0%";
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          bar.style.transition = "height 0.5s ease";
+          bar.style.height = h + "%";
+        }));
+      }
+      plot.append(bar);
+    }
+
+    // Drawn per column rather than once across the chart, so it stays aligned
+    // to the plot area no matter how the columns are sized.
+    if (average > 0) {
+      const guide = el("div", "tguide");
+      guide.style.bottom = `${Math.min(100, (average / max) * 100)}%`;
+      if (key === days[days.length - 1]) guide.append(el("span", "tguide-label", `avg ${fmtShort(average)}`));
+      plot.append(guide);
+    }
+
+    col.append(plot, el("div", "tl", weekdayShort(key)), el("div", "tv mono", total ? fmtShort(total) : "—"));
+    if (key <= today) {
+      const delta = compare ? ` — ${describeDelta(total, dayTotal(priorOf(key)))}` : "";
+      pressable(col, `${prettyDate(key)}, ${total ? fmt(total) : "0m"} tracked${delta}`, () => { selected = key; renderAll(); });
+    }
     trend.append(col);
   }
+
+  for (const cat of CATEGORIES.filter((c) => present.has(c))) {
+    const row = el("div", "lrow");
+    const chip = el("span", "lchip");
+    chip.style.background = catColor(cat);
+    row.append(chip, el("span", "lt", cat));
+    legendBox.append(row);
+  }
+  if (compare) {
+    const row = el("div", "lrow");
+    row.append(el("span", "lchip ghostchip"), el("span", "lt", "Same day last week"));
+    legendBox.append(row);
+  }
+}
+
+function describeDelta(now, before) {
+  if (!before && !now) return "same as last week";
+  if (!before) return "nothing last week";
+  const pct = Math.round(((now - before) / before) * 100);
+  if (pct === 0) return "same as last week";
+  return `${Math.abs(pct)}% ${pct > 0 ? "more" : "less"} than last week`;
 }
 
 /* ---------- weekly / monthly rollups ---------- */
@@ -366,7 +634,7 @@ function renderRollups() {
 
   const wDelta = weekTotal - prevWeekTotal;
   const wSub = prevWeekTotal
-    ? `<span class="${wDelta >= 0 ? "up" : "down"}">${fmtShort(Math.abs(wDelta))}</span> vs last week`
+    ? [el("span", wDelta >= 0 ? "up" : "down", fmtShort(Math.abs(wDelta))), document.createTextNode(" vs last week")]
     : "first week of data";
 
   const tiles = [
@@ -378,7 +646,10 @@ function renderRollups() {
   for (const [label, val, sub] of tiles) {
     const t = el("div", "tile");
     t.append(el("div", "tlabel", label), el("div", "tval", val));
-    const s = el("div", "tsub"); s.innerHTML = sub; t.append(s);
+    const s = el("div", "tsub");
+    if (Array.isArray(sub)) s.append(...sub);
+    else s.textContent = sub;
+    t.append(s);
     wrap.append(t);
   }
 }
@@ -403,7 +674,7 @@ function renderCalendar() {
       const v = dayTotal(k);
       if (v) cell.style.background = `color-mix(in srgb, var(--brand) ${Math.max(14, Math.round((v / max) * 100))}%, var(--track))`;
       cell.title = `${prettyDate(k)} — ${v ? fmt(v) : "0m"}`;
-      cell.addEventListener("click", () => { selected = k; renderAll(); });
+      pressable(cell, `${prettyDate(k)}, ${v ? fmt(v) : "0m"} tracked`, () => { selected = k; renderAll(); });
     }
     cal.append(cell);
   }
@@ -421,19 +692,28 @@ function renderBadges() {
   for (const b of computeBadges(dataBundle())) {
     const card = el("div", "badge" + (b.earned ? " earned" : ""));
     card.title = b.description;
-    card.append(el("div", "bemoji", b.emoji), el("div", "bname", b.name), el("div", "bdesc", b.description));
+    const medal = el("canvas", "bmedal");
+    medal.width = 96;
+    medal.height = 96;
+    medal.setAttribute("aria-hidden", "true"); // the badge name is right below
+    drawBadge(medal, b.id, b.earned);
+    card.append(medal, el("div", "bname", b.name), el("div", "bdesc", b.description));
     box.append(card);
   }
 }
 
 /* ---------- site list ---------- */
 function renderDay() {
-  document.getElementById("dayLabel").textContent = prettyDate(selected);
-  document.getElementById("dayTotal").textContent = fmt(dayTotal(selected));
+  document.getElementById("dayLabel").textContent = scopeLabel();
+  document.getElementById("dayTotal").textContent = fmt(scopeTotal());
   const list = document.getElementById("dlist");
   list.innerHTML = "";
-  const entries = Object.entries(usage[selected] || {}).sort((a, b) => b[1] - a[1]);
-  if (!entries.length) { list.append(el("div", "empty", "No activity recorded for this day.")); return; }
+  const entries = Object.entries(usageForKeys(scopeKeysToDate())).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    const noun = scope === "day" ? "this day" : scope === "week" ? "this week" : "this month";
+    list.append(el("div", "empty", `No activity recorded for ${noun}.`));
+    return;
+  }
   const max = entries[0][1] || 1;
   for (const [domain, secs] of entries) {
     const cat = categorize(domain, settings.overrides);
@@ -475,6 +755,7 @@ function renderDay() {
 function renderAll() {
   renderHero();
   renderTiles();
+  renderFocusSessions();
   renderDonut();
   renderHeat();
   renderCompare();
@@ -487,39 +768,82 @@ function renderAll() {
   renderDay();
 }
 
-document.getElementById("prev").addEventListener("click", () => { selected = shiftDay(selected, -1); renderAll(); });
-document.getElementById("next").addEventListener("click", () => { selected = shiftDay(selected, 1); renderAll(); });
+/* The arrows step by whatever is in scope, so Week moves a week at a time
+ * rather than making you press Prev seven times. */
+function stepScope(direction) {
+  const today = dateKey(Date.now());
+  let next;
+  if (scope === "day") next = shiftDay(selected, direction);
+  else if (scope === "week") next = shiftDay(startOfWeek(selected), direction * 7);
+  else {
+    const [y, m] = selected.split("-").map(Number);
+    next = dateKey(new Date(y, m - 1 + direction, 1).getTime());
+  }
+  // The calendar already treats future days as inert; the arrows agree.
+  if (direction > 0 && next > today) return;
+  selected = next > today ? today : next;
+  renderAll();
+}
+document.getElementById("prev").addEventListener("click", () => stepScope(-1));
+document.getElementById("next").addEventListener("click", () => stepScope(1));
+for (const input of document.querySelectorAll('input[name="scope"]')) {
+  input.addEventListener("change", () => { scope = input.value; renderAll(); });
+}
+for (const input of document.querySelectorAll('input[name="trendMode"]')) {
+  input.addEventListener("change", () => { trendSpan = Number(input.value); renderTrend(); });
+}
 document.getElementById("opts").addEventListener("click", () => chrome.runtime.openOptionsPage());
 document.getElementById("wrappedBtn").addEventListener("click", () => {
   chrome.tabs.create({ url: chrome.runtime.getURL("wrapped.html") });
 });
-document.getElementById("export").addEventListener("click", () => {
-  const data = JSON.stringify(
-    { usage, hours, switches, holes, notified, media, wellness, settings, exportedFrom: "Tabyss" },
-    null, 2
-  );
-  const blob = new Blob([data], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `tabyss-export-${dateKey(Date.now())}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+document.getElementById("export").addEventListener("click", async () => {
+  try {
+    const response = await chrome.runtime.sendMessage({ type: "EXPORT_DATA" });
+    if (!response || response.ok !== true || !response.data) {
+      throw new Error(response?.error || "Tabyss could not create a consistent export.");
+    }
+    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `tabyss-export-${dateKey(Date.now())}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+  } catch (error) {
+    alert(`Export stopped. ${error && error.message ? error.message : "The background worker could not create a consistent backup."}`);
+  }
 });
 
 (async function init() {
   try {
     await chrome.runtime.sendMessage({ type: "FLUSH_NOW" });
   } catch (_) {}
-  const store = await chrome.storage.local.get([
-    "usage", "hours", "switches", "holes", "notified", "media", "wellness",
-  ]);
-  usage = store.usage || {};
-  hours = store.hours || {};
-  switches = store.switches || {};
-  holes = store.holes || {};
-  notified = store.notified || {};
-  media = store.media || {};
-  wellness = store.wellness || {};
-  settings = await getSettings();
+  try {
+    const store = await chrome.storage.local.get([
+      "usage", "hours", "switches", "holes", "notified", "media", "wellness",
+    ]);
+    usage = store.usage || {};
+    hours = store.hours || {};
+    switches = store.switches || {};
+    holes = store.holes || {};
+    notified = store.notified || {};
+    media = store.media || {};
+    wellness = store.wellness || {};
+    settings = await getSettings();
+  } catch (error) {
+    document.getElementById("dayLabel").textContent = "Tabyss could not load your data — reload this page.";
+    console.warn("Tabyss dashboard load failed:", error && error.message ? error.message : error);
+    return;
+  }
+  try {
+    const focusData = await chrome.runtime.sendMessage({ type: "GET_FOCUS_DATA" });
+    if (focusData?.ok === true) {
+      focusSessions = Array.isArray(focusData.focusSessions) ? focusData.focusSessions : [];
+      focusActive = focusData.focus || null;
+      focusHistoryAvailable = focusData.focusHistoryAvailable !== false;
+    }
+  } catch (_) { focusHistoryAvailable = false; }
+  openTabFavicons = await openTabFaviconMap(); // empty map on any failure
   renderAll();
 })();
+
+document.addEventListener("tabyss-theme-change", () => renderAll());

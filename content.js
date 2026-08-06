@@ -1,19 +1,15 @@
-/* Tabyss — content script (v1.3)
+/* Tabyss — content script (v2.0)
  *
  * Two jobs, both fully on-device:
  *  1. MEDIA DETECTION — classify what's actually happening on the page:
  *     "shorts" (Reels / YT Shorts / TikTok), "video" (real long-form playback),
- *     or "scroll" (sustained feed-scrolling on known feed surfaces). Strict by
- *     design: normal webpage scrolling never counts — classification requires a
- *     known surface AND live evidence (a playing video or a sustained gesture
- *     cadence).
+ *     both requiring live evidence from a real <video> element. Feed scrolling
+ *     is deliberately not classified — see classify().
  *  2. BREAK OVERLAY — on command from the worker, blur the page with a
  *     full-screen break card (20-20-20 eye break, water, stand) with
  *     snooze / skip / done actions.
- *
- * Nothing here touches page content beyond reading <video> state and counting
- * scroll gestures; nothing is sent anywhere except to the extension's own
- * service worker.
+ * Nothing here touches page content beyond reading <video> state, counting scroll
+ * gestures; nothing is sent anywhere except to the extension's own service worker.
  */
 (() => {
   "use strict";
@@ -30,18 +26,6 @@
     { host: /(^|\.)tiktok\.com$/, path: /^\// },
     { host: /(^|\.)facebook\.com$/, path: /^\/(reel|reels|watch)(\/|$)/ },
   ];
-  // Feed surfaces: scrolling HERE with sustained cadence = doomscroll. A thread,
-  // an article, a profile page — none of these match, so reading never counts.
-  const FEED_SURFACES = [
-    { host: /(^|\.)(x|twitter)\.com$/, path: /^\/(home\/?)?$/ },
-    { host: /(^|\.)instagram\.com$/, path: /^\/$/ },
-    { host: /(^|\.)facebook\.com$/, path: /^\/$/ },
-    { host: /(^|\.)linkedin\.com$/, path: /^\/feed(\/|$)/ },
-    { host: /(^|\.)reddit\.com$/, path: /^\/(r\/(popular|all)\/?)?$/ },
-  ];
-
-  const SCROLL_RATE_MIN = 8; // gestures per rolling minute — strict threshold
-
   /* ---------- gesture tracking (rolling 60s window) ----------
    * Raw wheel/touchmove events arrive ~16ms apart through a momentum curve, so
    * one flick would look like dozens of "gestures". Coalesce: a new gesture is
@@ -87,7 +71,7 @@
     return list.some((s) => s.host.test(host) && s.path.test(location.pathname));
   }
 
-  /* Strict classification. Order matters: shorts > video > scroll. */
+  /* Strict classification. Order matters: shorts > video. */
   function classify() {
     if (document.visibilityState !== "visible" || !document.hasFocus()) return null;
     if (matchSurface(SHORT_SURFACES)) {
@@ -101,7 +85,11 @@
     // or fullscreen. Autoplaying muted teaser loops don't qualify.
     if (v && !v.muted && (v.duration > 90 || !!document.fullscreenElement)) return "video";
     if (v && document.fullscreenElement) return "video";
-    if (matchSurface(FEED_SURFACES) && gestureRate() >= SCROLL_RATE_MIN) return "scroll";
+    // Feed scrolling is deliberately no longer classified. It only ever matched
+    // five exact feed URLs, so someone scrolling a subreddit, Threads or a news
+    // feed saw 0m and concluded they had not scrolled. An incomplete number
+    // presented as fact is worse than no number. Playback-based kinds stay:
+    // they are evidenced by a real <video> element, not inferred from gestures.
     return null;
   }
 
@@ -109,7 +97,9 @@
     const kind = classify();
     if (!kind) return;
     try {
-      chrome.runtime.sendMessage({ type: "MEDIA_BEAT", kind, secs: BEAT_S });
+      // The promise rejects when no receiver exists (worker restarting);
+      // that's routine, not page-console-worthy.
+      chrome.runtime.sendMessage({ type: "MEDIA_BEAT", kind, secs: BEAT_S })?.catch?.(() => {});
     } catch (_) {
       /* extension reloaded — this script instance is orphaned; go quiet */
     }
@@ -143,7 +133,7 @@
     const pill = document.createElement("div");
     pill.style.cssText =
       "position:fixed;right:20px;bottom:20px;z-index:2147483646;display:flex;align-items:center;gap:10px;" +
-      "padding:10px 16px;border-radius:100px;background:rgba(18,20,30,0.92);color:#fff;" +
+      "padding:10px 16px;border-radius:18px;background:rgba(22,18,31,0.94);color:#fff;" +
       "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13px;" +
       "border:1px solid rgba(255,255,255,0.16);box-shadow:0 10px 34px rgba(0,0,0,0.4);" +
       "backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);" +
@@ -154,7 +144,7 @@
     const txt = document.createElement("span");
     const cd = document.createElement("b");
     cd.style.cssText = "font-variant-numeric:tabular-nums;margin-left:2px;";
-    txt.textContent = "Eye break coming up — page blurs in ";
+    txt.textContent = "Eyes need a horizon — page blurs in ";
     txt.append(cd);
     const dismiss = document.createElement("button");
     dismiss.textContent = "✕";
@@ -205,50 +195,65 @@
   }
 
   function send(msg) {
-    try { chrome.runtime.sendMessage(msg); } catch (_) {}
+    try { chrome.runtime.sendMessage(msg)?.catch?.(() => {}); } catch (_) {}
   }
 
   function showOverlay(cfg) {
     removeOverlay();
     removePill(); // the heads-up pill hands over to the full overlay
+    // "side" parks the same card in the corner: it stays until you act, but it
+    // never blurs the page or swallows clicks, so you can keep working.
+    const side = cfg.style === "side";
     const host = document.createElement("div");
-    host.style.cssText =
-      "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;" +
-      "background:rgba(8,10,16,0.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);" +
-      "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;";
+    host.style.cssText = side
+      ? "position:fixed;right:18px;bottom:18px;z-index:2147483647;max-width:340px;" +
+        "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;"
+      : "position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;" +
+        "background:rgba(8,10,16,0.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);" +
+        "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#fff;";
     const card = document.createElement("div");
-    card.style.cssText =
-      "max-width:420px;width:calc(100% - 3rem);text-align:center;padding:2rem 1.8rem;" +
-      "background:rgba(20,24,34,0.92);border:1px solid rgba(255,255,255,0.14);" +
-      "border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,0.5);";
+    card.style.cssText = side
+      ? "width:100%;text-align:left;padding:1rem 1.1rem;" +
+        "background:rgba(22,18,31,0.97);border:1px solid rgba(255,255,255,0.16);" +
+        "border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,0.45);"
+      : "max-width:420px;width:calc(100% - 3rem);text-align:center;padding:2rem 1.8rem;" +
+        "background:rgba(22,18,31,0.94);border:1px solid rgba(255,255,255,0.14);" +
+        "border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,0.5);";
 
     const emoji = document.createElement("div");
-    emoji.style.cssText = "font-size:3rem;line-height:1;margin-bottom:0.6rem;";
+    emoji.style.cssText = side
+      ? "font-size:1.5rem;line-height:1;margin-bottom:0.3rem;"
+      : "font-size:3rem;line-height:1;margin-bottom:0.6rem;";
     emoji.textContent = cfg.emoji;
     const title = document.createElement("div");
-    title.style.cssText = "font-size:1.35rem;font-weight:700;margin-bottom:0.4rem;";
+    title.style.cssText = side
+      ? "font-size:0.95rem;font-weight:700;margin-bottom:0.25rem;"
+      : "font-size:1.35rem;font-weight:700;margin-bottom:0.4rem;";
     title.textContent = cfg.title;
     const body = document.createElement("div");
-    body.style.cssText = "font-size:0.95rem;opacity:0.85;line-height:1.5;margin-bottom:1.1rem;";
+    body.style.cssText = side
+      ? "font-size:0.8rem;opacity:0.85;line-height:1.45;margin-bottom:0.8rem;"
+      : "font-size:0.95rem;opacity:0.85;line-height:1.5;margin-bottom:1.1rem;";
     body.textContent = cfg.body;
     card.append(emoji, title, body);
 
     let count = null;
     if (cfg.seconds) {
       count = document.createElement("div");
-      count.style.cssText =
-        "font-size:2.4rem;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:1.1rem;";
+      count.style.cssText = side
+        ? "font-size:1.4rem;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:0.7rem;"
+        : "font-size:2.4rem;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:1.1rem;";
       count.textContent = String(cfg.seconds);
       card.append(count);
     }
 
     const row = document.createElement("div");
-    row.style.cssText = "display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;";
+    row.style.cssText = `display:flex;gap:0.5rem;justify-content:${side ? "flex-start" : "center"};flex-wrap:wrap;`;
     const mkBtn = (label, primary, onClick) => {
       const b = document.createElement("button");
       b.textContent = label;
       b.style.cssText =
-        "font:inherit;font-weight:600;cursor:pointer;padding:0.6rem 1.1rem;border-radius:100px;" +
+        "font:inherit;font-weight:600;cursor:pointer;padding:0.6rem 1.1rem;border-radius:12px;" +
         (primary
           ? "background:#fff;color:#101423;border:none;"
           : "background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4);");
@@ -262,7 +267,7 @@
           send({ type: "BREAK_SNOOZE", kind: "eye", mins: cfg.snoozeMin });
           removeOverlay();
         }),
-        mkBtn("Skip", false, () => {
+        mkBtn("Skip — logged honestly", false, () => {
           send({ type: "BREAK_SKIP", kind: "eye" });
           removeOverlay();
         })
@@ -299,10 +304,24 @@
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg?.type === "SHOW_BREAK") {
-      showOverlay(msg.cfg);
+      // Guard the shape: a malformed cfg must not throw mid-listener.
+      const cfg = msg.cfg && typeof msg.cfg === "object" ? msg.cfg : null;
+      if (cfg && typeof cfg.kind === "string" && typeof cfg.title === "string") {
+        showOverlay({
+          kind: cfg.kind,
+          emoji: typeof cfg.emoji === "string" ? cfg.emoji : "⏳",
+          title: cfg.title,
+          body: typeof cfg.body === "string" ? cfg.body : "",
+          seconds: Number.isFinite(cfg.seconds) && cfg.seconds > 0 ? Math.min(600, Math.round(cfg.seconds)) : null,
+          snoozeMin: Number.isFinite(cfg.snoozeMin) && cfg.snoozeMin > 0 ? Math.round(cfg.snoozeMin) : 5,
+          // Anything unrecognised falls back to the blocking cover rather than
+          // silently rendering nothing and losing the reminder.
+          style: cfg.style === "side" ? "side" : "cover",
+        });
+      }
       sendResponse({ ok: true });
     } else if (msg?.type === "SHOW_PREBREAK") {
-      showPreBreak(msg.seconds);
+      showPreBreak(Number.isFinite(msg.seconds) && msg.seconds > 0 ? Math.min(600, Math.round(msg.seconds)) : 60);
       sendResponse({ ok: true });
     } else if (msg?.type === "PING") {
       sendResponse({ ok: true });

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tabyss Saved Pages</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="saved-pages-app">
+    <main class="saved-main">
+      <section class="saved-hero" aria-label="Save the current page">
+        <form id="savedPageForm" class="saved-page-form">
+          <button id="savePageSubmit" class="btn primary savebig" type="submit">Save current page</button>
+          <input id="savedPageNote" maxlength="240" autocomplete="off" placeholder="Note (optional) — why come back?" aria-label="Optional note" />
+        </form>
+        <p class="saved-privacy">Title and address stay on this device. Page content is never read.</p>
+      </section>
+
+      <p id="savedFeedback" class="cc-feedback" role="status" aria-live="polite" hidden></p>
+
+      <section class="saved-library" aria-labelledby="savedListTitle">
+        <div class="saved-list-heading">
+          <h2 id="savedListTitle">Your pages</h2>
+          <span id="savedPageCount" class="saved-count" aria-live="polite">0 saved</span>
+        </div>
+        <p id="dupHint" class="saved-privacy" role="status" hidden></p>
+        <div class="filter-row" role="group" aria-label="Filter saved pages">
+          <button class="filter-chip active" data-saved-filter="saved" type="button" aria-pressed="true">Saved</button>
+          <button class="filter-chip" data-saved-filter="done" type="button" aria-pressed="false">Completed</button>
+          <button class="filter-chip" data-saved-filter="all" type="button" aria-pressed="false">All</button>
+        </div>
+        <div id="savedPageList" class="saved-page-list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="common.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

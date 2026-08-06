@@ -9,6 +9,14 @@
          one visual world, like the format it winks at. */
       * { box-sizing: border-box; margin: 0; }
       html, body { height: 100%; }
+      /* Wrapped keeps its own world, but not its own typography: the signage
+         face and the figure treatment are the same ones the popup and
+         dashboard use, so this reads as the same product in party clothes.
+         Declared locally because this page deliberately loads no stylesheet. */
+      :root {
+        --w-display: "Bahnschrift", "DIN Alternate", "Avenir Next Condensed",
+          "Segoe UI Variable Display", "SF Pro Display", system-ui, sans-serif;
+      }
       body {
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         background: #0b0b12;
@@ -49,21 +57,21 @@
         to { opacity: 1; transform: none; }
       }
       .kicker {
-        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-        font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+        font-family: var(--w-display); font-stretch: 87.5%; font-weight: 700;
+        font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
         opacity: 0.7; margin-bottom: 1.1rem;
       }
-      h1 { font-size: clamp(1.7rem, 5.5vw, 3rem); line-height: 1.08; letter-spacing: -0.02em; margin-bottom: 0.9rem; text-wrap: balance; }
+      h1 { font-family: var(--w-display); font-weight: 700; font-size: clamp(1.7rem, 5.5vw, 3rem); line-height: 1.08; letter-spacing: -0.02em; margin-bottom: 0.9rem; text-wrap: balance; }
       .sub { font-size: clamp(0.95rem, 2.4vw, 1.15rem); opacity: 0.85; line-height: 1.5; max-width: 46ch; margin: 0 auto; }
       .big-emoji { font-size: clamp(4rem, 14vw, 7.5rem); line-height: 1.1; margin-bottom: 0.6rem; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.45)); }
       .epithet {
         display: inline-block; margin-top: 0.9rem;
-        font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem;
+        font-family: var(--w-display); font-weight: 640; font-size: 0.78rem; letter-spacing: 0.02em;
         padding: 0.3rem 0.9rem; border-radius: 100px;
         background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3);
       }
       .statline { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.2rem; }
-      .schip { font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: 100px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+      .schip { font-family: var(--w-display); font-variant-numeric: tabular-nums; font-size: 0.85rem; padding: 0.35rem 0.85rem; border-radius: 100px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
       .dots { position: absolute; top: 1.1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3; }
       .dots i { width: 22px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.25); transition: background 0.3s; }
       .dots i.on { background: #fff; }
@@ -93,8 +101,8 @@
       <div class="blob" id="blob"></div>
       <div class="dots" id="dots"></div>
       <button class="close" id="close" title="Close">✕</button>
-      <div class="slide" id="slide"></div>
-      <div class="navhint">click / → to continue · ← to go back</div>
+      <div class="slide" id="slide" aria-live="polite"></div>
+      <div class="navhint">click / → to continue · ← to go back · esc to close</div>
     </div>
     <script src="common.js"></script>
     <script src="wrapped.js"></script>
