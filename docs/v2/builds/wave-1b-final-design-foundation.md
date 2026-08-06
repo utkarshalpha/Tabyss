@@ -62,7 +62,7 @@ Exit gate for this branch:
   icon, and accessibility specification.
 - `docs/v2/decisions/ADR-020-calm-optimistic-design-system.md`: options, selected
   direction, consequences, and validation.
-- Registers, master checklist, and `PROMPTS.md`: branch/build/decision trace.
+- Registers, master checklist, ADRs, and build records: build/decision trace.
 
 ## Data, privacy, permissions, and threats
 

@@ -22,8 +22,8 @@ profiles, recurring plans, Pomodoro/flow cycles, side panel, or full timeline ar
 - [ADR-019](../decisions/ADR-019-intent-session-state.md) - accepted timestamp-derived focus state and bounded outcome model.
 - [ADR-014](../decisions/ADR-014-v2-feature-waves.md) - separate stacked implementation branch.
 - [ADR-002](../decisions/ADR-002-local-first-core.md) - no network, account, telemetry, or remote dependency.
-- The execution decision and compromises are also recorded in the root `PROMPTS.md`
-  trace ledger as required by the user-supplied Prompt Pack workflow.
+- The execution decision and compromises are recorded in ADR-019 and this build
+  record.
 - ADR-004 side-panel surfaces and ADR-005 final event storage remain Proposed; this
   branch does not silently accept them.
 
@@ -72,7 +72,8 @@ profiles, recurring plans, Pomodoro/flow cycles, side panel, or full timeline ar
 - Action and reflection UX: `popup.html`, `popup.js`, `dashboard.html`, `dashboard.js`, `styles.css`.
 - Consistent export/restore UX: `options.html`, `options.js`.
 - Tests/harness: `tests/focus.test.js`, `tests/background.test.js`, `tests/common.test.js`, `tests/chrome-mock.js`, `tests/ui-server.js`.
-- Product/release record: `README.md`, `PRD.md`, `PRIVACY.md`, `CHANGELOG.md`, `QA_CHECKLIST.md`, `PROMPTS.md`, V2 catalog/system/checklist, ADR-019, this record.
+- Product/release record: `README.md`, `PRD.md`, `PRIVACY.md`, `CHANGELOG.md`,
+  `QA_CHECKLIST.md`, the V2 catalog/system/checklist, ADR-019, and this record.
 
 ## Evidence
 
