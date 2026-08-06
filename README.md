@@ -14,7 +14,14 @@ wellbeing breaks, and a weekly Wrapped-style recap are computed
 > Tabyss watches how you actually browse and tells you who you are this week —
 > with unique generative artwork for every persona.
 
-![Dashboard](assets/screenshots/1-dashboard.png)
+![Dashboard — day-by-day chart stacked by category, with a daily average line](assets/screenshots/1-dashboard.jpg)
+
+<p align="center">
+  <img src="assets/screenshots/2-popup.png" width="330" alt="Popup — today at a glance with the session dial in the header" />
+  <img src="assets/screenshots/4-wrapped.png" width="440" alt="Wrapped — the weekly recap" />
+</p>
+
+![Settings — one switch row per preference, Save pinned to the header](assets/screenshots/3-settings.jpg)
 
 ## Features
 
@@ -25,17 +32,12 @@ wellbeing breaks, and a weekly Wrapped-style recap are computed
 | 🎭 **Browsing Personality** | 50+ personas from 6 archetypes × 4 rhythms × 4 intensities, computed weekly from real patterns, each with deterministic generative avatar art |
 | ✨ **Weekly Wrapped** | A 9-slide full-screen recap with a locally rendered 1080×1080 share card (categories only by default — sites are opt-in) |
 | 🎯 **Focus Score** | Daily 0–100 from productive share + tab discipline − rabbit holes; honest "warming up" state under 30 minutes |
-| 🎬 **Media detection** | Video watch-time, Shorts/Reels, and feed doomscrolling measured separately by a content script — normal reading never counts |
-| 👀 **20-20-20 eye breaks** | The page blurs for a 20-second look-away after continuous screen time, with an animated countdown warning first |
-| 🏢 **Office Mode** | Hydration and stand-up reminders, presence-gated so an empty desk is never nagged |
+| 🎬 **Media detection** | Video watch-time and Shorts/Reels measured separately by a content script, both requiring real playback — normal reading never counts |
+| 👀 **20-20-20 eye breaks** | A desktop notification after continuous screen time, with Done and Snooze, so it reaches you even when the browser is not in front |
+| 🏢 **Office Mode** | Hydration and stand-up reminders on wall-clock cycles, presence-gated so an empty desk is never nagged |
 | 🔥 **Streaks & badges** | 30m+ productive days build streaks (one rest day forgiven); 12 unlockable badges |
 | 🗂 **Auto-categorization** | Bundled offline catalog (~250 domains) + boundary-safe rules + keyword heuristics across 8 categories; user overrides always win |
-| 📊 **Full dashboard** | Category donut, hour heatmap, weekly/monthly rollups, 12-week calendar, vs-last-week deltas, per-site favicons |
-
-<p>
-  <img src="assets/screenshots/2-popup.png" width="49%" alt="Popup" />
-  <img src="assets/screenshots/3-wrapped.png" width="49%" alt="Wrapped" />
-</p>
+| 📊 **Full dashboard** | Day/week/month scope, a day-by-day chart stacked by category with a daily average line and same-weekday-last-week comparison, category donut, hour heatmap, calendar and per-site favicons |
 
 Appearance is also under your control: Settings offers **System, Light, and Dark**
 using the Abyss & Ember design language. System follows the device, and the choice
@@ -65,9 +67,10 @@ every line of UI, tracking, and artwork is hand-rolled:
 - **Deterministic persona + doodle engine** — seeded PRNG (mulberry32 over a string
   hash of persona + week) draws avatar art from the stats themselves: orbit dots =
   active days, voids = rabbit holes, core size = focus score.
-- **Strict media classification** — scroll gestures are coalesced into bursts
-  (≥400ms gaps) so one trackpad flick isn't "doomscrolling"; feed detection
-  requires both a known feed URL and sustained cadence (≥8 gestures/min).
+- **Evidence-only media classification** — a kind is recorded only with a real
+  `<video>` element playing, checked for size and visibility. Feed-scroll
+  inference was removed: it matched five exact feed URLs, so any other feed
+  recorded zero while the figure still read as complete.
 - **Privacy as architecture**: no `history` permission, no remote code, no
   telemetry, favicon rendering via Chrome's local cache, and a share card that
   excludes site names unless explicitly enabled. Incognito activity is excluded,

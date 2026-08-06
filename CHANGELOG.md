@@ -2,6 +2,53 @@
 
 All notable changes to Tabyss. Format based on Keep a Changelog; versioning is SemVer.
 
+## [2.5.0] — 2026-08-07 · "Reminders that fire"
+
+### Fixed
+- **Office mode never fired.** The water/stand cycles were restarted by a 90s
+  gap check meant to detect machine sleep, but MV3 suspends the worker and
+  delays alarms well past 90s exactly when the browser is backgrounded — which
+  is when Office mode is meant to count. Only a real 10-minute sleep gap
+  restarts them now; presence stays with the idle check.
+- **Eye breaks froze in other apps.** The clock only advanced while Chrome held
+  focus, so the threshold was never reached and no notification could be sent.
+  It now follows desk presence.
+- **Deleting a saved page silently stopped working.** It used `confirm()`;
+  once a user ticks Chrome's "prevent this page from creating additional
+  dialogues" that returns false forever. Destructive actions now arm their own
+  button, which cannot be suppressed.
+- Saved-page actions were bound to the list container, so any control outside
+  it never fired.
+- Settings silently clamped out-of-range numbers while the field kept showing
+  what was typed. Stored values are written back after every save.
+- Non-finite wellness timestamps from older builds made every comparison NaN
+  and disabled reminders outright.
+- Empty days in the day-by-day chart rendered a grey block instead of a stub.
+
+### Changed
+- Breaks are delivered as an OS notification only. The page overlay depended on
+  a content script, which is injected only when a page loads, so every tab
+  already open at install or update silently had no receiver.
+- Feed-scroll classification removed; it covered five exact URLs and reported
+  zero everywhere else while appearing complete. Existing history still imports.
+- Display, labels and figures move to a DIN-derived signage face; true monospace
+  is reserved for domain lists.
+- Dashboard is full width, with day/week/month scope and panels grouped into
+  four frames.
+- Settings rebuilt as switch rows with Save pinned to the header.
+- Eye-break interval floor lowered from 5 to 1 minute.
+
+### Added
+- Session dial in the popup header; the intentional session drops from it.
+- Scroll and watch figures surfaced in Today.
+- Notification sound toggle, Delete all for saved pages, Reset to defaults.
+
+### Internal
+- Test suite goes from 11 failures to zero — four covered features deleted in
+  2.3.0, four asserted the retired `theme` key, one asserted behaviour that was
+  deliberately changed, two were written against exact markup. `verify.ps1`
+  passes end to end, including the reproducible-package gate.
+
 ## [2.4.0] — 2026-08-02 · "Design parity, wave 1"
 
 ### Firefox
