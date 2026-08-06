@@ -203,7 +203,10 @@ function sanitizeProductTab(value) {
   if (!isPlainObject(value)) productFailure("PRODUCT_INVALID_TAB");
   return {
     url: productUrl(value.url),
-    title: productText(value.title || "Untitled tab", PRODUCT_LIMITS.title, true),
+    // Titles originate from browser tabs, so older records may exceed today's
+    // storage limit. Normalize them without letting one legacy title block all
+    // Saved Pages commands.
+    title: productCapturedTitle(value.title, "Untitled tab"),
     pinned: value.pinned === true,
     index: boundedNumber(value.index, 0, 10000, 0),
   };
@@ -240,7 +243,7 @@ function sanitizeProductCapsule(value) {
     planId: value.planId ? productId(value.planId, "plan") : "",
     url,
     domain: productDomain(new URL(url).hostname),
-    title: productText(value.title || new URL(url).hostname, PRODUCT_LIMITS.title, true),
+    title: productCapturedTitle(value.title, new URL(url).hostname),
     note: productText(value.note, PRODUCT_LIMITS.note),
     status,
     savedAt: productTimestamp(value.savedAt),

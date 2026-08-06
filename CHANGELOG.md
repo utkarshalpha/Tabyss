@@ -9,6 +9,8 @@ All notable changes to Tabyss. Format based on Keep a Changelog; versioning is S
   the 120-character storage limit; long titles are shortened safely before saving.
 - Saved Pages now reports over-limit notes precisely and explicitly refuses to save
   an Incognito active tab, matching the privacy contract.
+- Legacy browser-generated titles in saved pages, Spaces, and checkpoints are now
+  normalized during validation so one old record cannot block every new save.
 
 ## [2.5.0] — 2026-08-07 · "Reminders that fire"
 

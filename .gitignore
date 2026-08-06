@@ -6,3 +6,6 @@ tmp/
 
 # Live unpacked install — a full copy of the runtime, not source.
 tabyss-v2-wave1-review/
+
+# Extracted unpacked release copies used for local Chrome testing.
+tabyss-v2.5.0/

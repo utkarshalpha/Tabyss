@@ -31,6 +31,8 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Plan schedules do not notify and the retired drift guard is never injected.
 - [ ] Existing compatibility Plan/Space/checkpoint records survive update and remain
       present in a validated export without appearing in the Saved pages interface.
+- [ ] Updating with a legacy saved page, Space, or checkpoint whose browser title is
+      over 120 characters preserves the record and does not block a new page save.
 - [ ] At 320px width and 200% zoom, the save controls stack without horizontal
       scrolling; keyboard, screen-reader, light/dark, reduced-motion, forced-colors,
       and high-contrast checks pass.

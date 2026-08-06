@@ -56,6 +56,32 @@ test("captured page titles are safely bounded while user notes stay strict", () 
   assert.throws(() => api.productSavedPageNote("x".repeat(api.PRODUCT_LIMITS.note + 1)), /PRODUCT_INVALID_NOTE/);
 });
 
+test("legacy browser titles are normalized without blocking all Saved Pages data", () => {
+  const legacy = plain(api.defaultProductData());
+  const longTitle = `A browser-provided title ${"x".repeat(180)}`;
+  const tab = { url: "https://example.com/path", title: longTitle, pinned: false, index: 0 };
+  legacy.spaces.push({
+    id: "space_legacy001", profileId: "profile_personal", name: "Legacy research",
+    tabs: [tab], createdAt: 0, updatedAt: 0,
+  });
+  legacy.capsules.push({
+    id: "capsule_legacy001", profileId: "profile_personal", url: "https://example.com/read",
+    title: longTitle, note: "Keep", status: "saved", savedAt: 0, updatedAt: 0,
+  });
+  legacy.checkpoints.push({
+    id: "checkpoint_legacy001", label: "Legacy checkpoint", tabs: [tab],
+    createdAt: 0, reason: "manual",
+  });
+
+  const sanitized = plain(api.sanitizeProductData(inContext(legacy)));
+  assert.equal(sanitized.spaces[0].tabs[0].title.length, api.PRODUCT_LIMITS.title);
+  assert.equal(sanitized.capsules[0].title.length, api.PRODUCT_LIMITS.title);
+  assert.equal(sanitized.checkpoints[0].tabs[0].title.length, api.PRODUCT_LIMITS.title);
+
+  legacy.capsules[0].note = "x".repeat(api.PRODUCT_LIMITS.note + 1);
+  assert.throws(() => api.sanitizeProductData(inContext(legacy)), /PRODUCT_INVALID_TEXT/);
+});
+
 test("plan rules are normalized and evaluate domains without reading page content", () => {
   const plan = plain(api.sanitizeProductPlan(inContext({
     id: "plan_launch001",
