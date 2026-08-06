@@ -19,7 +19,8 @@ const context = vm.createContext({
 });
 vm.runInContext(`${common}\n${product}\n;globalThis.__productTest = {
   defaultProductData, sanitizeProductData, sanitizeProductPlan, productUrl,
-  productUrlKey, productTabIsPlanned, productDuplicateGroups, PRODUCT_LIMITS
+  productUrlKey, productCapturedTitle, productSavedPageNote,
+  productTabIsPlanned, productDuplicateGroups, PRODUCT_LIMITS
 };`, context);
 const api = context.__productTest;
 const inContext = (value) => vm.runInContext(`JSON.parse(${JSON.stringify(JSON.stringify(value))})`, context);
@@ -42,6 +43,17 @@ test("explicit captures accept only bounded credential-free HTTP(S) URLs", () =>
   assert.throws(() => api.productUrl("javascript:alert(1)"), /PRODUCT_INVALID_URL/);
   assert.throws(() => api.productUrl("https://user:secret@example.com/private"), /PRODUCT_INVALID_URL/);
   assert.throws(() => api.productUrl(`https://example.com/${"x".repeat(2100)}`), /PRODUCT_INVALID_URL/);
+});
+
+test("captured page titles are safely bounded while user notes stay strict", () => {
+  const longTitle = `GitHub repository ${"x".repeat(140)}`;
+  const captured = api.productCapturedTitle(longTitle, "example.com");
+  assert.equal(captured.length, api.PRODUCT_LIMITS.title);
+  assert.equal(longTitle.startsWith(captured), true);
+  assert.equal(api.productCapturedTitle("   ", "example.com"), "example.com");
+  assert.equal(api.productCapturedTitle(`${"x".repeat(119)}😀tail`, "example.com"), "x".repeat(119));
+  assert.equal(api.productSavedPageNote("  Read   after lunch  "), "Read after lunch");
+  assert.throws(() => api.productSavedPageNote("x".repeat(api.PRODUCT_LIMITS.note + 1)), /PRODUCT_INVALID_NOTE/);
 });
 
 test("plan rules are normalized and evaluate domains without reading page content", () => {

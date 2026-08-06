@@ -37,6 +37,30 @@ function productText(value, maxLength, required = false) {
   return text;
 }
 
+// Page titles come from arbitrary websites, not from a bounded user field. Keep a
+// useful, safe prefix instead of making an otherwise valid save fail because a site
+// chose a long document title. Iterate by Unicode code point so truncation never
+// leaves a broken surrogate at the boundary.
+function productCapturedTitle(value, fallback) {
+  const supplied = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+  const backup = typeof fallback === "string" ? fallback.trim().replace(/\s+/g, " ") : "";
+  const source = supplied || backup || "Untitled page";
+  let title = "";
+  for (const character of source) {
+    if (title.length + character.length > PRODUCT_LIMITS.title) break;
+    title += character;
+  }
+  return productText(title || "Untitled page", PRODUCT_LIMITS.title, true);
+}
+
+function productSavedPageNote(value) {
+  if (value == null) return "";
+  if (typeof value !== "string") productFailure("PRODUCT_INVALID_NOTE");
+  const note = value.trim().replace(/\s+/g, " ");
+  if (note.length > PRODUCT_LIMITS.note) productFailure("PRODUCT_INVALID_NOTE");
+  return note;
+}
+
 function productId(value, prefix) {
   if (typeof value !== "string" || !new RegExp(`^${prefix}_[a-z0-9_-]{3,72}$`).test(value)) {
     productFailure("PRODUCT_INVALID_ID");
@@ -354,7 +378,13 @@ function productDuplicateGroups(tabs) {
     const key = productUrlKey(tab.url);
     if (!key) continue;
     if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push({ id: tab.id, windowId: tab.windowId, active: tab.active === true, title: productText(tab.title || key, PRODUCT_LIMITS.title), url: productUrl(tab.url) });
+    groups.get(key).push({
+      id: tab.id,
+      windowId: tab.windowId,
+      active: tab.active === true,
+      title: productCapturedTitle(tab.title, new URL(key).hostname),
+      url: productUrl(tab.url),
+    });
   }
   return [...groups.values()].filter((group) => group.length > 1);
 }

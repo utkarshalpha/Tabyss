@@ -25,7 +25,7 @@
   let product = null;
   let productSequence = 1;
   const tabs = [
-    { id: 11, windowId: 1, index: 0, active: true, pinned: false, incognito: false, title: "Launch brief", url: "https://docs.example.com/launch" },
+    { id: 11, windowId: 1, index: 0, active: true, pinned: false, incognito: false, title: "utkarshalpha/Tabyss: Privacy-first browser extension — your browsing personality, computed on-device. Zero network requests.", url: "https://docs.example.com/launch" },
     { id: 12, windowId: 1, index: 1, active: false, pinned: false, incognito: false, title: "Research", url: "https://example.com/research" },
     { id: 13, windowId: 1, index: 2, active: false, pinned: false, incognito: false, title: "Research duplicate", url: "https://example.com/research#notes" },
   ];
@@ -88,9 +88,11 @@
           } else if (message.action === "delete-space") current.spaces = current.spaces.filter((item) => item.id !== message.spaceId);
           else if (message.action === "save-capsule") {
             const active = tabs.find((tab) => tab.active) || tabs[0];
+            if (active.incognito) productFailure("PRODUCT_PRIVATE_PAGE");
             const record = sanitizeProductCapsule({
-              id: mockProductId("capsule"), profileId: current.activeProfileId, url: active.url, title: active.title,
-              note: message.note, status: "saved", savedAt: now, updatedAt: now,
+              id: mockProductId("capsule"), profileId: current.activeProfileId, url: active.url,
+              title: productCapturedTitle(active.title, new URL(active.url).hostname),
+              note: productSavedPageNote(message.note), status: "saved", savedAt: now, updatedAt: now,
             });
             current.capsules.unshift(record);
           } else if (message.action === "update-capsule") {

@@ -3,7 +3,7 @@ const http = require("node:http");
 const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
-const port = Number(process.env.TABYSS_UI_TEST_PORT) || 4173;
+const port = Number(process.argv[2] || process.env.TABYSS_UI_TEST_PORT) || 4173;
 const types = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -28,7 +28,7 @@ http.createServer((request, response) => {
     if (["options.html", "popup.html", "dashboard.html", "sidepanel.html", "wrapped.html"].includes(relative)) {
       body = buffer.toString("utf8").replace(
         '<script src="common.js"></script>',
-        '<script src="tests/chrome-mock.js"></script>\n    <script src="common.js"></script>'
+        '<script src="common.js"></script>\n    <script src="product.js"></script>\n    <script src="tests/chrome-mock.js"></script>'
       );
     }
     response.writeHead(200, {

@@ -168,8 +168,10 @@ function sendResult(promise, sendResponse, after) {
       FOCUS_INVALID_TRANSITION: "That action is not available in the current session state.",
       PRODUCT_DATA_CORRUPT: "V2 product data could not be validated. Export a backup before repairing or clearing it.",
       PRODUCT_INVALID_TEXT: "Review the name, intention, or note and keep it within the shown limit.",
+      PRODUCT_INVALID_NOTE: "Keep the optional note within 240 characters.",
       PRODUCT_INVALID_ID: "That saved item could not be identified safely.",
       PRODUCT_INVALID_URL: "Only valid HTTP or HTTPS pages can be saved.",
+      PRODUCT_PRIVATE_PAGE: "Incognito pages are never saved.",
       PRODUCT_INVALID_DOMAIN: "Review the site rules and enter domains such as example.com.",
       PRODUCT_INVALID_PROFILE: "That profile could not be validated.",
       PRODUCT_INVALID_PLAN: "That plan could not be validated.",
@@ -972,6 +974,7 @@ async function publicProductData(product) {
 }
 
 async function doProductCommand(action, payload) {
+  payload = isPlainObject(payload) ? payload : {};
   const product = await loadProductData();
   const now = Date.now();
   if (action === "get") return publicProductData(product);
@@ -982,15 +985,17 @@ async function doProductCommand(action, payload) {
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       const tab = tabs[0];
       if (!tab) productFailure("PRODUCT_NOT_FOUND");
+      if (tab.incognito) productFailure("PRODUCT_PRIVATE_PAGE");
       source = { url: tab.url, title: tab.title, note: payload.note };
     }
+    const safeUrl = productUrl(source.url);
     const capsule = sanitizeProductCapsule({
       id: newProductId("capsule"),
       profileId: currentProductProfile(product, source.profileId),
       planId: source.planId || product.activeContract?.planId || "",
-      url: source.url,
-      title: source.title,
-      note: source.note,
+      url: safeUrl,
+      title: productCapturedTitle(source.title, new URL(safeUrl).hostname),
+      note: productSavedPageNote(source.note),
       status: "saved",
       savedAt: now,
       updatedAt: now,
@@ -1004,7 +1009,7 @@ async function doProductCommand(action, payload) {
     const id = productId(payload.capsuleId, "capsule");
     if (!product.capsules.some((item) => item.id === id)) productFailure("PRODUCT_NOT_FOUND");
     product.capsules = product.capsules.map((item) => item.id === id
-      ? { ...item, status: payload.status === "done" ? "done" : "saved", note: productText(payload.note ?? item.note, PRODUCT_LIMITS.note), updatedAt: now }
+      ? { ...item, status: payload.status === "done" ? "done" : "saved", note: productSavedPageNote(payload.note ?? item.note), updatedAt: now }
       : item);
     await saveProductData(product);
     return publicProductData(product);

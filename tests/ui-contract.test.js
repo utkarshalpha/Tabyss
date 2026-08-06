@@ -42,6 +42,15 @@ test("Saved pages replaces the multi-section Command Center with accessible cont
   }
 });
 
+test("the local UI preview loads the product model before its browser mock", () => {
+  const server = fs.readFileSync(path.join(root, "tests", "ui-server.js"), "utf8");
+  const commonAt = server.indexOf('<script src="common.js"></script>');
+  const productAt = server.indexOf('<script src="product.js"></script>');
+  const mockAt = server.indexOf('<script src="tests/chrome-mock.js"></script>');
+  assert.ok(commonAt >= 0 && commonAt < productAt, "common.js must load before product.js");
+  assert.ok(productAt < mockAt, "product.js must load before the UI browser mock");
+});
+
 test("the intentional session stays secondary behind its header dial", () => {
   const html = fs.readFileSync(path.join(root, "popup.html"), "utf8");
   const js = fs.readFileSync(path.join(root, "popup.js"), "utf8");

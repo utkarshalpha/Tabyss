@@ -158,6 +158,49 @@ test("runtime mutation surface is limited to Saved pages", () => {
   assert.deepEqual([...api.ACTIVE_PRODUCT_ACTIONS].sort(), ["delete-capsule", "save-capsule", "update-capsule"]);
 });
 
+test("Saved pages bounds site titles, completes the lifecycle and rejects private or unsafe captures", async () => {
+  delete storageState.product;
+  state.tabs = null;
+  const originalTab = state.tab;
+  const longTitle = "utkarshalpha/Tabyss: Privacy-first browser extension — your browsing personality, computed on-device. Zero network requests.";
+  state.tab = { id: 7, active: true, url: "https://github.com/utkarshalpha/Tabyss", title: longTitle, incognito: false };
+  try {
+    const saved = await api.doProductCommand("save-capsule", inContext({ note: "Read after lunch" }));
+    const page = JSON.parse(JSON.stringify(saved.savedCapsule));
+    assert.equal(page.title.length, 120);
+    assert.equal(longTitle.startsWith(page.title), true);
+    assert.equal(page.note, "Read after lunch");
+    assert.equal(page.status, "saved");
+
+    const completed = await api.doProductCommand("update-capsule", inContext({
+      capsuleId: page.id,
+      status: "done",
+      note: page.note,
+    }));
+    assert.equal(completed.product.capsules[0].status, "done");
+
+    await api.doProductCommand("delete-capsule", inContext({ capsuleId: page.id }));
+    assert.equal(storageState.product.capsules.length, 0);
+
+    state.tab = { ...state.tab, incognito: true };
+    await assert.rejects(api.doProductCommand("save-capsule", inContext({ note: "private" })), /PRODUCT_PRIVATE_PAGE/);
+
+    state.tab = { ...state.tab, incognito: false, url: "chrome://settings" };
+    await assert.rejects(api.doProductCommand("save-capsule", inContext({ note: "unsupported" })), /PRODUCT_INVALID_URL/);
+
+    state.tab = { ...state.tab, url: "https://example.com/" };
+    await assert.rejects(
+      api.doProductCommand("save-capsule", inContext({ note: "x".repeat(241) })),
+      /PRODUCT_INVALID_NOTE/
+    );
+    assert.equal(storageState.product.capsules.length, 0);
+  } finally {
+    state.tab = originalTab;
+    state.tabs = null;
+    delete storageState.product;
+  }
+});
+
 test("focus commands persist active state, schedule recovery and export outcomes", async () => {
   delete storageState.focusActive;
   delete storageState.focusSessions;

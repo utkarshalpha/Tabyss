@@ -2,6 +2,14 @@
 
 All notable changes to Tabyss. Format based on Keep a Changelog; versioning is SemVer.
 
+## [Unreleased]
+
+### Fixed
+- Saved Pages no longer rejects valid sites whose browser-provided title exceeds
+  the 120-character storage limit; long titles are shortened safely before saving.
+- Saved Pages now reports over-limit notes precisely and explicitly refuses to save
+  an Incognito active tab, matching the privacy contract.
+
 ## [2.5.0] — 2026-08-07 · "Reminders that fire"
 
 ### Fixed

@@ -17,6 +17,10 @@ Run before every store submission. Load unpacked from `chrome://extensions`
 - [ ] Save current page stores the active safe HTTP(S) URL/title and optional note,
       resets the form, announces success, and shows the locally cached favicon or
       letter fallback.
+- [ ] A site title longer than 120 characters is safely shortened without blocking
+      the save; an over-limit note gets a note-specific error and keeps the input.
+- [ ] Saving from an Incognito or unsupported browser page fails without creating a
+      record; the message explains the privacy or URL boundary.
 - [ ] Saved pages from every former Profile appear together so the simplified UI
       never strands existing records.
 - [ ] Open page, Mark completed, Save again, and confirmed Delete behave correctly.
