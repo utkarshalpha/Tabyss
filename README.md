@@ -1,7 +1,9 @@
 # ⏳ Tabyss — Know Your Scroll
 
-[![Edge Add-ons](https://img.shields.io/badge/Microsoft%20Edge-Add--ons-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/bcnealjpndcccogjpceoaokeahmfdkha)
+[![Edge Add-ons](https://img.shields.io/badge/Microsoft%20Edge-Add--ons-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/tabyss-%E2%80%94-know-your-scroll/bcnealjpndcccogjpceoaokeahmfdkha)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--ons-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/en-US/firefox/addon/tabyss-know-your-scroll/)
+
+**[Install Tabyss from Microsoft Edge Add-ons →](https://microsoftedge.microsoft.com/addons/detail/tabyss-%E2%80%94-know-your-scroll/bcnealjpndcccogjpceoaokeahmfdkha)**
 
 **A privacy-first browser extension for understanding your time, running a simple
 session when it helps, and saving pages for later.** Browsing insights, optional
@@ -132,7 +134,7 @@ source produces an identical archive on the supported build runner. Pass
 
 ## Install
 
-**Microsoft Edge** — [Add to Edge](https://microsoftedge.microsoft.com/addons/detail/bcnealjpndcccogjpceoaokeahmfdkha)
+**Microsoft Edge** — [Add to Edge](https://microsoftedge.microsoft.com/addons/detail/tabyss-%E2%80%94-know-your-scroll/bcnealjpndcccogjpceoaokeahmfdkha)
 **Firefox** — [Add to Firefox](https://addons.mozilla.org/en-US/firefox/addon/tabyss-know-your-scroll/)
 
 **From source (2 minutes):**
